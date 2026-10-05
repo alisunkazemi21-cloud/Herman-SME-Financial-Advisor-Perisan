@@ -58,3 +58,29 @@ def test_image_adapter_with_stub_not_accuracy_claim(tmp_path, monkeypatch):
     extractor = PersianFinancialExtractor()
     monkeypatch.setattr(extractor, "recognize", lambda image: ("فاکتور جمع کل ۱۰۰۰", 0.9))
     assert extractor.extract(str(path)).confidence == 0.9
+
+
+def test_pdf_mixed_pages_adapter(tmp_path, monkeypatch):
+    from src.ingestion.pdf_parser import extract_pdf
+    path = tmp_path / "mixed.pdf"
+    path.write_bytes(b"fixture for adapter only")
+    class Page:
+        def __init__(self, text):
+            self.text = text
+        def extract_text(self):
+            return self.text
+        def to_image(self, resolution):
+            from types import SimpleNamespace
+            return SimpleNamespace(original="image")
+    class PDF:
+        pages = [Page("فاکتور"), Page("")]
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            pass
+    monkeypatch.setattr("pdfplumber.open", lambda path: PDF())
+    extractor = PersianFinancialExtractor()
+    monkeypatch.setattr(extractor, "recognize", lambda image: ("جمع کل ۱۰۰۰", 0.7))
+    result = extract_pdf(str(path), extractor)
+    assert result.extraction_method == "pdf_mixed" and result.confidence == 0.7
+    assert [r["page"] for r in result.structured_data["pages"]] == [1, 2]
