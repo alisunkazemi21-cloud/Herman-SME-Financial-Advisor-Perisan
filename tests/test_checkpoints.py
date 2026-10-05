@@ -19,6 +19,7 @@ def test_full_synthetic_run_synchronizes_artifacts(tmp_path):
     assert list((tmp_path / "research" / "CHAPTERS").glob("*.md"))
     assert result["run_id"] in (tmp_path / "media" / "narrative_fa.md").read_text(encoding="utf-8")
     assert json.loads((tmp_path / "runs" / "latest.json").read_text())["run_id"] == result["run_id"]
+    assert "\\" not in json.loads((tmp_path / "runs" / "latest.json").read_text())["manifest"]
     second = run_analysis(path, tmp_path)
     assert second != manifest and manifest.exists()
 

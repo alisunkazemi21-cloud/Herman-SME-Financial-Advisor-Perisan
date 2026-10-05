@@ -102,7 +102,7 @@ def run_analysis(input_path: Path, output_root: Path) -> Path:
     # Publish the common pointer last: dashboard never sees an incomplete run.
     pointer = output_root / "runs" / "latest.json"
     temp = pointer.with_name(f"latest-{uuid.uuid4().hex}.tmp")
-    temp.write_text(json.dumps({"manifest": str(manifest.relative_to(output_root)), "run_id": run_id}),
+    temp.write_text(json.dumps({"manifest": manifest.relative_to(output_root).as_posix(), "run_id": run_id}),
                     encoding="utf-8")
     os.replace(temp, pointer)
     (output_root / "media" / "narrative_fa.md").write_text(narrative, encoding="utf-8")
