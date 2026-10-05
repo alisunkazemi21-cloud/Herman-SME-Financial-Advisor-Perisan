@@ -29,6 +29,9 @@ def main() -> None:
     run = sub.add_parser("run", help="تحلیل داده بررسی‌شده")
     run.add_argument("file", type=Path)
     run.add_argument("--output", type=Path, default=Path("."))
+    advice = sub.add_parser("advise", help="پیش‌نویس توضیح با مدل محلی Ollama")
+    advice.add_argument("file", type=Path, help="فایل RunInput بررسی‌شده")
+    advice.add_argument("--model", default="mshojaei77/gemma3persian")
     args = parser.parse_args()
     try:
         if args.command == "demo":
@@ -45,6 +48,15 @@ def main() -> None:
             print("تصمیم انسانی ثبت شد")
         elif args.command == "trace":
             print(json.dumps(JevLedger(args.book).trace(args.id), ensure_ascii=False, indent=2))
+        elif args.command == "advise":
+            from src.ai_agent.agent import AgentConfig, FinancialAgent
+            from src.ai_agent.tools import calculated_context
+            from src.pipeline import RunInput, all_evidence
+            data = RunInput.model_validate_json(args.file.read_bytes())
+            for evidence in all_evidence(data):
+                evidence.verify()
+            print(json.dumps(FinancialAgent(AgentConfig(model=args.model)).advise(
+                calculated_context(data.statement)), ensure_ascii=False, indent=2))
         else:
             print(run_analysis(args.file, args.output))
     except (ValueError, OSError, ImportError, KeyError) as exc:

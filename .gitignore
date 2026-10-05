@@ -7,4 +7,5 @@ __pycache__/
 data/
 *.lock
 !uv.lock
-
+__marimo__/
+dashboard-preview.html

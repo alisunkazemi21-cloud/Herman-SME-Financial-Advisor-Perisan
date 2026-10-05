@@ -20,6 +20,9 @@ advisor = "src.cli:main"
 [tool.setuptools.packages.find]
 include = ["src*"]
 
+[tool.setuptools.package-data]
+"src.dashboard" = ["assets/*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["integration: موتور واقعی و فایل‌های مرجع محلی"]

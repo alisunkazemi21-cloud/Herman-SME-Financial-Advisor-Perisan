@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import hashlib
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -11,7 +11,10 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 def exact_decimal(value: Any) -> Decimal:
     if isinstance(value, (float, bool)):
         raise ValueError("مبلغ باید رشته یا عدد صحیح باشد؛ اعشار شناور مجاز نیست")
-    result = Decimal(value)
+    try:
+        result = Decimal(value)
+    except (InvalidOperation, TypeError) as exc:
+        raise ValueError("قالب عدد معتبر نیست") from exc
     if not result.is_finite():
         raise ValueError("عدد باید متناهی باشد")
     return result

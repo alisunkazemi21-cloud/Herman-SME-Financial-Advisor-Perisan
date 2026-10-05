@@ -6,25 +6,34 @@ app = marimo.App(width="full", app_title="هرمان | مشاور مالی")
 
 @app.cell
 def _():
+    import base64
+    import html
     import json
+    from decimal import Decimal
     from pathlib import Path
 
     import marimo as mo
     import plotly.graph_objects as go
-    return Path, go, json, mo
+
+    from src.analytics.forecast import MonthlyCashFlow, forecast_cashflow
+    return Decimal, MonthlyCashFlow, Path, base64, forecast_cashflow, go, html, json, mo
 
 
 @app.cell
-def _(mo):
+def _(Path, base64, mo):
+    _font = base64.b64encode((Path(__file__).parent / "assets" / "Vazirmatn-Regular.woff2").read_bytes()).decode()
     mo.Html('''<style>
-    @font-face {font-family:Vazirmatn;src:local("Vazirmatn");}
+    @font-face {font-family:Vazirmatn;src:url(data:font/woff2;base64,FONT_DATA) format("woff2");}
     body, .marimo {font-family:Vazirmatn,Tahoma,sans-serif;direction:rtl;}
+    table {border-collapse:collapse;} td,th {padding:12px 16px;border-bottom:1px solid #dce9e6;}
+    th {background:#ecf5f2;} tbody tr:nth-child(even) {background:#f7faf9;}
+    code {direction:ltr;unicode-bidi:isolate;}
     .herman-hero {background:linear-gradient(120deg,#0f3443,#176e63);padding:36px;
     border-radius:20px;color:white;margin-bottom:22px;}
     .herman-kicker {color:#bce6ce;font-size:13px;letter-spacing:2px;}
     </style><div class="herman-hero" dir="rtl"><div class="herman-kicker">هرمان / همراه مالی کسب‌وکار</div>
     <h1>تصویر روشن‌تری از کسب‌وکارتان ببینید</h1>
-    <p>شواهد، محاسبات دقیق و تصمیم انسانی در یک نگاه</p></div>''')
+    <p>شواهد، محاسبات دقیق و تصمیم انسانی در یک نگاه</p></div>'''.replace("FONT_DATA", _font))
     return
 
 
@@ -50,21 +59,46 @@ def _(json, mo, refresh, root):
 
 
 @app.cell
-def _(mo, result):
-    ratio_rows = [{"نسبت": r["name_fa"], "مقدار": r["value"] or "تعریف‌نشده",
-                   "روش محاسبه": r["formula_fa"], "یادداشت": r["warning_fa"] or "نیازمند مقایسه با صنعت"}
-                  for r in result["ratios"]]
-    mo.vstack([mo.md("## سلامت مالی در یک نگاه"), mo.ui.table(ratio_rows, selection=None)])
+def _(mo):
+    search = mo.ui.text(label="جست‌وجوی نسبت", placeholder="برای نمونه: سود")
+    mo.vstack([mo.md("## سلامت مالی در یک نگاه"), search])
+    return (search,)
+
+
+@app.cell
+def _(Decimal, html, mo, result, search):
+    _digits = str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹")
+    _rows = []
+    for _ratio in result["ratios"]:
+        if search.value and search.value not in _ratio["name_fa"]:
+            continue
+        _value = (format(Decimal(_ratio["value"]), ".4f").rstrip("0").rstrip(".")
+                  if _ratio["value"] is not None else "تعریف‌نشده")
+        _cells = [_ratio["name_fa"], _value.translate(_digits), _ratio["formula_fa"],
+                  _ratio["warning_fa"] or "نیازمند مقایسه با صنعت"]
+        _rows.append("<tr>" + "".join("<td>" + html.escape(_cell) + "</td>" for _cell in _cells) + "</tr>")
+    mo.Html('<div dir="rtl"><table style="width:100%;text-align:right"><thead><tr>'
+            '<th>نسبت</th><th>مقدار</th><th>روش محاسبه</th><th>یادداشت</th></tr></thead><tbody>'
+            + "".join(_rows) + '</tbody></table><p>نسبت‌ها به صورت کسر؛ نمایش گرد‌شده تا چهار رقم اعشار</p></div>')
     return
 
 
 @app.cell
-def _(go, mo, result):
+def _(mo):
+    horizon = mo.ui.slider(start=1, stop=12, value=3, label="افق بررسی پیش‌بینی (ماه)", show_value=True)
+    horizon
+    return (horizon,)
+
+
+@app.cell
+def _(MonthlyCashFlow, forecast_cashflow, go, horizon, mo, result):
     chart = go.Figure()
     chart.add_bar(x=[r["month"] for r in result["monthly_cashflows"]],
                   y=[float(r["net"]["value"]) for r in result["monthly_cashflows"]],
                   name="جریان نقد ثبت‌شده", marker_color="#218577")
-    future = result["forecast"]["predictions"]
+    scenario = forecast_cashflow([MonthlyCashFlow.model_validate(r) for r in result["monthly_cashflows"]],
+                                 horizon=horizon.value)
+    future = scenario["predictions"]
     if future:
         chart.add_scatter(x=[r["month"] for r in future], y=[r["estimate"] for r in future],
                           name="پیش‌بینی", mode="lines+markers", line_color="#c18124",
@@ -73,7 +107,9 @@ def _(go, mo, result):
                                        arrayminus=[r["estimate"] - r["lower"] for r in future]))
     chart.update_layout(title="جریان نقد ماهانه و بازه پیش‌بینی", template="plotly_white",
                         font_family="Vazirmatn, Tahoma", yaxis_title="ریال", xaxis_title="ماه شمسی")
-    mo.vstack([mo.ui.plotly(chart), mo.callout(result["forecast"]["warning_fa"], kind="warn")])
+    mo.vstack([mo.ui.plotly(chart, config={"displayModeBar": False}),
+               mo.md("بازه اسمی ۸۵٪؛ تغییر افق فقط برای بررسی تعاملی است و گزارش ذخیره‌شده را تغییر نمی‌دهد."),
+               mo.callout(scenario["warning_fa"], kind="warn")])
     return
 
 

@@ -28,7 +28,7 @@ uv run marimo run src/dashboard/notebook.py --watch
 
 <div dir="rtl">
 
-نمونه کاملاً ساختگی است. همه مبالغ ریال هستند. هیچ نرخ جاری دلار/طلا یا توصیه خرید در نمونه نیست. برای ویرایش تعاملی از `marimo edit src/dashboard/notebook.py --watch` استفاده کنید. فونت Vazirmatn در صورت نصب محلی استفاده می‌شود؛ جایگزین Tahoma است و فونت از اینترنت دریافت نمی‌شود.
+نمونه کاملاً ساختگی است. همه مبالغ ریال هستند. هیچ نرخ جاری دلار/طلا یا توصیه خرید در نمونه نیست. برای ویرایش تعاملی از `marimo edit src/dashboard/notebook.py --watch` استفاده کنید. فونت Vazirmatn نسخه v33.003 همراه مجوز OFL در پروژه قرار دارد و در زمان اجرا از اینترنت دریافت نمی‌شود.
 
 ## گردش سند
 
@@ -42,6 +42,7 @@ advisor propose proposal.json --book data/book.jsonl
 advisor trace J1 --book data/book.jsonl
 advisor decide decision.json --book data/book.jsonl
 advisor run reviewed_input.json --output .
+advisor advise reviewed_input.json --model mshojaei77/gemma3persian
 ```
 
 <div dir="rtl">
