@@ -23,7 +23,7 @@ include = ["src*"]
 
 [tool.setuptools.package-data]
 "src.dashboard" = ["assets/*"]
-"src.backend" = ["schema.sql"]
+"src.backend" = ["*.sql"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

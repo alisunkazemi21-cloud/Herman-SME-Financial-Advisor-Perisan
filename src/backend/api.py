@@ -1,0 +1,161 @@
+from pathlib import Path
+from typing import Annotated
+from uuid import UUID
+
+import psycopg
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
+from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import JSONResponse
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import Field, ValidationError
+
+from src.backend.database import AccessDenied, Database
+from src.backend.inventory import (
+    Count,
+    Fulfillment,
+    InventoryRequest,
+    Item,
+    Movement,
+    Recipe,
+    UnitConversion,
+    reconcile_inventory,
+)
+from src.backend.service import AnalysisInput, Conflict, NotFound, Service, Warehouse
+from src.models import Model
+
+
+class BusinessInput(Model):
+    name: str = Field(min_length=1, max_length=200)
+    industry: str = Field(min_length=1, max_length=100)
+
+
+class DecisionInput(Model):
+    approved: bool
+    reason_fa: str = Field(min_length=1, max_length=2000)
+
+
+def create_app(database: Database, blob_root: Path) -> FastAPI:
+    app = FastAPI(title="Herman SME backend", version="0.2.0")
+    service = Service(database, blob_root)
+    bearer = HTTPBearer(auto_error=False)
+
+    def actor(credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)]) -> UUID:
+        if credentials is None:
+            raise HTTPException(401, "اعتبار دسترسی لازم است")
+        try:
+            return database.authenticate(credentials.credentials)
+        except AccessDenied:
+            raise HTTPException(401, "اعتبار دسترسی نامعتبر است") from None
+
+    Actor = Annotated[UUID, Depends(actor)]
+    Key = Annotated[str, Header(alias="Idempotency-Key", min_length=1, max_length=200)]
+
+    @app.exception_handler(AccessDenied)
+    async def denied(request, exc):
+        return JSONResponse(status_code=403, content={"detail": "دسترسی مجاز نیست"})
+
+    @app.exception_handler(NotFound)
+    async def missing(request, exc):
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+    @app.exception_handler(Conflict)
+    async def conflict(request, exc):
+        return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    @app.exception_handler(ValueError)
+    async def invalid(request, exc):
+        # Do not echo submitted financial records or credentials in validation errors.
+        detail = "ورودی با قرارداد داده سازگار نیست" if isinstance(exc, ValidationError) else str(exc)
+        return JSONResponse(status_code=422, content={"detail": detail})
+
+    @app.exception_handler(psycopg.IntegrityError)
+    async def integrity(request, exc):
+        return JSONResponse(status_code=409, content={"detail": "رکورد تکراری یا ارجاع نامعتبر در همین بیزینس"})
+
+    @app.get("/health")
+    def health():
+        return {"status": "ok"}
+
+    @app.get("/businesses")
+    def businesses(user: Actor):
+        return service.businesses(user)
+
+    @app.post("/businesses", status_code=201)
+    def create_business(value: BusinessInput, user: Actor, key: Key):
+        return {"id": service.create_business(user, value.name, value.industry, key)}
+
+    @app.post("/businesses/{business}/documents", status_code=201)
+    async def document(business: UUID, request: Request, user: Actor, key: Key,
+                       filename: Annotated[str, Header(alias="X-Filename", min_length=1, max_length=200)]):
+        content = bytearray()
+        async for chunk in request.stream():
+            content.extend(chunk)
+            if len(content) > 10 * 1024 * 1024:
+                raise HTTPException(413, "حداکثر اندازه سند ۱۰ مگابایت است")
+        identity = await run_in_threadpool(service.document, user, business, key, filename,
+            request.headers.get("content-type", "application/octet-stream"), bytes(content))
+        return {"id": identity}
+
+    @app.get("/businesses/{business}/documents/{identity}")
+    def read_document(business: UUID, identity: UUID, user: Actor):
+        _, content = service.read_document(user, business, identity)
+        return Response(content, media_type="application/octet-stream",
+                        headers={"Content-Disposition": "attachment", "X-Content-Type-Options": "nosniff",
+                                 "Cache-Control": "no-store"})
+
+    @app.post("/businesses/{business}/warehouses", status_code=201)
+    def warehouse(business: UUID, value: Warehouse, user: Actor, key: Key):
+        return {"id": service.catalog(user, business, key, value)}
+
+    @app.post("/businesses/{business}/items", status_code=201)
+    def item(business: UUID, value: Item, user: Actor, key: Key):
+        return {"id": service.catalog(user, business, key, value)}
+
+    @app.post("/businesses/{business}/conversions", status_code=201)
+    def conversion(business: UUID, value: UnitConversion, user: Actor, key: Key):
+        return {"id": service.catalog(user, business, key, value)}
+
+    @app.post("/businesses/{business}/counts", status_code=201)
+    def count(business: UUID, value: Count, user: Actor, key: Key):
+        return {"id": service.propose(user, business, key, value)}
+
+    @app.post("/businesses/{business}/movements", status_code=201)
+    def movement(business: UUID, value: Movement, user: Actor, key: Key):
+        return {"id": service.propose(user, business, key, value)}
+
+    @app.post("/businesses/{business}/recipes", status_code=201)
+    def recipe(business: UUID, value: Recipe, user: Actor, key: Key):
+        return {"id": service.propose(user, business, key, value)}
+
+    @app.post("/businesses/{business}/fulfillments", status_code=201)
+    def fulfillment(business: UUID, value: Fulfillment, user: Actor, key: Key):
+        return {"id": service.propose(user, business, key, value)}
+
+    @app.post("/businesses/{business}/records/{identity}/decision", status_code=201)
+    def decision(business: UUID, identity: UUID, value: DecisionInput, user: Actor, key: Key):
+        return {"id": service.approve(user, business, key, identity, value.approved, value.reason_fa)}
+
+    @app.post("/businesses/{business}/inventory-analyses", status_code=201)
+    def analyze(business: UUID, value: AnalysisInput, user: Actor, key: Key):
+        identity = service.analyze(user, business, key, value)
+        return service.analysis(user, business, identity)
+
+    @app.get("/businesses/{business}/inventory-analyses/{identity}")
+    def analysis(business: UUID, identity: UUID, user: Actor):
+        return service.analysis(user, business, identity)
+
+    @app.get("/businesses/{business}/records/{identity}")
+    def record(business: UUID, identity: UUID, user: Actor):
+        return service.record(user, business, identity)
+
+    @app.get("/businesses/{business}/resources/{resource}")
+    def resources(business: UUID, resource: str, user: Actor, after: UUID | None = None, limit: int = 50):
+        return service.page(user, business, resource, after, limit)
+
+    @app.post("/quick/inventory")
+    def quick(value: InventoryRequest, user: Actor, response: Response):
+        # Authentication only: all financial inputs come from this request. No business retrieval/writes.
+        response.headers["Cache-Control"] = "no-store"
+        return reconcile_inventory(value)
+
+    return app
