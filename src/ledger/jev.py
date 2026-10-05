@@ -54,3 +54,11 @@ class Decision(Model):
     approved: bool
     reviewed_values: Literal[True]
     reason_fa: str = Field(min_length=3)
+
+
+def explain_entry(entry: JevEntry, status_fa: str) -> str:
+    amount = format(entry.amount, ",f").translate(str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹"))
+    return (f"سند {entry.jev_id}: مبلغ {amount} ریال در حساب «{ACCOUNTS[entry.debit_account]}» بدهکار "
+            f"و به همان مبلغ در حساب «{ACCOUNTS[entry.credit_account]}» بستانکار پیشنهاد شده است. "
+            f"شرح: {entry.description_fa}. وضعیت: {status_fa}. "
+            "بدهکار/بستانکار جهت ثبت حسابداری است و به‌تنهایی به معنی ورود/خروج پول نیست.")

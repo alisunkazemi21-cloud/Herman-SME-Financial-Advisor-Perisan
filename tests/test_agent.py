@@ -29,3 +29,11 @@ def test_ollama_transport_is_draft_only(monkeypatch):
     result = FinancialAgent().advise({"current_ratio": "2"})
     assert "پیش‌نویس" in result["status_fa"]
     assert captured["stream"] is False and "tools" not in captured
+
+
+def test_missing_cashflow_is_explicit_before_advice(demo):
+    from src.ai_agent.tools import calculated_context
+    result = calculated_context(demo.statement)
+    assert result["forecast"]["predictions"] == []
+    assert result["forecast"]["diagnostics"]["is_stationary"] is None
+    assert "داده" in result["forecast"]["warning_fa"]

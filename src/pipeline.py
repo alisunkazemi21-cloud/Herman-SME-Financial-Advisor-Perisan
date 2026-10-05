@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Literal
 
+from filelock import FileLock
 from pydantic import Field
 
 from src.analytics.benchmarks import BenchmarkRequest, compare
@@ -76,6 +77,17 @@ def run_analysis(input_path: Path, output_root: Path) -> Path:
                       for r in ratios)
     forecast_table = "\n".join(f"|{p['month']}|{p['estimate']:.0f}|{p['lower']:.0f}|{p['upper']:.0f}|"
                                for p in forecast["predictions"])
+    benchmark_table = "نرخ مستند وارد نشده است؛ مقایسه‌ای محاسبه نشده است."
+    if result["benchmarks"]:
+        benchmark_rows = []
+        for benchmark in result["benchmarks"]:
+            label = "دلار آمریکا" if benchmark["asset"] == "USD" else "گرم طلای ۱۸عیار"
+            benchmark_rows.append(f"|{label}|{benchmark['start_date']}|{benchmark['end_date']}|"
+                                  f"{benchmark['amount_irr']}|{benchmark['ending_value_irr']}|"
+                                  f"{benchmark['nominal_return']}|")
+        benchmark_table = ("|دارایی|شروع|پایان|مبلغ اولیه ریال|ارزش فرضی پایان ریال|بازده اسمی به صورت کسر|\n"
+                           "|---|---|---|---|---|---|\n" + "\n".join(benchmark_rows) +
+                           "\n\nمقایسه فرضی بدون کارمزد، مالیات و تعدیل تورم؛ توصیه خرید نیست.")
     text = (f"# گزارش مالی {data.business_name}\n\nشناسه اجرا: `{run_id}`\n\n{result['note_fa']}\n\n"
             f"هش ورودی: `{result['input_sha256']}`\n\nواحد: ریال؛ مقادیر نسبت‌ها کسر هستند.\n\n"
             f"|نسبت|مقدار|فرمول|\n|---|---|---|\n{table}\n\n"
@@ -83,6 +95,7 @@ def run_analysis(input_path: Path, output_root: Path) -> Path:
             f"{forecast['diagnostics']['recommendation_fa']}\n\n"
             f"سطح اسمی بازه: {forecast['coverage']:.0%}\n\n"
             f"|ماه|برآورد|کران پایین|کران بالا|\n|---|---|---|---|\n{forecast_table}\n\n"
+            f"## مقایسه دلار و طلا\n\n{benchmark_table}\n\n"
             f"## پیشنهاد بررسی\n\n{result['advice_fa']}\n\n"
             "جزئیات پیش‌بینی، منشأ هر مقدار و نرخ‌های مقایسه در manifest.json همین اجرا موجود است.\n")
     (directory / "README.md").write_text(text, encoding="utf-8")
@@ -99,13 +112,23 @@ def run_analysis(input_path: Path, output_root: Path) -> Path:
         target = output_root / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content, encoding="utf-8")
-    # Publish the common pointer last: dashboard never sees an incomplete run.
-    pointer = output_root / "runs" / "latest.json"
-    temp = pointer.with_name(f"latest-{uuid.uuid4().hex}.tmp")
-    temp.write_text(json.dumps({"manifest": manifest.relative_to(output_root).as_posix(), "run_id": run_id}),
-                    encoding="utf-8")
-    os.replace(temp, pointer)
-    (output_root / "media" / "narrative_fa.md").write_text(narrative, encoding="utf-8")
+    # Each run remains immutable; publish daily views and the common pointer under one lock.
+    with FileLock(str(output_root / "runs" / "publication.lock"), timeout=10):
+        date_label = now.strftime("%Y-%m-%d")
+        daily_index = (f"# آخرین اجرای روز {date_label}\n\nشناسه اجرا: `{run_id}`\n\n"
+                       f"[گزارش کامل]({directory.name}/README.md) · "
+                       f"[شواهد و نتایج]({directory.name}/manifest.json)\n")
+        for target, content in ((directory.parent / "README.md", daily_index),
+                                 (output_root / "reports" / f"{date_label}_technical_fa.md", text),
+                                 (output_root / "media" / "narrative_fa.md", narrative)):
+            temp_view = target.with_name(target.name + "." + uuid.uuid4().hex + ".tmp")
+            temp_view.write_text(content, encoding="utf-8")
+            os.replace(temp_view, target)
+        pointer = output_root / "runs" / "latest.json"
+        temp = pointer.with_name(f"latest-{uuid.uuid4().hex}.tmp")
+        temp.write_text(json.dumps({"manifest": manifest.relative_to(output_root).as_posix(), "run_id": run_id}),
+                        encoding="utf-8")
+        os.replace(temp, pointer)
     return manifest
 
 

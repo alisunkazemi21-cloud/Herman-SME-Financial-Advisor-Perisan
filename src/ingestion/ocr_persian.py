@@ -7,6 +7,7 @@ from typing import Any, Literal
 
 from pydantic import Field
 
+from src.ingestion.invoice_fields import extract_invoice_amounts
 from src.ingestion.normalizer import normalize_persian_digits, parse_jalali
 from src.models import Evidence, Model
 
@@ -55,8 +56,11 @@ def document(text: str, path: str | Path, method: str, confidence: float,
             jalali = dates[0]
         except ValueError:
             warnings.append("تاریخ استخراج‌شده نامعتبر است")
+    fields = dict(structured or {})
+    fields["invoice_amount_candidates"] = [candidate.model_dump(mode="json")
+                                            for candidate in extract_invoice_amounts(text)]
     return ExtractedDocument(doc_type=kind, raw_text_fa=text, normalized_text=normalized,
-                             structured_data=structured or {}, confidence=confidence,
+                             structured_data=fields, confidence=confidence,
                              source_file=str(Path(path).resolve()), evidence=Evidence.from_file(path),
                              extraction_method=method, jalali_date=jalali, warnings_fa=warnings)
 

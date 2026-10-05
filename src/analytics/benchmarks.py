@@ -34,7 +34,9 @@ def compare(request: BenchmarkRequest) -> dict[str, object]:
     if start.irr_per_unit.value <= 0 or end.irr_per_unit.value <= 0:
         raise ValueError("نرخ باید مثبت باشد")
     units = request.amount_irr.value / start.irr_per_unit.value
-    return {"units": str(units), "ending_value_irr": str(units * end.irr_per_unit.value),
+    return {"asset": start.asset, "start_date": str(start.day), "end_date": str(end.day),
+            "amount_irr": str(request.amount_irr.value), "units": str(units),
+            "ending_value_irr": str(units * end.irr_per_unit.value),
             "nominal_return": str(end.irr_per_unit.value / start.irr_per_unit.value - 1),
             "evidence": [request.amount_irr.model_dump(mode="json"),
                          start.model_dump(mode="json"), end.model_dump(mode="json")],

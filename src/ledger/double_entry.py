@@ -10,7 +10,7 @@ from typing import Any
 
 from filelock import FileLock
 
-from src.ledger.jev import Decision, JevEntry
+from src.ledger.jev import Decision, JevEntry, explain_entry
 from src.models import Evidence
 
 
@@ -147,6 +147,7 @@ class JevLedger:
             raise KeyError(entry_id)
         evidence = Evidence.model_validate(events[0]["payload"]["evidence"])
         evidence.verify()
-        return {"evidence": evidence.model_dump(), "events": events,
-                "status_fa": "در انتظار بررسی" if len(events) == 1 else
-                ("تأییدشده" if events[-1]["payload"]["approved"] else "ردشده")}
+        status = "در انتظار بررسی" if len(events) == 1 else (
+            "تأییدشده" if events[-1]["payload"]["approved"] else "ردشده")
+        return {"evidence": evidence.model_dump(), "events": events, "status_fa": status,
+                "explanation_fa": explain_entry(JevEntry.model_validate(events[0]["payload"]), status)}

@@ -121,5 +121,20 @@ def _(mo, result):
     return
 
 
+@app.cell
+def _(html, mo, result):
+    _comparisons = result.get("benchmarks", [])
+    _body = "<p>نرخ مستند وارد نشده است؛ مقایسه‌ای محاسبه نشده است.</p>"
+    if _comparisons:
+        _body = "<table><tr><th>دارایی</th><th>ارزش فرضی پایان (ریال)</th><th>بازده اسمی (کسر)</th></tr>"
+        for _comparison in _comparisons:
+            _label = "دلار آمریکا" if _comparison["asset"] == "USD" else "گرم طلای ۱۸عیار"
+            _body += ("<tr><td>" + _label + "</td><td>" + html.escape(_comparison["ending_value_irr"]) +
+                      "</td><td>" + html.escape(_comparison["nominal_return"]) + "</td></tr>")
+        _body += "</table><p>مقایسه فرضی بدون هزینه معامله و تعدیل تورم؛ توصیه خرید نیست.</p>"
+    mo.Html('<section dir="rtl"><h2>مقایسه با دلار و طلا</h2>' + _body + '</section>')
+    return
+
+
 if __name__ == "__main__":
     app.run()

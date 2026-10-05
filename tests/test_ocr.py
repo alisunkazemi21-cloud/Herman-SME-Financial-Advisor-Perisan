@@ -84,3 +84,24 @@ def test_pdf_mixed_pages_adapter(tmp_path, monkeypatch):
     result = extract_pdf(str(path), extractor)
     assert result.extraction_method == "pdf_mixed" and result.confidence == 0.7
     assert [r["page"] for r in result.structured_data["pages"]] == [1, 2]
+
+
+def test_invoice_structuring_keeps_multiple_totals_and_units(evidence):
+    result = document("فاکتور\nجمع کل: ۱٬۲۰۰ تومان\nمبلغ کل: ۱۲۰۰۰ ریال", evidence.source_file,
+                      "tesseract", 0.7)
+    candidates = result.structured_data["invoice_amount_candidates"]
+    assert len(candidates) == 2
+    assert [c["amount_irr"] for c in candidates] == ["12000", "12000"]
+    assert candidates[0]["raw_fragment"] == "جمع کل: ۱٬۲۰۰ تومان"
+    assert all(c["needs_review"] for c in candidates)
+    split_words = document("فاکتور\nجمع\nکل\n۱۰۰۰\nتومان", evidence.source_file, "tesseract", 0.9)
+    assert split_words.structured_data["invoice_amount_candidates"][0]["amount_irr"] == "10000"
+
+
+def test_invoice_ambiguous_unit_never_guessed(evidence):
+    result = document("فاکتور\nجمع کل: ۱۰۰۰\nمبلغ کل: ۱۲٬۳۴ ریال", evidence.source_file,
+                      "tesseract", 0.9)
+    candidates = result.structured_data["invoice_amount_candidates"]
+    assert len(candidates) == 2
+    assert all(c["amount_irr"] is None for c in candidates)
+    assert candidates[0]["unit"] is None

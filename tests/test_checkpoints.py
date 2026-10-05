@@ -15,6 +15,9 @@ def test_full_synthetic_run_synchronizes_artifacts(tmp_path):
     assert result["synthetic"] and len(result["ratios"]) == 10
     assert result["forecast"]["predictions"]
     assert (manifest.parent / "README.md").exists()
+    assert result["run_id"] in (manifest.parent.parent / "README.md").read_text(encoding="utf-8")
+    assert result["run_id"] in (tmp_path / "reports" / (result["run_id"][:10] +
+                                "_technical_fa.md")).read_text(encoding="utf-8")
     assert list((tmp_path / "reports").glob("*.md"))
     assert list((tmp_path / "research" / "CHAPTERS").glob("*.md"))
     assert result["run_id"] in (tmp_path / "media" / "narrative_fa.md").read_text(encoding="utf-8")
@@ -22,6 +25,20 @@ def test_full_synthetic_run_synchronizes_artifacts(tmp_path):
     assert "\\" not in json.loads((tmp_path / "runs" / "latest.json").read_text())["manifest"]
     second = run_analysis(path, tmp_path)
     assert second != manifest and manifest.exists()
+
+
+def test_benchmarks_in_report_and_manifest(tmp_path):
+    path = create_demo(tmp_path / "samples")
+    data = json.loads(path.read_text(encoding="utf-8"))
+    fact = data["statement"]["current_assets"]
+    data["benchmarks"] = [{"amount_irr": fact,
+        "start": {"day": "2025-01-01", "asset": "USD", "irr_per_unit": fact},
+        "end": {"day": "2026-01-01", "asset": "USD", "irr_per_unit": fact}}]
+    path.write_text(json.dumps(data), encoding="utf-8")
+    manifest = run_analysis(path, tmp_path)
+    report = (manifest.parent / "README.md").read_text(encoding="utf-8")
+    assert "دلار آمریکا" in report
+    assert json.loads(manifest.read_text(encoding="utf-8"))["benchmarks"][0]["nominal_return"] == "0"
 
 
 @pytest.mark.integration

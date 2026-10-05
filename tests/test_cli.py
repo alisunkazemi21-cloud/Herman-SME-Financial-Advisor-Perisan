@@ -40,6 +40,9 @@ def test_cli_uses_typed_context_for_advice(tmp_path, monkeypatch, capsys):
     from src.ai_agent.agent import FinancialAgent
     def advise(self, context):
         assert len(context["ratios"]) == 10
+        assert "diagnostics" in context["forecast"]
+        assert all("lower" in prediction and "upper" in prediction
+                   for prediction in context["forecast"]["predictions"])
         return {"text_fa": "آزمون پیش‌نویس"}
     monkeypatch.setattr(FinancialAgent, "advise", advise)
     monkeypatch.setattr(sys, "argv", ["advisor", "advise", str(path)])

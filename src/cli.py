@@ -56,7 +56,8 @@ def main() -> None:
             for evidence in all_evidence(data):
                 evidence.verify()
             print(json.dumps(FinancialAgent(AgentConfig(model=args.model)).advise(
-                calculated_context(data.statement)), ensure_ascii=False, indent=2))
+                calculated_context(data.statement, data.monthly_cashflows, data.benchmarks)),
+                ensure_ascii=False, indent=2))
         else:
             print(run_analysis(args.file, args.output))
     except (ValueError, OSError, ImportError, KeyError) as exc:

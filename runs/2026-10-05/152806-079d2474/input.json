@@ -1,0 +1,522 @@
+{
+  "business_name": "کافه نمونه — داده ساختگی",
+  "synthetic": true,
+  "reviewed_by": "human:demo",
+  "reviewed_values": true,
+  "statement": {
+    "period_start": "2025-03-21",
+    "period_end": "2026-03-20",
+    "currency": "IRR",
+    "current_assets": {
+      "value": "200000000",
+      "evidence": {
+        "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+        "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+        "locator": "values.current_assets"
+      }
+    },
+    "inventory": {
+      "value": "50000000",
+      "evidence": {
+        "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+        "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+        "locator": "values.inventory"
+      }
+    },
+    "prepayments": {
+      "value": "10000000",
+      "evidence": {
+        "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+        "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+        "locator": "values.prepayments"
+      }
+    },
+    "current_liabilities": {
+      "value": "100000000",
+      "evidence": {
+        "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+        "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+        "locator": "values.current_liabilities"
+      }
+    },
+    "total_assets": {
+      "value": "500000000",
+      "evidence": {
+        "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+        "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+        "locator": "values.total_assets"
+      }
+    },
+    "total_liabilities": {
+      "value": "200000000",
+      "evidence": {
+        "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+        "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+        "locator": "values.total_liabilities"
+      }
+    },
+    "equity": {
+      "value": "300000000",
+      "evidence": {
+        "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+        "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+        "locator": "values.equity"
+      }
+    },
+    "opening_assets": {
+      "value": "400000000",
+      "evidence": {
+        "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+        "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+        "locator": "values.opening_assets"
+      }
+    },
+    "opening_equity": {
+      "value": "250000000",
+      "evidence": {
+        "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+        "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+        "locator": "values.opening_equity"
+      }
+    },
+    "revenue": {
+      "value": "600000000",
+      "evidence": {
+        "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+        "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+        "locator": "values.revenue"
+      }
+    },
+    "cost_of_goods": {
+      "value": "360000000",
+      "evidence": {
+        "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+        "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+        "locator": "values.cost_of_goods"
+      }
+    },
+    "net_income": {
+      "value": "60000000",
+      "evidence": {
+        "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+        "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+        "locator": "values.net_income"
+      }
+    },
+    "ebit": {
+      "value": "90000000",
+      "evidence": {
+        "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+        "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+        "locator": "values.ebit"
+      }
+    },
+    "interest_expense": {
+      "value": "10000000",
+      "evidence": {
+        "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+        "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+        "locator": "values.interest_expense"
+      }
+    }
+  },
+  "monthly_cashflows": [
+    {
+      "month": "1402/01",
+      "net": {
+        "value": "9600000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[0]"
+        }
+      }
+    },
+    {
+      "month": "1402/02",
+      "net": {
+        "value": "12420000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[1]"
+        }
+      }
+    },
+    {
+      "month": "1402/03",
+      "net": {
+        "value": "15240000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[2]"
+        }
+      }
+    },
+    {
+      "month": "1402/04",
+      "net": {
+        "value": "12460000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[3]"
+        }
+      }
+    },
+    {
+      "month": "1402/05",
+      "net": {
+        "value": "15280000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[4]"
+        }
+      }
+    },
+    {
+      "month": "1402/06",
+      "net": {
+        "value": "12500000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[5]"
+        }
+      }
+    },
+    {
+      "month": "1402/07",
+      "net": {
+        "value": "15320000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[6]"
+        }
+      }
+    },
+    {
+      "month": "1402/08",
+      "net": {
+        "value": "12540000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[7]"
+        }
+      }
+    },
+    {
+      "month": "1402/09",
+      "net": {
+        "value": "15360000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[8]"
+        }
+      }
+    },
+    {
+      "month": "1402/10",
+      "net": {
+        "value": "18180000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[9]"
+        }
+      }
+    },
+    {
+      "month": "1402/11",
+      "net": {
+        "value": "15400000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[10]"
+        }
+      }
+    },
+    {
+      "month": "1402/12",
+      "net": {
+        "value": "18220000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[11]"
+        }
+      }
+    },
+    {
+      "month": "1403/01",
+      "net": {
+        "value": "10400000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[12]"
+        }
+      }
+    },
+    {
+      "month": "1403/02",
+      "net": {
+        "value": "13220000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[13]"
+        }
+      }
+    },
+    {
+      "month": "1403/03",
+      "net": {
+        "value": "10440000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[14]"
+        }
+      }
+    },
+    {
+      "month": "1403/04",
+      "net": {
+        "value": "13260000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[15]"
+        }
+      }
+    },
+    {
+      "month": "1403/05",
+      "net": {
+        "value": "16080000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[16]"
+        }
+      }
+    },
+    {
+      "month": "1403/06",
+      "net": {
+        "value": "13300000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[17]"
+        }
+      }
+    },
+    {
+      "month": "1403/07",
+      "net": {
+        "value": "16120000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[18]"
+        }
+      }
+    },
+    {
+      "month": "1403/08",
+      "net": {
+        "value": "13340000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[19]"
+        }
+      }
+    },
+    {
+      "month": "1403/09",
+      "net": {
+        "value": "16160000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[20]"
+        }
+      }
+    },
+    {
+      "month": "1403/10",
+      "net": {
+        "value": "13380000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[21]"
+        }
+      }
+    },
+    {
+      "month": "1403/11",
+      "net": {
+        "value": "16200000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[22]"
+        }
+      }
+    },
+    {
+      "month": "1403/12",
+      "net": {
+        "value": "19020000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[23]"
+        }
+      }
+    },
+    {
+      "month": "1404/01",
+      "net": {
+        "value": "11200000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[24]"
+        }
+      }
+    },
+    {
+      "month": "1404/02",
+      "net": {
+        "value": "14020000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[25]"
+        }
+      }
+    },
+    {
+      "month": "1404/03",
+      "net": {
+        "value": "11240000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[26]"
+        }
+      }
+    },
+    {
+      "month": "1404/04",
+      "net": {
+        "value": "14060000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[27]"
+        }
+      }
+    },
+    {
+      "month": "1404/05",
+      "net": {
+        "value": "11280000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[28]"
+        }
+      }
+    },
+    {
+      "month": "1404/06",
+      "net": {
+        "value": "14100000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[29]"
+        }
+      }
+    },
+    {
+      "month": "1404/07",
+      "net": {
+        "value": "16920000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[30]"
+        }
+      }
+    },
+    {
+      "month": "1404/08",
+      "net": {
+        "value": "14140000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[31]"
+        }
+      }
+    },
+    {
+      "month": "1404/09",
+      "net": {
+        "value": "16960000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[32]"
+        }
+      }
+    },
+    {
+      "month": "1404/10",
+      "net": {
+        "value": "14180000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[33]"
+        }
+      }
+    },
+    {
+      "month": "1404/11",
+      "net": {
+        "value": "17000000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[34]"
+        }
+      }
+    },
+    {
+      "month": "1404/12",
+      "net": {
+        "value": "14220000",
+        "evidence": {
+          "sha256": "830b12e48850eae85a176e4d60c7c216b43b98a46c4844755825e368c54bfdd4",
+          "source_file": "G:\\Herman Agent\\persian-financial-advisor\\samples\\synthetic_source.json",
+          "locator": "flows[35]"
+        }
+      }
+    }
+  ],
+  "benchmarks": []
+}

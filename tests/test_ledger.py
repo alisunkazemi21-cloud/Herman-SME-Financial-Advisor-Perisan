@@ -24,6 +24,8 @@ def test_proposal_not_posted_until_human_approval(tmp_path, entry):
     assert ledger.balances() == {"1000": Decimal(1000), "4000": Decimal(-1000)}
     assert sum(ledger.balances().values()) == 0
     assert ledger.trace("J1")["status_fa"] == "تأییدشده"
+    assert "نقد و بانک" in ledger.trace("J1")["explanation_fa"]
+    assert "درآمد عملیاتی" in ledger.trace("J1")["explanation_fa"]
 
 
 @pytest.mark.parametrize("changes", [{"amount": 0}, {"amount": -1}, {"amount": 0.1},
