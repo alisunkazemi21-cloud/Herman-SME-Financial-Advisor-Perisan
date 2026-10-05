@@ -9,3 +9,6 @@ data/
 !uv.lock
 __marimo__/
 dashboard-preview.html
+.runtime/
+.env
+*.secret
