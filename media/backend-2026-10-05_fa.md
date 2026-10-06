@@ -1,9 +1,9 @@
-# روایت checkpoint بک‌اند
+# Backend checkpoint summary
 
-شناسه: `backend-2026-10-05`.
+Checkpoint: `backend-2026-10-05`.
 
-پروفایل بیزینس اکنون می‌تواند اسناد، کالا، انبار، شمارش، رسپی و فروش را با سوابق بررسی نگه دارد. ابزار تطبیق توضیح می‌دهد مصرف مورد انتظار از کدام فروش و کدام نسخه رسپی آمده و اختلاف آن با شمارش چقدر است. در نمونهٔ ساختگی، اختلاف ۷ کیلو است؛ برای تشخیص علت به بررسی مدیر نیاز داریم.
+Business profiles can retain documents, items, warehouses, counts, recipes and sales with review history. Reconciliation traces expected consumption to fulfilled sales and recipe versions and compares it with counted stock. The synthetic example has a 7 kg discrepancy; a manager must investigate its cause.
 
-حالت Quick فعلاً همان ابزار محاسبه را فقط روی دادهٔ همین درخواست اجرا می‌کند و به سابقهٔ بیزینس وصل نمی‌شود. چت کامل و پردازش خودکار اسناد هنوز آماده نیستند. آزمون پایگاه داده شامل هزار بیزینس بود؛ این نتیجه ادعای آماده‌بودن کل سرویس برای هزار کاربر هم‌زمان نیست.
+Quick mode runs the same calculation on request-local inputs without business history. At this checkpoint, full chat and automated document processing were not ready. A database benchmark covering 1,000 businesses does not prove readiness for 1,000 concurrent application users.
 
-[شواهد و محدودیت‌ها](../research/BACKEND_ACCEPTANCE.md)
+[Evidence and limitations](../research/BACKEND_ACCEPTANCE.md)

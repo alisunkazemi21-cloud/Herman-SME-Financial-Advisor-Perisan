@@ -1,9 +1,9 @@
-# گزارش فنی checkpoint بک‌اند
+# Backend checkpoint technical report
 
-شناسه: `backend-2026-10-05`؛ داده‌ها ساختگی‌اند.
+Checkpoint: `backend-2026-10-05`. Data is synthetic.
 
-پیاده‌سازی شامل مدل دامنه، دو migration، API، فایل شاهد مستقل و تست واقعی PostgreSQL است. مثال مرجع رستوران از ۱۰۰ کیلو ابتدای دوره، ۵۰ کیلو خرید، ۱۲۰ کیلو مصرف نظری و ۵ کیلو ضایعات به ۲۵ کیلو موجودی مورد انتظار می‌رسد. شمارش ۱۸ کیلو، ۷ کیلو کسری توضیح‌داده‌نشده نشان می‌دهد؛ علت از این عدد اثبات نمی‌شود.
+The implementation includes the domain model, two migrations, API, separate evidence files and real PostgreSQL tests. The restaurant example starts with 100 kg, adds 50 kg of purchases, subtracts 120 kg theoretical consumption and 5 kg waste, and expects 25 kg. A count of 18 kg leaves 7 kg unexplained; the number does not establish its cause.
 
-۸۶ تست موفق و یک تست OCR اجرا نشده؛ ۲۸ تست بک‌اند/دامنه پس از آخرین تغییرات مجدداً موفق شدند. آزمون بار خواندن: ۱۰۰۰ بیزینس/یک میلیون گردش/۲۵ worker، صفر خطا یا دسترسی غیرمجاز مشاهده‌شده. p95 نهایی ۱۹۴۶٫۳۸ میلی‌ثانیه است؛ کل مسیر اپ، بار OCR، پردازش اسناد و مدل در این عدد نیستند.
+The full suite passed 86 tests with one real OCR test skipped; 28 backend/domain tests passed again after final changes. The read benchmark used 1,000 businesses, one million movements and 25 workers, with no observed errors or unauthorized reads. Final p95 was 1,946.38 ms. This excludes the full application path, OCR, document processing and model inference.
 
-روش، فایل خام، تنظیمات و موارد باز در [BACKEND_ACCEPTANCE](../research/BACKEND_ACCEPTANCE.md) ثبت شده‌اند. طراحی رابط در این checkpoint تغییر نکرده است.
+Methods, raw files, settings and open issues: [BACKEND_ACCEPTANCE](../research/BACKEND_ACCEPTANCE.md). This checkpoint did not change the interface.

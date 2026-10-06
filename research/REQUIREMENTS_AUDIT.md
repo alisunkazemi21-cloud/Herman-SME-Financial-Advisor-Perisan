@@ -1,39 +1,37 @@
-# ممیزی تکمیل در برابر درخواست اصلی
+# Requirements audit
 
-وضعیت بر اساس بازبینی فایل‌ها در ۲۰۲۶/۱۰/۰۵، پس از شش commit اول.
+This is a progress record, not a declaration that the whole product is complete.
 
-|الزام|شاهد فعلی|وضعیت|
-|---|---|---|
-|پژوهش پیش از کد، تصمیم و گردش کار دقیق|سه فایل research و commit اولیه|انجام شده؛ مرجع رسمی استانداردها هنوز تأیید نشده|
-|ده نسبت فارسی، اعشار دقیق و آزمون|ratios.py، ۱۰۰٪ پوشش خطی و مقادیر مرجع مستقل|انجام شده|
-|Excel، CSV، تصویر و PDF با provenance|ingestion و آزمون adapterها|پیاده شده؛ OCR واقعی آزمایش نشده؛ ساختاربندی فیلدهای فاکتور نیازمند تکمیل|
-|تاریخ شمسی و رقم فارسی/عربی|normalizer و آزمون تاریخ نامعتبر|انجام شده|
-|دفتر افزایشی، تصمیم انسانی، اصلاح معکوس|double_entry و آزمون دستکاری/همزمانی|انجام شده در محیط محلی تک‌کاربره|
-|توضیح قابل فهم هر ثبت برای غیرحسابدار|فقط شرح آزاد سند|نیازمند تولید توضیح از نام حساب‌ها|
-|استانداردهای ۱۶، ۳۹ و ۴۳|فقط برچسب بررسی|کامل نیست؛ قواعد استانداردها پیاده نشده‌اند|
-|Ollama محلی با پیشنهاد و بدون ثبت خودکار|agent.py و transport آزمایشی|پیاده شده؛ ارزیابی مدل واقعی در دسترس نیست|
-|عدم قطعیت و ایستایی پیش از هر مشاوره|مسیر run تشخیص را اجرا می‌کند؛ advise فقط نسبت‌ها را می‌فرستد|نقص مسیر advise باید رفع شود|
-|ADF، غربال فصل، بازه همه پیش‌بینی‌ها|forecast.py و آزمون کوتاهی/گسست سری|پیاده شده؛ الگوی رمضان به طور جدا مدل نشده|
-|مقایسه دلار/طلا|benchmarks.py با نرخ ورودی مستند|محاسبه انجام شده؛ نمایش و گزارش باید تکمیل شود|
-|پنج خروجی همگام|manifest مشترک، گزارش‌های دارای شناسه یکتا|انجام شده؛ مسیرهای روزانه دقیق درخواست باید به عنوان نمایه اضافه شوند|
-|داشبورد فارسی RTL و Vazirmatn|آزمون مرورگر، فونت بسته‌بندی‌شده، slider و جست‌وجو|انجام شده|
-|سه نمونه OCR و checkpoint پیش از تولید|آزمون opt-in بدون fixtures|آزمون واقعی هنوز ناقص؛ داده واقعی پردازش نشده|
-|Git مرحله‌ای و مخزن GitHub|شش commit محلی|ساخت GitHub منتظر انتخاب دسترسی توسط کاربر پس از رد auto-review|
+## Initial prototype and follow-up — 2026-10-05
 
-این سند اعلام تکمیل کامل نیست. موردهای ناقص باید با شواهد اجرایی بسته شوند؛ نصب نبودن موتور یا یک آزمون جایگزین، صحت موتور واقعی را اثبات نمی‌کند.
+| Requirement | Evidence and status |
+|---|---|
+| Research and decisions before code | Research records and initial commit completed; official accounting sources remain unverified. |
+| Ten ratios with exact values and provenance | Implemented; the ratio module reached 100% line coverage against independent expected values. |
+| CSV/XLSX, PDF and image ingestion | Adapters and tests implemented. Invoice amount candidates with explicit units added in the follow-up; real OCR remains unvalidated. |
+| Persian/Arabic digits and Jalali dates | Normalization and invalid-date tests implemented. |
+| Append-only ledger, human decisions, reversals | Implemented for a trusted local single-user context. |
+| Understandable journal explanation | Follow-up generates Persian trace text from account labels and recorded values. |
+| Iranian standards 16/39/43 | Review flags only; complete accounting rules and compliance are not implemented. |
+| Local Ollama drafts without write tools | Adapter and transport tests implemented; real-model evaluation remains open. |
+| Uncertainty before advice | Follow-up aligned `advise` with ratio, ADF/seasonality, interval and benchmark context; missing series are explicit. |
+| Forecast diagnostics and intervals | Implemented; Ramadan is not modeled separately. |
+| USD/gold benchmarks | Evidence-backed calculations and report/dashboard display implemented; no live-rate claim. |
+| Synchronized outputs | Shared manifest, unique run artifacts and daily index views implemented. |
+| Persian RTL dashboard | Browser-checked prototype with bundled Vazirmatn, search and horizon slider. Further interface work is deferred. |
+| Three real OCR reference cases | Still missing; mocked checks do not establish OCR accuracy. |
+| Incremental Git/GitHub history | The user created the public repository; local history was merged with its initial commit and pushed. |
 
-## نتیجه اصلاح این مرحله
-- ساختاربندی نامزدهای مبلغ فاکتور، واحد صریح و تبدیل تومان با آزمون ابهام و چند مبلغ اضافه شد؛ انتخاب خودکار مبلغ نهایی انجام نمی‌شود.
-- توضیح فارسی هر سند در trace از حساب‌ها و مقدار ثبت‌شده ساخته می‌شود.
-- advise اکنون ADF، فصل، هشدار کمبود داده و کران‌های پیش‌بینی را پیش از فراخوانی مدل محلی محاسبه می‌کند.
-- مقایسه‌های مستند در گزارش و داشبورد نمایش داده می‌شوند و مسیرهای روزانهٔ دقیق درخواست اضافه شدند.
-- کاربر مخزن عمومی را ساخت؛ تاریخچه محلی با commit اولیه او ادغام و به origin/main ارسال شد.
-- استانداردهای حسابداری و آزمون عملی موتور OCR/مدل محلی همچنان کامل نیستند.
+## Approved backend milestones
 
-## مرحله بک‌اند تأییدشده
+Profiles/memberships, a restricted PostgreSQL runtime role, RLS, immutable evidence, proposals/decisions, catalog/warehouses/recipes/movements/fulfillments and persisted inventory reconciliation are implemented. Quick currently provides request-only calculation, not a complete conversational agent. See [backend acceptance](BACKEND_ACCEPTANCE.md) for boundaries and the synthetic read benchmark.
 
-پروفایل/عضویت، نقش محدود PostgreSQL و RLS، شواهد فایل، پیشنهاد و تأیید، کالا/انبار/رسپی/گردش/فروش و تطبیق ذخیره‌شده پیاده شدند. Quick فعلاً ابزار محاسبه بدون تاریخچه است، نه ایجنت مکالمه کامل. جزئیات آزمون واقعی و موارد باز در [BACKEND_ACCEPTANCE.md](BACKEND_ACCEPTANCE.md) ثبت شده؛ این مرحله اعلام تکمیل کل اپ نیست. توسعه رابط طبق دستور جدید کاربر متوقف مانده است.
+On 2026-10-06, the durable queue added leases, retries, recovery after worker interruption, immutable extraction output and transition audit events. Validation: 93 passed, one real OCR test skipped. See [queue contract](DOCUMENT_QUEUE.md).
 
-checkpoint صف اسناد (۲۰۲۶/۱۰/۰۶): اجاره، retry، بازیابی پس از قطع worker، خروجی استخراج ثابت و ممیزی با تست PostgreSQL اضافه شدند. ۹۳ تست موفق و یک تست OCR واقعی اجرا نشده؛ [قرارداد و محدودیت‌ها](DOCUMENT_QUEUE.md).
+The next checkpoint added atomic CSV/XLSX mapping to count/movement/fulfillment proposals, extraction provenance in analyses, source-row uniqueness, identical-file and matching-event detection, and explicit duplicate-review decisions. Validation: 108 passed, one real OCR test skipped. See [import and duplicate-detection contract](TABULAR_IMPORTS.md).
 
-checkpoint نگاشت و تکرار (۲۰۲۶/۱۰/۰۶): نگاشت اتمی CSV/XLSX به پیشنهاد شمارش/گردش/تحقق، منشأ نسخه استخراج در تحلیل، قید ردیف تکراری، تشخیص فایل یکسان و رویداد مشابه و تصمیم صریح مدیر اضافه شدند. ۱۰۸ تست موفق و یک تست OCR واقعی اجرا نشده؛ [قرارداد و محدوده تشخیص](TABULAR_IMPORTS.md). تشخیص معنایی فاکتور/مبالغ مالی و اصلاح ثبت قطعی هنوز کامل نیستند.
+Still outstanding: conversational agents and verified memory; full tenant-scoped financial journals; semantic invoice/amount matching; corrections to confirmed records; real OCR/model evaluation; official standards; backup/restore and full application capacity validation.
+
+## Documentation language — 2026-10-06
+
+The user requested English documentation at every checkpoint. Repository prose and generated Markdown are being translated; app language and source data remain Persian. This changes presentation, not financial values, stored evidence or previous test results.

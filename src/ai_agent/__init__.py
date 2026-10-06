@@ -1,1 +1,1 @@
-"""عامل پیشنهاددهنده."""
+"""Draft-only advisory agent."""

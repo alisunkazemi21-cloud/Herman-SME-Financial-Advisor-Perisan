@@ -1,46 +1,46 @@
-# گزارش مالی کافه نمونه — داده ساختگی
+# Financial report: کافه نمونه — داده ساختگی
 
-شناسه اجرا: `2026-10-05/152806-079d2474`
+Run ID: `2026-10-05/152806-079d2474`
 
-داده ساختگی برای نمایش
+Synthetic demonstration data.
 
-هش ورودی: `a86df8223eeca4a0c9aa2d328d352622db51f18cdbcf895a44ced068229c71db`
+Input SHA-256: `a86df8223eeca4a0c9aa2d328d352622db51f18cdbcf895a44ced068229c71db`
 
-واحد: ریال؛ مقادیر نسبت‌ها کسر هستند.
+Currency: IRR. Ratios are fractions.
 
-|نسبت|مقدار|فرمول|
+|Ratio|Value|Formula|
 |---|---|---|
-|نسبت جاری|2|دارایی جاری / بدهی جاری|
-|نسبت آنی|1.4|(دارایی جاری − موجودی − پیش‌پرداخت) / بدهی جاری|
-|نسبت مالکانه|0.6|حقوق مالکانه / دارایی|
-|نسبت بدهی|0.4|بدهی / دارایی|
-|حاشیه سود ناخالص|0.4|(فروش − بهای تمام‌شده) / فروش|
-|حاشیه سود خالص|0.1|سود خالص / فروش|
-|بازده دارایی‌ها|0.1333333333333333333333333333|سود خالص / متوسط دارایی|
-|بازده حقوق صاحبان سهام|0.2181818181818181818181818182|سود خالص / متوسط حقوق مالکانه|
-|گردش دارایی‌ها|1.333333333333333333333333333|فروش / متوسط دارایی|
-|پوشش بهره|9|سود قبل از بهره و مالیات / بهره|
+|Current ratio|2|Current assets / current liabilities|
+|Quick ratio|1.4|(Current assets - inventory - prepayments) / current liabilities|
+|Equity ratio|0.6|Equity / total assets|
+|Debt ratio|0.4|Total liabilities / total assets|
+|Gross margin|0.4|(Revenue - cost of goods) / revenue|
+|Net margin|0.1|Net income / revenue|
+|Return on assets|0.1333333333333333333333333333|Net income / average assets|
+|Return on equity|0.2181818181818181818181818182|Net income / average equity|
+|Asset turnover|1.333333333333333333333333333|Revenue / average assets|
+|Interest coverage|9|EBIT / interest expense|
 
-## عدم قطعیت
+## Uncertainty
 
-بازه تجربی خطاهای تاریخی است؛ پوشش تضمین نشده. تورم، شوک و رمضان جدا مدل نشده‌اند
+Intervals use empirical historical errors; coverage is not guaranteed. Inflation, shocks and Ramadan are not modeled separately.
 
-فرض ریشه واحد رد شد
+The unit-root null was rejected.
 
-سطح اسمی بازه: 85%
+Nominal interval coverage: 85%
 
-|ماه|برآورد|کران پایین|کران بالا|
+|Month|Estimate|Lower bound|Upper bound|
 |---|---|---|---|
 |1405/01|11200000|6533333|12133333|
 |1405/02|14020000|7420337|15339933|
 |1405/03|11240000|3157096|12856581|
 
-## مقایسه دلار و طلا
+## Dollar and gold comparison
 
-نرخ مستند وارد نشده است؛ مقایسه‌ای محاسبه نشده است.
+No evidence-backed rates were supplied; no comparison was calculated.
 
-## پیشنهاد بررسی
+## Review notes
 
-نسبت‌ها باید با صنعت و دوره قبل مقایسه شوند. مطالبات، سررسید بدهی‌ها و ذخیره نقد را بررسی کنید. این گزارش پیشنهاد تخصیص سرمایه یا ادعای انطباق قانونی ندارد.
+Compare ratios with the relevant industry and prior periods. Review receivables, debt maturities and cash reserves. This report is not an asset-allocation recommendation or a claim of legal compliance.
 
-جزئیات پیش‌بینی، منشأ هر مقدار و نرخ‌های مقایسه در manifest.json همین اجرا موجود است.
+Forecast details, input provenance and comparison rates are preserved in this run's manifest.json.

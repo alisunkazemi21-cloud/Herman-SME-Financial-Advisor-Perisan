@@ -1,14 +1,14 @@
 # Backend checkpoint — backend-2026-10-05
 
-این اجرا checkpoint مهندسی روی دادهٔ ساختگی است، نه تحلیل مالی یک مشتری.
+This engineering checkpoint uses synthetic data, not a customer's financial records.
 
-- هسته تطبیق مواد و رسپی با Decimal و شاهد پیاده و آزمایش شد.
-- API چندبیزینسی روی PostgreSQL واقعی با نقش محدود، پیشنهاد/تأیید، idempotency و ممیزی بررسی شد.
-- مجموعه کامل: ۸۶ موفق و یک تست OCR واقعی اجرا نشده؛ پس از آخرین تغییرات، ۲۸ تست بک‌اند/دامنه مجدداً موفق شدند.
-- دادهٔ بار: ۱۰۰۰ بیزینس، یک میلیون گردش، ۲۵ worker؛ ۱۰۰۰ خواندن موفق، صفر دسترسی غیرمجاز مشاهده‌شده.
-- p95 پس از migration 2 حدود ۱۹۴۶ میلی‌ثانیه است؛ این عدد برای مسیر خواندن ساختگی و شامل اتصال جدید است، نه SLA کل اپ.
-- طبق دستور کاربر داشبورد تغییر نکرد؛ اشاره‌گر آخرین گزارش مالی با checkpoint مهندسی جایگزین نشد.
+- Implemented and tested Decimal ingredient/recipe reconciliation with evidence.
+- Tested the multi-business API against real PostgreSQL with a restricted role, proposals/approval, idempotency and audit records.
+- Full suite: 86 passed, one real OCR test skipped. After final changes, 28 backend/domain tests passed again.
+- Read benchmark: 1,000 businesses, one million movements, 25 workers; 1,000 successful reads, no observed unauthorized access.
+- After migration 2, p95 was about 1,946 ms, including fresh connections. This synthetic read benchmark is not a full-application SLA.
+- The dashboard and latest financial-report pointer were unchanged in this engineering checkpoint.
 
-قرارداد و محدودیت‌ها: [BACKEND_ACCEPTANCE](../../research/BACKEND_ACCEPTANCE.md). خروجی‌های خام: [baseline](../../research/benchmarks/backend-2026-10-05.json) و [optimized](../../research/benchmarks/backend-2026-10-05-optimized.json).
+Contracts and limitations: [acceptance](../../research/BACKEND_ACCEPTANCE.md). Raw results: [baseline](../../research/benchmarks/backend-2026-10-05.json), [optimized](../../research/benchmarks/backend-2026-10-05-optimized.json).
 
-خروجی‌های همگام این checkpoint: [فصل پژوهش](../../research/CHAPTERS/backend-2026-10-05.md)، [گزارش فنی](../../reports/backend-2026-10-05_technical_fa.md)، [روایت](../../media/backend-2026-10-05_fa.md). مرجع اعداد در همه این فایل‌ها گزارش پذیرش و JSONهای خام یکسان است.
+Synchronized outputs: [research chapter](../../research/CHAPTERS/backend-2026-10-05.md), [technical report](../../reports/backend-2026-10-05_technical_fa.md), [summary](../../media/backend-2026-10-05_fa.md). All use the same acceptance evidence and raw results.

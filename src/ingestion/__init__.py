@@ -1,1 +1,1 @@
-"""ورود شواهد محلی."""
+"""Local evidence ingestion."""

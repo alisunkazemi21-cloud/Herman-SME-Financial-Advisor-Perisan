@@ -1,9 +1,9 @@
 # Checkpoint: backend-import-2026-10-06
 
-داده‌ها ساختگی‌اند؛ این checkpoint گزارش مالی مشتری نیست.
+Data is synthetic; this is not a customer's financial report.
 
-صف پایدار استخراج با اجاره و بازیابی خطا، سپس نگاشت صریح CSV/XLSX به پیشنهاد شمارش/گردش/تحقق پیاده شد. نسخه استخراج، ردیف منبع و نگاشت تا تحلیل ذخیره‌شده قابل پیگیری‌اند. فایل یکسان و رویداد مشابه نامزد تکرار می‌شوند؛ تصمیم انسانی ثبت می‌شود و حذف خودکار وجود ندارد.
+Implemented a durable extraction queue with leases/recovery, followed by explicit CSV/XLSX mapping into proposed counts, movements and fulfillments. Extraction versions, source rows and mappings remain traceable through saved analysis. Identical files and matching events are flagged for duplicate review; human decisions are retained without automatic deletion.
 
-قراردادها و شواهد آزمون: [صف اسناد](../../research/DOCUMENT_QUEUE.md)، [نگاشت و تشخیص تکرار](../../research/TABULAR_IMPORTS.md). وضعیت کل محصول: [ممیزی الزامات](../../research/REQUIREMENTS_AUDIT.md).
+Contracts and evidence: [document queue](../../research/DOCUMENT_QUEUE.md), [mapping and duplicates](../../research/TABULAR_IMPORTS.md). Product status: [requirements audit](../../research/REQUIREMENTS_AUDIT.md).
 
-خروجی‌های همگام: [فصل پژوهش](../../research/CHAPTERS/backend-import-2026-10-06.md)، [گزارش فنی](../../reports/backend-import-2026-10-06_technical_fa.md)، [روایت](../../media/backend-import-2026-10-06_fa.md). مرجع مشترک قراردادها همان دو سند بالاست. داشبورد و اشاره‌گر آخرین گزارش مالی طبق دستور کاربر تغییر نکردند.
+Synchronized outputs: [research chapter](../../research/CHAPTERS/backend-import-2026-10-06.md), [technical report](../../reports/backend-import-2026-10-06_technical_fa.md), [summary](../../media/backend-import-2026-10-06_fa.md). They share the contracts above. The dashboard and latest financial-report pointer were unchanged.

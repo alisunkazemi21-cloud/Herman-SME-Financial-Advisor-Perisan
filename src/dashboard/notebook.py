@@ -23,8 +23,9 @@ def _():
 def _(Path, base64, mo):
     _font = base64.b64encode((Path(__file__).parent / "assets" / "Vazirmatn-Regular.woff2").read_bytes()).decode()
     mo.Html('''<style>
+    @font-face {font-family:Kalameh;src:local("Kalameh"),local("Kalameh Regular");font-weight:400;font-style:normal;}
     @font-face {font-family:Vazirmatn;src:url(data:font/woff2;base64,FONT_DATA) format("woff2");}
-    body, .marimo {font-family:Vazirmatn,Tahoma,sans-serif;direction:rtl;}
+    body, .marimo {font-family:Kalameh,Vazirmatn,Tahoma,sans-serif;direction:rtl;}
     table {border-collapse:collapse;} td,th {padding:12px 16px;border-bottom:1px solid #dce9e6;}
     th {background:#ecf5f2;} tbody tr:nth-child(even) {background:#f7faf9;}
     code {direction:ltr;unicode-bidi:isolate;}
@@ -106,7 +107,7 @@ def _(MonthlyCashFlow, forecast_cashflow, go, horizon, mo, result):
                                        array=[r["upper"] - r["estimate"] for r in future],
                                        arrayminus=[r["estimate"] - r["lower"] for r in future]))
     chart.update_layout(title="جریان نقد ماهانه و بازه پیش‌بینی", template="plotly_white",
-                        font_family="Vazirmatn, Tahoma", yaxis_title="ریال", xaxis_title="ماه شمسی")
+                        font_family="Kalameh, Vazirmatn, Tahoma", yaxis_title="ریال", xaxis_title="ماه شمسی")
     mo.vstack([mo.ui.plotly(chart, config={"displayModeBar": False}),
                mo.md("بازه اسمی ۸۵٪؛ تغییر افق فقط برای بررسی تعاملی است و گزارش ذخیره‌شده را تغییر نمی‌دهد."),
                mo.callout(scenario["warning_fa"], kind="warn")])

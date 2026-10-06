@@ -14,7 +14,11 @@ def test_full_synthetic_run_synchronizes_artifacts(tmp_path):
     result = json.loads(manifest.read_text(encoding="utf-8"))
     assert result["synthetic"] and len(result["ratios"]) == 10
     assert result["forecast"]["predictions"]
-    assert (manifest.parent / "README.md").exists()
+    report = (manifest.parent / "README.md").read_text(encoding="utf-8")
+    assert "# Financial report:" in report and "Current ratio" in report
+    assert result["business_name"] in report
+    assert result["ratios"][0]["name_fa"] == "نسبت جاری"
+    assert "داده ساختگی" in result["note_fa"]
     assert result["run_id"] in (manifest.parent.parent / "README.md").read_text(encoding="utf-8")
     assert result["run_id"] in (tmp_path / "reports" / (result["run_id"][:10] +
                                 "_technical_fa.md")).read_text(encoding="utf-8")
@@ -37,7 +41,7 @@ def test_benchmarks_in_report_and_manifest(tmp_path):
     path.write_text(json.dumps(data), encoding="utf-8")
     manifest = run_analysis(path, tmp_path)
     report = (manifest.parent / "README.md").read_text(encoding="utf-8")
-    assert "دلار آمریکا" in report
+    assert "US dollar" in report
     assert json.loads(manifest.read_text(encoding="utf-8"))["benchmarks"][0]["nominal_return"] == "0"
 
 
@@ -45,7 +49,7 @@ def test_benchmarks_in_report_and_manifest(tmp_path):
 def test_real_ocr_three_labelled_invoices():
     location = os.environ.get("PFA_OCR_FIXTURES")
     if not location:
-        pytest.skip("سه فاکتور برچسب‌دار و موتور OCR نصب‌شده ارائه نشده است")
+        pytest.skip("Three labeled invoices and an installed OCR engine were not supplied")
     cases = json.loads((Path(location) / "cases.json").read_text(encoding="utf-8"))
     assert len(cases) >= 3
     for case in cases:

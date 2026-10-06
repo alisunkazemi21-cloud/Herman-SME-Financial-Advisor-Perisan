@@ -1,81 +1,88 @@
 # Herman SME Financial Advisor ( Perisan)
 
-> مسیر فعلی پروژه **بک‌اند چندبیزینسی** است. پروفایل، سند، تأیید انسانی و تطبیق انبار اکنون API و PostgreSQL دارند. راه‌اندازی، قرارداد API، تست‌ها و محدودیت‌های این مرحله: [Backend acceptance](research/BACKEND_ACCEPTANCE.md). بخش Marimo زیر نمونهٔ قبلی است؛ توسعه رابط فعلاً متوقف است.
+A local-first financial advisor for Iranian small businesses. Agents propose, typed Python calculates, and people approve.
 
-> مسیر ورود سند: [صف پردازش و worker](research/DOCUMENT_QUEUE.md) → [نگاشت CSV/XLSX به پیشنهاد و تأیید انسانی](research/TABULAR_IMPORTS.md).
+The current priority is the multi-business backend. Interface development is paused. Documentation and generated Markdown use English; app text, Persian business data, RTL presentation and evidence retain their original language.
 
-<div dir="rtl">
+## Backend workflow
 
-مشاور مالی محلی برای کسب‌وکارهای کوچک ایرانی: استخراج سند، دفتر دوطرفه با شواهد، محاسبهٔ دقیق و داشبورد فارسی. عامل پیشنهاد می‌دهد، Python محاسبه می‌کند و انسان تصمیم می‌گیرد.
+Business profile → evidence upload → extraction job → explicit CSV/XLSX mapping → proposed records → human review → inventory reconciliation with traceable inputs.
 
-## شروع
+- [Backend setup, API and acceptance evidence](research/BACKEND_ACCEPTANCE.md)
+- [Document queue and worker operations](research/DOCUMENT_QUEUE.md)
+- [Tabular imports, provenance and duplicate review](research/TABULAR_IMPORTS.md)
+- [Architecture](research/BACKEND_WORKFLOW.md), [metric contracts](research/METRICS_CATALOG.md), [requirements audit](research/REQUIREMENTS_AUDIT.md)
 
-Python 3.11 یا جدیدتر لازم است. دستورها را در ریشه مخزن اجرا کنید:
+The latest functional checkpoint passed 108 tests; the real OCR fixture test remains skipped. This is an implemented backend foundation, not a completed conversational advisor or a production-capacity certification.
 
-</div>
+## Installation
+
+Use Python 3.11 or newer. Run these commands from the repository root:
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".[dev,ocr]"
-.\.venv\Scripts\python.exe -m pytest tests -v --tb=short
-.\.venv\Scripts\python.exe -m src.cli demo
-.\.venv\Scripts\marimo.exe run src/dashboard/notebook.py --watch
+.\.venv\Scripts\python.exe -m pip install -e ".[dev,ocr,backend]"
+.\.venv\Scripts\python.exe -m pytest tests -q --tb=short
 ```
+
+Alternatively:
 
 ```sh
-# معادل با uv
-uv sync --extra dev --extra ocr
-uv run pytest tests/ -v --tb=short
-uv run advisor demo
-uv run marimo run src/dashboard/notebook.py --watch
+uv sync --extra dev --extra ocr --extra backend
+uv run pytest tests/ -q --tb=short
 ```
 
-<div dir="rtl">
+PostgreSQL acceptance tests require `HERMAN_TEST_ADMIN_DSN` pointing to a disposable database; they skip without it. Follow the backend setup guide for the separate migration and restricted runtime roles. Do not serve requests with an administrative database connection.
 
-نمونه کاملاً ساختگی است. همه مبالغ ریال هستند. هیچ نرخ جاری دلار/طلا یا توصیه خرید در نمونه نیست. برای ویرایش تعاملی از `marimo edit src/dashboard/notebook.py --watch` استفاده کنید. فونت Vazirmatn نسخه v33.003 همراه مجوز OFL در پروژه قرار دارد و در زمان اجرا از اینترنت دریافت نمی‌شود.
+## Earlier local analysis prototype
 
-## گردش سند
+The earlier prototype remains available for synthetic demonstrations:
 
-۱. فایل را با دستور زیر استخراج کنید. Google Sheets باید به CSV یا XLSX صادر شود؛ اتصال زنده وجود ندارد.
+```sh
+advisor demo
+marimo run src/dashboard/notebook.py --watch
+```
 
-</div>
+The demo is entirely synthetic. Amounts are IRR; it contains no live dollar/gold quotes or purchase recommendations. `marimo edit src/dashboard/notebook.py --watch` opens the reactive notebook editor. Vazirmatn v33.003 is bundled with its OFL license; the app does not fetch a font from a CDN.
+
+The local CLI workflow is:
 
 ```sh
 advisor ingest invoice.pdf --output extracted.json --engine tesseract
 advisor propose proposal.json --book data/book.jsonl
 advisor trace J1 --book data/book.jsonl
 advisor decide decision.json --book data/book.jsonl
-advisor run reviewed_input.json --output .
+advisor run reviewed_input.json --output data/analysis
 advisor advise reviewed_input.json --model mshojaei77/gemma3persian
 ```
 
-<div dir="rtl">
+Review extracted text, values, dates, units and accounts before constructing a `JevEntry`. `samples/proposal.example.json` and `samples/decision.example.json` are templates; replace evidence paths and hashes with your own. A local approval needs a `human:...` actor and `reviewed_values: true`. Confidence below 0.8 adds a warning; higher confidence still does not authorize posting. Export Google Sheets to CSV/XLSX; there is no live Sheets connection.
 
-۲. متن، رقم، تاریخ، واحد و حساب‌ها را بررسی کنید و پیشنهاد را مطابق مدل `JevEntry` بسازید. `samples/proposal.example.json` و `samples/decision.example.json` قالب هستند؛ مسیر و هش شاهد را باید با فایل خود جایگزین کنید. تأیید سند باید با نام `human:...` و `reviewed_values: true` باشد. confidence کمتر از ۰٫۸ نیاز به بازبینی بیشتر دارد؛ confidence بالا هم ثبت خودکار ایجاد نمی‌کند.
+For financial analysis, prepare reviewed `RunInput` using `samples/demo_input.json` as a structural example. The input statement is explicit: journal balances alone do not supply all classifications or opening/closing averages. Every amount carries evidence and a locator. This tool analyzes the supplied statement; it does not claim to prepare statutory statements automatically.
 
-۳. برای گزارش مالی، ورودی `RunInput` را مطابق خروجی ساختگی `samples/demo_input.json` بسازید. صورت مالی بررسی‌شده به‌طور صریح وارد می‌شود؛ مانده‌های دفتر به‌تنهایی برای ساخت خودکار صورت مالی، میانگین ابتدا/انتها و طبقه‌بندی جاری/غیرجاری کافی نیستند. هر قلم دارای شاهد و محل استخراج است. گزارش حاضر تحلیل صورت مالی واردشده است، نه ادعای تهیه خودکار صورت مالی قانونی از دفتر.
+Each successful run writes an input snapshot, evidence archive, manifest, run README, research chapter, technical report and narrative. The dashboard reads the manifest referenced by `runs/latest.json`. Run IDs tie the outputs together. Keep real files and results in ignored `data/` paths, not Git. Historical `_fa.md` filenames remain for link compatibility; their documentation prose is now English.
 
-۴. هر اجرای موفق manifest، README اجرا، فصل پژوهش، گزارش فنی و روایت را ذخیره می‌کند؛ داشبورد از `runs/latest.json` می‌خواند. شماره اجرا در همه خروجی‌ها مشترک است. گزارش‌های قدیمی نگه داشته می‌شوند. فایل‌های واقعی را در Git ثبت نکنید؛ `data/` نادیده گرفته می‌شود. برای اسناد واقعی خروجی را در `data/analysis` بگذارید.
+## OCR and local language model
 
-## OCR و عامل محلی
+Install Tesseract separately with `fas` and `eng` language files and put its executable on PATH. Installing the Python wrapper does not install the engine. EasyOCR is optional (`pip install -e '.[easyocr]'`); preinstall local models because automatic downloads are disabled. Aspose and DocFlow were research comparisons, not implemented adapters.
 
-Tesseract و زبان‌های `fas` و `eng` باید روی دستگاه نصب و در PATH باشند. بسته Python به‌تنهایی موتور را نصب نمی‌کند. برای EasyOCR از `pip install -e '.[easyocr]'` استفاده و مدل‌ها را پیشاپیش در مسیر محلی قرار دهید؛ دانلود خودکار خاموش است. DocFlow و Aspose صرفاً در پژوهش مقایسه شده‌اند و adapter اجرایی ندارند.
+`FinancialAgent` uses a configurable local Ollama model; `mshojaei77/gemma3persian` is the documented example. The client accepts explicit loopback endpoints and disables proxies and redirects. There is no cloud adapter, and Ollama itself must be configured for local inference. The model has no posting or approval tools. Its text is always an unapproved draft; deterministic calculations run without Ollama.
 
-Ollama با مدل قابل تنظیم از کلاس `FinancialAgent` استفاده می‌شود؛ نمونه نام مدل `mshojaei77/gemma3persian` است. API فقط روی نشانی صریح loopback کار می‌کند، proxy و redirect خاموش‌اند. حالت cloud در برنامه پیاده نشده؛ خود Ollama نیز باید با مدل محلی و بدون cloud پیکربندی شده باشد. عامل هیچ ابزار ثبت یا تأیید ندارد و متنش همیشه پیش‌نویس تأییدنشده است. محاسبات گزارش بدون Ollama اجرا می‌شوند.
+## Financial controls and limits
 
-## کنترل‌های مالی و حدود کاربرد
+- Ten ratios use Decimal with input provenance. ROA/ROE use opening/closing averages; nonpositive denominators yield an undefined result.
+- The earlier JSONL ledger uses append-only proposals/decisions, locks, a SHA-256 chain and archived evidence. Corrections use reversals. It assumes one trusted local user; its actor string is not enterprise authentication, and a hash chain alone cannot stop a device administrator from replacing the whole file.
+- XIRR uses ACT/365F; ambiguous multiple-sign-change cash flows are rejected. USD/18-karat-gold comparisons require dated, evidence-backed rates.
+- Forecasts require at least 24 consecutive months. ADF and lag-12 screening precede interpretation. Bootstrap intervals do not guarantee coverage or separately model inflation, shocks or Ramadan.
+- Iranian standards 16/39/43 are accountant-review flags, not a claim of full compliance, consolidation or automated revenue recognition.
+- PDF extraction applies OCR to pages without text. Partially extracted text in mixed PDFs still needs review. Text/Excel confidence measures transfer, not accounting correctness.
 
-- ده نسبت با Decimal و منشأ هر ورودی؛ ROA/ROE با میانگین ابتدا و انتهای دوره. مخرج صفر/منفی تعریف‌نشده است.
-- دفتر JSONL افزایشی با قفل، SHA256، بایگانی شاهد و رویداد تصمیم جداگانه. اصلاح با سند معکوس انجام می‌شود. این ابزار تک‌کاربرهٔ مورد اعتماد است؛ actor احراز هویت نیست و هش زنجیره جلوی بازنویسی کل فایل توسط مدیر دستگاه را نمی‌گیرد.
-- XIRR با ACT/365F؛ جریان چندریشه‌ای رد می‌شود. مقایسه دلار/گرم طلای ۱۸عیار فقط با نرخ‌های مستندِ ورودی.
-- پیش‌بینی حداقل ۲۴ ماه پیوسته نیاز دارد؛ ADF و غربال فصل پیش از تفسیر اجرا می‌شوند. بازه bootstrap تجربی است؛ تضمین پوشش و مدل‌سازی تورم/رمضان ندارد.
-- استانداردهای ۱۶/۳۹/۴۳ به‌صورت برچسب بررسی حسابدار ثبت می‌شوند؛ انطباق قانونی کامل، تلفیق و شناسایی خودکار درآمد ادعا نمی‌شود.
-- استخراج PDF صفحه‌به‌صفحه برای صفحات فاقد متن OCR می‌کند؛ متن ناقص در PDF ترکیبی باید دستی بررسی شود. confidence متن/Excel نشانگر انتقال متن است، نه صحت حسابداری.
+## Real-engine checkpoint
 
-## آزمون موتور واقعی
+Set `PFA_OCR_FIXTURES` to a directory containing at least three labeled invoices and `cases.json`. Each case needs `image` and `expected_fragments` using normalized Latin digits. `test_real_ocr_three_labelled_invoices` skips without these fixtures. Mocked adapter tests do not establish OCR accuracy; the real-engine checkpoint and accounting review remain required before production use.
 
-`PFA_OCR_FIXTURES` را به پوشهٔ سه فاکتور برچسب‌دار با `cases.json` تنظیم کنید. هر مورد دارای `image` و `expected_fragments` (با رقم لاتین) است. آزمون `test_real_ocr_three_labelled_invoices` بدون این فایل‌ها skip می‌شود. stubهای آزمون ادعای دقت OCR نیستند. پیش از استفاده تولیدی این checkpoint و بررسی حسابدار لازم است.
+Research and decisions: [literature](research/LITERATURE.md), [decisions](research/DECISIONS.md), [workflow](research/WORKFLOW.md).
 
-پژوهش و دلایل انتخاب در [LITERATURE](research/LITERATURE.md)، [DECISIONS](research/DECISIONS.md) و [WORKFLOW](research/WORKFLOW.md) ثبت شده است.
+## Future UI preferences
 
-</div>
+Use Kalameh for Persian typography; its webfont files are pending, so the prototype prefers an installed Kalameh font with the existing fallback. At the next UI checkpoint, inspect the package and project, then use `npx vibefarsi add contour`. Backend work remains the priority.

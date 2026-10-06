@@ -1,7 +1,7 @@
-# روایت checkpoint ورود اسناد
+# Document import checkpoint summary
 
-شناسه: `backend-import-2026-10-06`.
+Checkpoint: `backend-import-2026-10-06`.
 
-مدیر می‌تواند سند را وارد کند، خروجی استخراج را ببیند و مشخص کند کدام ستون مربوط به کالا، مقدار، واحد و زمان است. پیشنهادها بعد از بررسی انسانی وارد محاسبه می‌شوند. اگر فایل یا رویدادی مشابه قبلاً وجود داشته باشد، سیستم آن را برای بررسی نشان می‌دهد؛ برابر بودن یک مقدار به‌تنهایی باعث حذف معامله نمی‌شود.
+Managers can upload a document, inspect extraction output and explicitly map item, quantity, unit and timestamp columns. Proposals enter calculations after human review. Similar files or matching events are presented for review; equal quantities alone do not delete a transaction.
 
-این مرحله مسیر جدولی CSV/XLSX را پوشش می‌دهد. نگاشت خودکار متن آزاد، اصلاح ثبت‌های تأییدشده و چت کامل ایجنت هنوز آماده نیستند. [شواهد و محدودیت‌ها](../research/TABULAR_IMPORTS.md)
+This stage covers tabular CSV/XLSX imports. Automatic free-text mapping, corrections to approved records and full agent chat are not ready. [Evidence and limitations](../research/TABULAR_IMPORTS.md)

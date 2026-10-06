@@ -1,61 +1,71 @@
-# تصمیم‌ها پیش از پیاده‌سازی
+# Decisions recorded before implementation
 
-ثبت: ۲۰۲۶/۱۰/۰۵؛ پس از مرور LITERATURE.md و قبل از نوشتن کد.
+Initial record: 2026-10-05, after LITERATURE.md and before implementation. Later sections record subsequent approved checkpoints, not claims of complete product readiness.
 
-|موضوع|انتخاب و دلیل|جایگزین و ریسک|
+|Topic|Decision and rationale|Alternative or limitation|
 |---|---|---|
-|OCR|Tesseract پیش‌فرض، EasyOCR اختیاری با بارگذاری تنبل و بدون دانلود خودکار؛ خروجی قابل بررسی|Aspose نیازمند ابر؛ DocFlow فاقد ارزیابی مستقل پروژه؛ خط دست و اسکن کم‌کیفیت همچنان نیازمند انسان|
-|دفتر|JSONL افزایشی با قفل بین‌پردازشی، زنجیره SHA256، fsync و رویداد جداگانهٔ پیشنهاد/تصمیم؛ فایل شواهد با هش|SQLite مقیاس‌پذیرتر؛ فایل محلی در مقابل مدیر سیستم مقاوم نیست و زنجیره بدون ریشهٔ مورد اعتماد مانع بازنویسی کامل نمی‌شود|
-|تأیید|پیشنهاد حتی با approved=true پذیرفته نمی‌شود؛ تصمیم با actor انسانی، دلیل و تأیید بررسی متن لازم است|این هویت محلی احراز هویت سازمانی نیست؛ سامانه برای یک کاربر مورد اعتماد است|
-|اصلاح|سند معکوس با پیوند به سند قبلی؛ بدون حذف/ویرایش|ویرایش مستقیم رد می‌شود؛ معکوس هم نیاز به تأیید دارد|
-|LLM|درگاه مستقیم Ollama روی loopback، بدون cloud یا ابزار دارای اثر؛ متن صرفاً پیش‌نویس|LangChain برای یک endpoint پیچیدگی غیرضروری دارد؛ برای گردش چندعاملی قابل افزودن است|
-|محاسبات|Decimal، مدل Pydantic و ده نسبت با منشأ هر ورودی|NumPy/my727finance برای نسبت‌های اصلی انتخاب نشد؛ float فقط در الگوریتم آماری با برچسب تخمینی|
-|ارز|واحد دفتر IRR؛ تبدیل IRT به IRR دقیق و صریح هنگام ورود؛ نرخ‌ها با تاریخ، واحد و سند|نرخ زنده پیش‌فرض وجود ندارد؛ مقایسهٔ دلار/گرم طلای ۱۸عیار سناریویی است، نه توصیه سرمایه‌گذاری|
-|تاریخ|jdatetime با کنترل اعتبار تقویم؛ ترتیب ماه‌های شمسی صریح|تبدیل تقریبی یا پذیرش روز نامعتبر ممنوع|
-|پیش‌بینی|حداقل ۲۴ ماه متوالی، ADF و همبستگی وقفه ۱۲؛ مدل پایهٔ آخرین مقدار/فصلی و بازهٔ bootstrap خطاهای تاریخی با seed|Holt-Winters و ARIMA تا ارزیابی rolling-origin کنار گذاشته می‌شوند؛ بازه تجربی تضمین پوشش ندارد و شوک ساختاری را مدل نمی‌کند|
-|اسناد|CSV/XLSX، PDF متن با OCR صفحه‌به‌صفحه، تصویر؛ Google Sheets از طریق خروجی محلی|اتصال زنده حساب Google و DocFlow در دامنه پایه نیست؛ فرمول XLSX اجرا نمی‌شود|
-|کدینگ و استاندارد|کدینگ نمونه و پرچم بررسی ۴۳/۳۹/۱۶، بدون ادعای انطباق کامل|اجرای مقررات بدون نسخه رسمی تأییدشده نادرست است|
-|رابط|Marimo فارسی RTL با Vazirmatn محلی و Tahoma جایگزین؛ CLI برای ورود، بررسی، تأیید، اجرا|وب‌سایت مستقل لازم نیست؛ هیچ URL فونت خارجی بارگذاری نمی‌شود|
-|همگام‌سازی|هر اجرا پوشه یکتا و manifest دارد؛ گزارش‌ها و فصل از همان manifest؛ داشبورد manifest آخر را می‌خواند|فایل‌های گزارش گذشته بازنویسی نمی‌شوند؛ اشاره‌گر آخر پس از تکمیل خروجی‌ها عوض می‌شود|
-|آزمون|آزمون واحد، مالی، خطا، قفل و مسیر کامل روی داده ساختگی قبل از اجرا؛ OCR واقعی آزمون opt-in با سه نمونه|امتیاز OCR ساختگی گزارش نمی‌شود؛ دادهٔ واقعی تا عبور checkpoint موتور واقعی پردازش تولیدی نمی‌شود|
+|OCR|Tesseract default; optional lazy EasyOCR without automatic downloads; review outputs.|Aspose needs cloud access; DocFlow lacks independent project evaluation. Handwriting and poor scans need human review.|
+|Original ledger|Append-only JSONL, process locks, SHA-256 chain, fsync, separate proposal/decision events and hashed evidence.|SQLite scales better. A local administrator can rewrite a chain without an externally trusted root.|
+|Approval|A proposal's approved=true is insufficient: require a human actor, reason and text-review confirmation.|Original local identity assumes one trusted user, not enterprise authentication.|
+|Corrections|Approved reversal linked to the original; no direct edit or deletion.|Reversals also require review.|
+|LLM|Direct loopback Ollama; draft text only, no cloud or action tools.|LangChain adds unnecessary complexity for one endpoint; reconsider for complex workflows.|
+|Calculations|Decimal, Pydantic, ten ratios and input provenance.|No NumPy/my727finance for core ratios; floats only for explicitly estimated statistics.|
+|Currency|IRR ledger; explicit exact IRT conversion; dated evidence and units for rates.|No default live rates. Dollar/18-karat gold scenarios are not investment recommendations.|
+|Dates|jdatetime, valid calendar dates and explicit Jalali month ordering.|Reject approximate conversion and invalid days.|
+|Forecast|24 consecutive months, ADF and lag-12 screening, last-value/seasonal baselines and seeded historical-error bootstrap.|Defer Holt-Winters/ARIMA until rolling-origin evaluation. No coverage guarantee or structural-shock model.|
+|Documents|CSV/XLSX, PDF with page-level OCR, images and local Google Sheets exports.|No live Google account connector; never execute spreadsheet formulas.|
+|Standards|Sample accounts and review flags for standards 43/39/16.|No full compliance claim without verified official editions.|
+|Original interface|Persian RTL Marimo, local Vazirmatn/Tahoma, plus ingestion/review/run CLI.|No separate website or external font URLs. Later font preference appears below.|
+|Publication|Unique run directories and manifests, synchronized reports/chapters, latest pointer published last.|Stable historical outputs; later language exception changes narrative only.|
+|Validation|Synthetic unit, financial, failure, concurrency and end-to-end tests; opt-in real OCR on three fixtures.|Do not report mock OCR accuracy or production readiness before real-engine validation.|
 
-مهارت‌های نام‌برده یافت نشدند و برای ساخت این کد وابستگی اجباری نیستند. تصمیم‌های جدید باید پیش از تغییر مربوط در این فایل افزوده شوند.
+The originally named skills were unavailable and are not mandatory dependencies of this independent implementation. Record new decisions before related changes.
 
-## اصلاح پس از checkpoint
-پیش از اصلاح رابط: نمایش چهار رقم اعشار فقط در رابط و نگهداری مقدار دقیق در manifest؛ جدول HTML فارسی با جست‌وجوی واکنشی به جای کنترل‌های انگلیسی جدول عمومی Marimo. افق پیش‌بینی با slider فارسی قابل بررسی است؛ سناریوی تعاملی گزارش ذخیره‌شده را تغییر نمی‌دهد. فرمان مستقل advise پیش‌نویس Ollama را از نتایج محاسبه‌شده تولید می‌کند و در دفتر نمی‌نویسد.
+## Original interface and portability follow-ups
 
-فونت Vazirmatn نسخه v33.003 از مخزن رسمی با مجوز OFL در پروژه بسته‌بندی می‌شود تا ظاهر فارسی به نصب فونت دستگاه وابسته نباشد. مرورگر فونت را از دادهٔ محلی می‌گیرد؛ CDN زمان اجرا استفاده نمی‌شود.
+Display four decimal places in the interface while retaining exact manifest values. Use a searchable Persian HTML table and Persian forecast slider. Interactive exploration does not overwrite stored results. The separate advise command drafts Ollama advice from calculated results without writing ledger entries.
 
-پیش از اصلاح قابلیت حمل: اشاره‌گر manifest با جداکننده POSIX ذخیره می‌شود تا روی ویندوز و لینوکس کار کند. Git نباید پایان خط JSON و بایت‌های شواهد بایگانی‌شده را تبدیل کند؛ در غیر این صورت هش ممیزی تغییر می‌کند.
+The prototype bundled Vazirmatn v33.003 from its official repository under OFL, served locally without a CDN. Store manifest pointers with POSIX separators for Windows/Linux portability. Preserve JSON line endings and archived evidence bytes in Git so hashes remain valid.
 
-## تصمیم‌های ممیزی تکمیل — پیش از اصلاح بعدی
-- مسیر advise همان مجموعه نسبت‌ها، تشخیص ایستایی/فصل، بازه پیش‌بینی و مقایسه‌های مستند مسیر run را دریافت می‌کند. نبود سری به طور صریح گزارش می‌شود؛ مدل اجازه ندارد از نبود داده نتیجه بسازد. جایگزینِ ارسال فقط نسبت‌ها الزام بررسی عدم قطعیت را پوشش نمی‌داد.
-- ساختاربندی فاکتور با قواعد شفاف برای نام فیلد، عبارت مبلغ و واحد صریح انجام می‌شود. خروجی فقط نامزد استخراج است و هیچ واحد مبهمی حدس زده نمی‌شود. مدل NER تا دسترسی به ارزیابی مستقل جایگزین قواعد نمی‌شود.
-- توضیح ثبت از نام فارسی حساب، مبلغ و وضعیت تصمیم ساخته می‌شود، نه از متن مدل؛ متن سند همچنان مستقل حفظ می‌شود.
-- مسیرهای روزانهٔ درخواستی به نمایهٔ آخرین اجرای روز متصل می‌شوند؛ فایل‌های اجرای یکتا هرگز جایگزین نمی‌شوند. مقایسه‌های دلار/طلا در گزارش و داشبورد نمایش داده می‌شوند؛ نبود نرخ مستند به‌جای عدد مثال به‌روشنی اعلام می‌شود.
+## Audit follow-ups
 
-## تغییر جهت به بک‌اند چندبیزینسی به درخواست کاربر
-توسعه رابط از این مرحله متوقف است؛ نمونه موجود فقط نمونه قبلی محسوب می‌شود. BACKEND_WORKFLOW.md و METRICS_CATALOG.md قرارداد طراحی مرحله جدید هستند. انتخاب پیشنهادی PostgreSQL و ذخیره فایل مستقل، جایگزین دفتر فایل تک‌کاربره به‌عنوان زیرساخت سرویس است؛ منطق Decimal و provenance موجود قابل استفاده مجدد است. انتخاب JSON بزرگ برای هر بیزینس و استفاده از متن گفتگو به‌عنوان موجودی قطعی رد می‌شود. پیش از اعلام ظرفیت ۱۰۰۰ بیزینس، آزمون جداسازی و بار روی پایگاه واقعی لازم است. دو حالت بیزینس/quick ابزارهای مشترک و دامنه داده متفاوت دارند.
+- Give advise the same ratios, stationarity/seasonality diagnostics, intervals and documented benchmarks as run. Report absent series explicitly; never invent conclusions from missing data.
+- Extract invoice field candidates with transparent field, amount and explicit-unit rules. Never guess ambiguous units. Defer NER substitution until independently evaluated.
+- Construct ledger explanations from account names, amounts and decision status, not model prose; preserve document text separately.
+- Daily paths index the latest unique run. Display documented dollar/gold comparisons in reports and dashboard; report missing rates explicitly instead of supplying examples.
 
-## اجرای طرح تأییدشده — مرحله اول
-پس از تأیید صریح کاربر، ابتدا هسته دامنه و migration PostgreSQL اجرا می‌شود. مقدار کالا NUMERIC(24,6) و پول NUMERIC(28,6) با رد ورودی دارای اعشار بیشتر، UUID برای شناسه و کلید خارجی مرکب شامل business_id انتخاب شده است. زمان‌ها timezone-aware هستند. هسته تطبیق به دیتابیس یا LLM وابسته نیست؛ مجموعه ورودی با دامنه مشخص، پوشش تأییدشده و شواهد بررسی می‌شود. خروجی وضعیت کامل/ناقص دارد. ثبت مرجوعی وجه بدون برگشت فیزیکی، ثبت مصرف فروش دوباره، و استفاده از تعدیل شمارش برای پنهان کردن کسری رد می‌شوند.
+## User-directed move to a multi-business backend
 
-برای MVP سرویس از FastAPI و psycopg با SQL پارامتری استفاده می‌کند؛ ORM در این مرحله ضرورتی ندارد. schema نسخه‌دار و migration در تراکنش است. محیط آزمایش PostgreSQL به صورت محلی و فقط loopback اجرا می‌شود؛ سیستم عامل یا سرویس سراسری تغییر نمی‌کند. مسیر runtime و داده آزمایش وارد Git نمی‌شوند. توسعه مرحله‌ای است و هر milestone شواهد پذیرش خود را دارد؛ تأیید معماری به معنی ادعای تکمیل تمام محصول نیست.
+Pause interface expansion. BACKEND_WORKFLOW.md and METRICS_CATALOG.md define the new design contracts. Choose PostgreSQL and separate blob storage over a large JSON object per business; reuse Decimal and provenance. Conversation text is not authoritative stock data. Validate real database isolation and load before claiming capacity for 1,000 businesses. Business-profile and Quick modes share tools with separate data scopes.
 
-پس از آزمون واقعی یک میلیون گردش، EXPLAIN ANALYZE نشان داد member_role برای هر ردیف اجرا می‌شود (حدود ۱۵۰ هزار buffer hit برای ۵۰ هزار گردش). پیش از بهینه‌سازی: شرط برابری business_id با دامنه تراکنش حفظ می‌شود و بررسی عضویت همان دامنه به subquery مستقل تبدیل می‌شود تا PostgreSQL آن را یک‌بار در statement ارزیابی کند. migration شماره ۲ و اجرای دوباره آزمون جداسازی الزامی است. نتیجه قبل و بعد حفظ می‌شود؛ تکرار با cache گرم اثبات عملکرد cold-cache نیست.
+## Approved first backend stage
 
-## مرحله دوم تأییدشده: صف اسناد
+Implement the domain core and PostgreSQL migrations first. Use NUMERIC(24,6) quantities and NUMERIC(28,6) money, rejecting excess precision; UUID identifiers, composite tenant foreign keys and timezone-aware timestamps. The reconciliation core is independent of databases and LLMs. Check scoped inputs, reviewed coverage and evidence; report complete/incomplete results. Refunds are not physical returns, consumption must not be counted twice, and count adjustments must not conceal shortages.
 
-صف PostgreSQL با `FOR UPDATE SKIP LOCKED` انتخاب شد؛ broker جدا فعلاً لازم نیست. job عملیاتی قابل تغییر است ولی درخواست، سند و خروجی استخراج ثابت می‌مانند و انتقال وضعیت ممیزی می‌شود. worker با credential یک عضو و business مشخص اجرا می‌شود، نه نقش superuser. claim و پایان کار تراکنش کوتاه READ COMMITTED دارند؛ تحلیل مالی همچنان snapshot تکرارپذیر دارد. هر claim توکن اجاره تازه و مهلت محدود دارد؛ worker قدیمی پس از انقضا حق ثبت نتیجه ندارد. سقف تلاش ۳ است؛ خطای گذرا با تأخیر مجدد و ورودی خراب با شکست نهایی پاسخ داده می‌شود. خروجی استخراج فقط نامزد بررسی است و هیچ رکورد مالی را تأیید نمی‌کند.
+Use FastAPI and psycopg with parameterized SQL; no ORM initially. Version schemas and transact migrations. Run test PostgreSQL on loopback without system service changes; ignore runtime binaries and test data in Git. Each milestone needs its own acceptance evidence.
 
-parser در subprocess محدود به زمان اجرا و فایل موقت اجرا می‌شود؛ DSN و credentialهای برنامه به subprocess منتقل نمی‌شوند. خروجی، شناسه سند و هش اصلی را نگه می‌دارد و مسیر فایل موقت را منتشر نمی‌کند. این جداسازی فرایند sandbox امنیتی کامل نیست؛ محدودیت سخت حافظه و ارزیابی OCR واقعی همچنان کار باز هستند.
+The million-movement experiment showed per-row member_role evaluation (about 150,000 buffer hits for 50,000 movements). Migration 2 preserves tenant equality but moves membership evaluation into a statement-level subquery. Repeat isolation checks and preserve before/after results. Warm-cache comparisons do not prove cold-cache performance.
 
-مراجع: [PostgreSQL locking/queue semantics](https://www.postgresql.org/docs/17/sql-select.html#SQL-FOR-UPDATE-SHARE)، [Python subprocess timeouts](https://docs.python.org/3/library/subprocess.html).
+## Approved document queue
 
-## checkpoint بعدی با تأیید کاربر: نگاشت استخراج به پیشنهاد
+Use PostgreSQL FOR UPDATE SKIP LOCKED without another broker. Operational jobs are mutable; requests, documents and extraction outputs remain fixed, with audited transitions. Workers use specific member/business credentials, never superuser access. Claims/finalization use short READ COMMITTED transactions; financial analyses retain repeatable snapshots. Each claim has a new bounded lease token; expired workers cannot publish. Limit attempts to three; retry transient failures with delay and permanently fail invalid input. Extraction never approves records.
 
-نخست نگاشت صریح CSV/XLSX اجرا می‌شود: کاربر sheet/ردیف‌ها، ستون SKU، مقدار، واحد و زمان را مشخص می‌کند؛ نام کالا، واحد، منطقه زمانی یا نوع رویداد حدس زده نمی‌شود. حداکثر ۱۰۰ ردیف در تراکنش واحد به شمارش/گردش/تحقق فروش پیشنهادی تبدیل می‌شود. یک ردیف نامعتبر همه batch را برمی‌گرداند. قید یکتایی (بیزینس، سند، sheet، شماره ردیف، نوع رکورد) حتی پس از استخراج دوباره همان سند جلوی ثبت دوباره را می‌گیرد؛ این مرحله اصلاح/جایگزینی رکورد قبلی نیست. منشأ استخراج و نگاشت کنار رکورد و در تحلیل ذخیره می‌شوند. PDF/تصویر و رسپی تودرتو همچنان به پیشنهاد تایپ‌شده و بررسی انسانی نیاز دارند؛ تبدیل خودکار متن آزاد فعلاً اجرا نمی‌شود.
+Parse in a timed subprocess with temporary files and a minimal environment without application credentials/DSNs. Retain original document IDs/hashes; do not publish temporary paths. This is not a full security sandbox; hard memory limits and real OCR evaluation remain open.
 
-به درخواست کاربر، تشخیص تکرار فایل و مقادیر نیز در همین checkpoint اضافه می‌شود. فایل برابر با SHA-256 یکسان در همان بیزینس علامت می‌خورد؛ فایل حذف یا ادغام خودکار نمی‌شود. برای شمارش/گردش/تحقق، ترکیب انبار، کالا، نوع رویداد، زمان دقیق و مقدار پس از تبدیل واحد، نامزد تکرار است؛ برابر بودن مبلغ یا مقدار به‌تنهایی کافی نیست. قبل از تأیید رکورد مشکوک، تصمیم صریح «همان رویداد» (رد پیشنهاد) یا «رویداد مستقل» همراه دلیل لازم است. این تشخیص شباهت معنایی آزاد، OCR مشابه با بایت متفاوت یا موتور کامل کشف فاکتور تکراری با شماره/طرف حساب نیست؛ آن‌ها با مدل مالی بعدی توسعه می‌یابند.
+References: [PostgreSQL queue locking](https://www.postgresql.org/docs/17/sql-select.html#SQL-FOR-UPDATE-SHARE), [Python subprocess timeouts](https://docs.python.org/3/library/subprocess.html).
 
-checkpoint کامل مسیر بلند ویندوز، طول بیش‌ازحد نام فایل staging را آشکار کرد. نام موقت فقط UUID کوتاه خواهد بود؛ فایل منتشرشده همچنان هش کامل دارد و الگوریتم انتشار اتمی تغییر نمی‌کند.
+## Approved imports and duplicate detection
+
+Explicit CSV/XLSX mapping selects sheets/rows and SKU, quantity, unit and timestamp columns. Do not infer item identity, units, timezone or event kind. Import at most 100 rows atomically as proposed counts, movements or fulfillments; one invalid row rolls back the batch. Uniqueness across business/document/sheet/row/record-kind prevents replay even after re-extraction. This is not an amendment workflow. Preserve extraction/mapping provenance with records and analyses. PDF/images and nested recipes still need typed proposals and human review.
+
+At the user's request, flag identical SHA-256 files within the same business without automatic deletion/merging. For operational events compare warehouse, item, kind, exact timestamp and unit-normalized quantity. Equal amounts alone are insufficient. Suspected-duplicate approval needs distinct_event with a reason; same_event requires rejection. Semantic similarity, byte-different OCR duplicates and full supplier/invoice-number matching remain future work.
+
+Full testing exposed long Windows staging filenames. Use a short UUID for staging while keeping full content-hash published filenames and atomic publication.
+
+## English documentation checkpoint and future UI preferences
+
+Translate documentation, research, checkpoint reports, developer prose and generated Markdown narrative into English. Keep Persian application text, source data, business names, manifests and evidence unchanged. Historical narrative may be translated without recalculation; preserve data/evidence bytes and retain originals in Git history. Keep existing filenames for link compatibility.
+
+The user selected Kalameh for Persian typography but has no font files available. Prefer locally installed Kalameh and retain the existing fallback; bundling Kalameh remains pending actual webfont files. Never relabel the Vazirmatn binary as Kalameh.
+
+For later UI checkpoints, the user requested `npx vibefarsi add contour`. When UI work resumes, inspect the package and target project before running that command, then verify Persian RTL and Kalameh typography. Do not scaffold a new interface in this documentation/backend checkpoint.

@@ -1,9 +1,9 @@
-# فصل: از استخراج تا ثبت بررسی‌شده
+# From extraction to reviewed records
 
-شناسه: `backend-import-2026-10-06`.
+Checkpoint: `backend-import-2026-10-06`.
 
-متن استخراج‌شده حقیقت حسابداری محسوب نمی‌شود. worker فقط خروجی نامزد را ذخیره می‌کند؛ نگاشت ستون‌ها به SKU، مقدار، واحد و زمان صریح است و رکوردها ابتدا در وضعیت پیشنهادند. هر batch یک تراکنش است؛ ردیف خراب ثبت جزئی ایجاد نمی‌کند. رکورد تاییدشده همچنان به نسخه استخراج و ردیف سند وصل است.
+Extracted text is not accounting truth. Workers store candidate outputs; mapping to SKU, quantity, unit and timestamp is explicit, and records begin as proposals. Each batch is one transaction; invalid rows cannot leave partial imports. Approved records remain linked to extraction versions and source rows.
 
-تکرار سه لایه دارد: بایت‌های یکسان فایل، ورود دوباره یک ردیف و شباهت رویداد پس از تبدیل واحد. فقط مورد ورود دوباره همان ردیف به همان نوع رکورد با قید یکتایی مسدود می‌شود. نامزدهای فایل/رویداد به تصمیم انسانی نیاز دارند، چون تکرار مقدار می‌تواند مشروع باشد. شماره فاکتور، طرف حساب و تشابه OCR به مدل مالی کامل‌تری نیاز دارند.
+Duplicate detection has three layers: identical file bytes, repeated source-row imports and matching events after unit conversion. Only repeat import of the same source row into the same record kind is blocked by uniqueness. File/event candidates require human review because repeated values can be legitimate. Invoice numbers, counterparties and OCR similarity need a fuller financial model.
 
-روش و آزمون‌ها در [قرارداد نگاشت](../TABULAR_IMPORTS.md) و [قرارداد worker](../DOCUMENT_QUEUE.md) مستندند؛ ظرفیت ایجنت، OCR واقعی یا کل صف برای هزار بیزینس از این آزمون‌ها استنتاج نشده است.
+Methods and tests: [mapping contract](../TABULAR_IMPORTS.md), [worker contract](../DOCUMENT_QUEUE.md). These tests do not establish agent capacity, real OCR accuracy or full queue capacity for 1,000 businesses.

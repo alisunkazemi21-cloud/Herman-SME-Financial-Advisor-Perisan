@@ -26,6 +26,14 @@ skills:
   - dollar-gold-benchmarking
 ---
 
+## Current project instructions (updated 2026-10-06)
+
+- Write all repository documentation, research, decisions, checkpoint notes, technical reports, media narratives, code comments and developer-facing text in clear English.
+- Keep app-facing text, RTL presentation, Persian input/output data, fixtures, source documents and evidence in Persian where applicable. Persian literals in the code examples below are app/data examples, not a documentation-language requirement.
+- At every checkpoint, update the English documentation along with the implementation and validation evidence. Generated Markdown reports must also use English prose while preserving business names and source data verbatim.
+- Backend development is the current priority. Interface work is deferred at the user's request.
+- These later user preferences supersede the original prompt's broader Persian-language requirement. The original technical brief follows for reference.
+
 # @token-reduction: ON
 # @skill: financial-advisor
 # @skill: persian-ocr
@@ -42,10 +50,10 @@ skills:
 Before writing any code, review the current repository state, then research and document the following in `research/LITERATURE.md`:
 
 **Persian financial accounting standards:**
-Iran uses national accounting standards (استانداردهای حسابداری ملی) that are largely converged with IFRS/IAS. Key standards to encode include: استاندارد ۴۳ (درآمد عملیاتی حاصل از قرارداد با مشتریان), استاندارد ۳۹ (صورت‌های مالی تلفیقی), استاندارد ۱۶ (تسعیر ارز), and the standard chart of accounts used by Iranian SMEs including سرقفلی, حساب‌های دریافتنی, اسناد پرداختی, and ذخایر.
+The original brief describes Iranian national accounting standards as largely converged with IFRS/IAS. It requests research into Standard 43 (revenue from contracts with customers), Standard 39 (consolidated financial statements), Standard 16 (foreign exchange), and SME accounts including goodwill, receivables, notes payable and provisions. Verify official versions before claiming compliance; the research log records unresolved source access.
 
 **Financial ratios in Persian:**
-Document the Persian terminology for all ratios you will compute: نسبت جاری (current ratio), نسبت آنی (quick ratio), نسبت مالکانه (equity ratio), نسبت بدهی (debt ratio), حاشیه سود ناخالص (gross profit margin), حاشیه سود خالص (net profit margin), بازده دارایی‌ها (ROA), بازده حقوق صاحبان سهام (ROE), گردش دارایی‌ها (asset turnover), and پوشش بهره (interest coverage).
+Provide Persian app labels for current ratio, quick ratio, equity ratio, debt ratio, gross margin, net margin, return on assets, return on equity, asset turnover and interest coverage. Explain their contracts in English documentation.
 
 **Persian OCR & document extraction:**
 Existing solutions include: `faniuta/ocr` (EasyOCR + Tesseract for Persian, FastAPI wrapper), Aspose.OCR Cloud SDK (supports Persian among 45+ languages), and DocFlow Invoice Parser FA (EasyOCR fa/en + ParsBERT NER + Pydantic business rules, achieving macro F1 of 0.93 on Persian invoices).
@@ -420,7 +428,11 @@ Follow the evidence-preserving workflow EXACTLY:
 5. After each run, synchronize README, Marimo notebook, research chapter, technical report, and media narrative.
 6. Never overwrite ledger entries — append only. Every number must trace back to evidence.
 
-Language: All user-facing text in Persian (فارسی). RTL layout. Vazirmatn font.
+Language: App-facing text and data remain Persian, with RTL layout and Vazirmatn. Repository documentation and generated Markdown prose are English under the later user instruction above.
 Local-first: Use Ollama for LLM inference. No cloud dependency by default.
 Safety: Agents propose. Typed Python computes. Humans approve.
 ```
+
+## User UI preferences (2026-10-06)
+
+Use Kalameh for Persian typography. Font files are not yet available; prefer an installed Kalameh font and retain a fallback until webfont assets are supplied. For later UI checkpoints, use `npx vibefarsi add contour` after inspecting the package and the target project. UI expansion remains deferred while backend work continues.

@@ -1,9 +1,9 @@
-# گزارش فنی ورود اسناد و تشخیص تکرار
+# Document imports and duplicate detection: technical report
 
-شناسه: `backend-import-2026-10-06`.
+Checkpoint: `backend-import-2026-10-06`.
 
-Migration 3 صف و استخراج ثابت، migration 4 نگاشت و منشأ رکورد، و migration 5 نمایه هش سند و تصمیم تکرار را اضافه می‌کنند. worker از نقش محدود و بیزینس مشخص استفاده می‌کند. خروجی worker خودکار تأیید نمی‌شود. import اتمی است؛ retry هم‌زمان رکورد اضافه نمی‌سازد و نسخه استخراج جدید راهی برای دور زدن قید ردیف تکراری نیست.
+Migration 3 adds the queue and immutable extraction outputs; migration 4 adds mapping and record provenance; migration 5 adds document-hash indexing and duplicate decisions. Workers use restricted roles and explicit business scopes. Worker output is never automatically approved. Imports are atomic; concurrent retries do not create extra records, and new extraction versions cannot bypass source-row uniqueness.
 
-تطبیق تکرار رویداد با کالا، انبار، نوع، زمان و مقدار انجام می‌شود؛ kg/g و l/ml یکسان‌سازی می‌شوند. تأیید مورد مشکوک نیازمند `distinct_event` و دلیل است؛ `same_event` باید رد شود. سوابق تصمیم و شواهد حذف یا بازنویسی نمی‌شوند.
+Event matching compares item, warehouse, kind, timestamp and quantity, normalizing kg/g and l/ml. Approval of flagged candidates requires `distinct_event` and a reason; `same_event` must be rejected. Decisions and evidence are not deleted or overwritten.
 
-آزمون کامل یک نقص نام فایل موقت در مسیر بلند ویندوز را پیدا کرد؛ نام staging کوتاه شد و نام نهایی همچنان هش کامل محتواست. جزئیات پذیرش و نتیجه نهایی تست‌ها در [قرارداد checkpoint](../research/TABULAR_IMPORTS.md) نگهداری می‌شود. آزمون OCR واقعی و ایجنت مکالمه‌ای همچنان کامل نیستند.
+Full testing found long Windows temporary filenames; staging names were shortened while final names retain full content hashes. Acceptance details and final test results are in the [checkpoint contract](../research/TABULAR_IMPORTS.md). Real OCR evaluation and a conversational agent remain incomplete.

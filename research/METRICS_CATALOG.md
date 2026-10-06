@@ -1,47 +1,57 @@
-# قرارداد شاخص‌های عملیاتی — نسخه ۱ پیشنهادی
+# Operational metric contracts — proposed version 1
 
-هر تعریف شامل شناسه، نسخه، واحد، دامنه بیزینس/شعبه/انبار، بازه [شروع، پایان)، ورودی‌های الزامی، فرمول، سیاست داده مفقود، شواهد و آستانه هشدار است. نتیجه بدون پوشش داده کافی وضعیت «اطلاعات ناکافی» دارد؛ مقدار مفقود صفر تلقی نمی‌شود.
+Each definition records an ID, version, unit, business/branch/warehouse scope, half-open period `[start, end)`, required inputs, formula, missing-data policy, evidence and review threshold. Inadequate coverage yields an incomplete result. Missing values are not zero.
 
-## inventory.expected_usage.v1 — مصرف نظری ماده اولیه
-برای هر ماده و واحد پایه:
+## inventory.expected_usage.v1 — theoretical ingredient consumption
 
-مصرف نظری = مجموع (تعداد واقعاً تولید/سروشده × مقدار ماده در رسپی معتبر همان زمان).
+For each ingredient in its base unit:
 
-اگر رسپی مقدار خالص را تعریف کرده: مقدار خام = مقدار خالص / بازده آماده‌سازی. اگر رسپی مقدار خام را تعریف کرده، دوباره بازده اعمال نمی‌شود. بازده پخت با افت آماده‌سازی یکی نیست. برای رسپی گروهی، مقدار بر خروجی استاندارد گروه تقسیم می‌شود. رسپی تودرتو باید به مواد پایه باز شود و چرخه مردود است.
+`expected usage = sum(fulfilled production/service quantity × ingredient quantity in the recipe valid at that event time)`
 
-سفارش لغوشده مصرف نظری ایجاد نمی‌کند. سفارش رایگان یا غذای کارکنان اگر واقعاً تهیه شده باشد مصرف دارد. مرجوعی وجه به‌تنهایی به معنی برگشت مواد اولیه به انبار نیست. در مدل مبتنی بر batch، مصرف مواد از تولید محاسبه می‌شود؛ فروش کالای آماده همان مواد را دوباره مصرف نمی‌کند.
+For a net ingredient quantity, `raw quantity = net quantity / preparation yield`. Do not apply yield again when the recipe already specifies raw quantity. Cooking yield and preparation loss are different concepts. Batch recipes divide ingredient quantities by standard batch output. Expand nested recipes to base ingredients and reject cycles.
 
-## inventory.expected_closing.v1 — موجودی مورد انتظار
-موجودی اول دوره + دریافت خرید + انتقال ورودی − برگشت به تأمین‌کننده − انتقال خروجی − ضایعات ثبت‌شده − سایر مصرف‌های ثبت‌شده خارج از فروش − مصرف نظری = موجودی مورد انتظار پایان دوره.
+Canceled orders create no theoretical consumption. Prepared complimentary/staff meals do. A cash refund alone does not return physical ingredients to stock. Under a production-batch basis, ingredients are consumed by production; selling the resulting finished goods must not consume the ingredients again.
 
-شمارش فیزیکی پایان دوره یک مشاهده مستقل است، نه خروج کالا. تعدیل ناشی از همان شمارش نباید قبل از محاسبه مغایرت وارد سمت مورد انتظار شود، وگرنه مغایرت به‌صورت مصنوعی صفر می‌شود. انتقال بین انبارها در سطح شعبه خنثی است، اما در سطح انبار اثر دارد.
+## inventory.expected_closing.v1 — expected closing stock
 
-## inventory.unexplained_variance.v1 — مغایرت توضیح‌داده‌نشده
-کسری توضیح‌داده‌نشده = موجودی مورد انتظار − موجودی شمارش‌شده.
+`opening + purchase receipts + inbound transfers − supplier returns − outbound transfers − recorded waste − other non-sale usage − theoretical usage`
 
-عدد مثبت: موجودی واقعی کمتر از انتظار؛ عدد منفی: مازاد. درصد انحراف مصرف = کسری / مصرف نظری × ۱۰۰؛ اگر مصرف نظری صفر باشد، درصد تعریف‌نشده است، نه بی‌نهایت یا صفر.
+Physical customer returns are inbound stock when evidenced; a monetary refund is not. Closing physical count is an independent observation, not an outbound movement. Do not include the adjustment derived from that count in expected stock before measuring variance, since doing so would conceal the discrepancy. Transfers can cancel at branch level while still affecting each warehouse.
 
-برای تفکیک: برداشت مشاهده‌شده = موجودی اول + ورودی‌ها − برگشت/انتقال خروجی − موجودی پایان. مقایسه با مصرف نظری، فقط پس از جدا کردن ضایعات و دیگر مصارف توضیح‌داده‌شده معتبر است.
+## inventory.unexplained_variance.v1 — unexplained variance
 
-مثال ساختگی: ۱۰۰ کیلو اول دوره + ۵۰ کیلو خرید − ۱۰۰۰ پرس × ۰٫۱۲ کیلو − ۵ کیلو ضایعات = ۲۵ کیلو موجودی مورد انتظار. اگر شمارش ۱۸ کیلو باشد، کسری توضیح‌داده‌نشده ۷ کیلو و نسبت به مصرف نظری ۵٫۸۳٪ است. این یافته علت را اثبات نمی‌کند؛ خطای شمارش، نسخه رسپی، وزن پرس یا رسید مفقود هم ممکن است دخیل باشند.
+`unexplained shortage = expected closing stock − counted closing stock`
 
-ورودی لازم: شمارش اول و پایان با زمان قطع مشخص، تمام گردش‌های دوره، تعداد سرو/تولید، نسخه رسپی، واحدها و تأیید کامل‌بودن پوشش داده. تنها موجودی فعلی و رسپی برای این محاسبه کافی نیست.
+Positive means shortage; negative means excess. `variance percentage = shortage / theoretical usage × 100`. When theoretical usage is zero, the relative variance is undefined, not zero or infinity.
 
-## materiality.inventory_variance.v1 — نیاز به بررسی
-سیاست هر بیزینس باید حد مقداری و درصدی را تعیین کند. پیشنهاد اولیه: پرچم وقتی قدرمطلق کسری از max(حد مقدار، مصرف نظری × حد درصد) بزرگ‌تر شود. برابری با حد هشدار ایجاد نمی‌کند؛ این قرارداد قابل نسخه‌بندی است. در نبود مصرف نظری معتبر، فقط حد مقداری قابل استفاده است.
+Observed depletion can be calculated as opening stock plus inflows minus returns/outbound transfers minus closing stock. Compare it with theoretical use only after separating waste and other explained consumption.
 
-این «اهمیت عملیاتی» است، نه معناداری آماری. معناداری آماری به تاریخچه کافی، خطای شمارش و مدل تغییرپذیری نیاز دارد. آستانه ثابت عمومی و ادعای سرقت/تقلب از یک مغایرت ممنوع است.
+Synthetic example: `100 kg opening + 50 kg purchases − 1,000 meals × 0.12 kg − 5 kg waste = 25 kg expected closing`. A count of 18 kg leaves a 7 kg unexplained shortage, approximately 5.83% of theoretical use. This does not establish cause: counting errors, recipe versions, portion size or missing receipts are possible explanations.
 
-## inventory.variance_value.v1 — ارزش ریالی مغایرت
-مغایرت مقدار × بهای واحد طبق روش مصوب همان بیزینس در تاریخ تحلیل. روش ارزش‌گذاری و نسخه هزینه باید همراه نتیجه باشد؛ قیمت خرید آخر به‌صورت خام جایگزین میانگین موزون یا FIFO نمی‌شود. اگر هزینه مستند نداریم، فقط مقدار گزارش می‌شود.
+Required evidence: opening and closing counts with explicit cutoffs, all period movements, fulfilled service/production quantities, valid recipe versions, units and reviewed completeness assertions. A current stock count plus a recipe is insufficient.
 
-## سایر شاخص‌های نخستین
-|شناسه|تعریف|داده لازم|
+## materiality.inventory_variance.v1 — review threshold
+
+Each business supplies an absolute quantity threshold and a relative fraction. Flag when:
+
+`abs(shortage) > max(absolute threshold, theoretical usage × relative threshold)`
+
+Equality does not trigger a warning. This is a versioned operational-materiality rule, not statistical significance. Statistical interpretation needs sufficient history, measurement error and a variability model. Without a valid usage denominator, only an absolute threshold can be meaningful. Do not infer theft/fraud from one discrepancy or impose a universal threshold across industries.
+
+## inventory.variance_value.v1 — variance value in IRR
+
+`quantity variance × evidenced unit cost under the business's approved valuation method at the analysis date`
+
+Record the method and cost version. The latest purchase price must not silently replace weighted-average or FIFO costing. If cost evidence is absent, report quantity only. This valuation metric remains a contract, not an implemented costing ledger.
+
+## Additional initial metrics
+
+| ID | Definition | Required data |
 |---|---|---|
-|inventory.waste_rate|ضایعات ثبت‌شده / مقدار ورودی به فرآیند مربوط|ضایعات با علت، واحد و فرآیند؛ مخرج صفر تعریف‌نشده|
-|recipe.standard_food_cost|جمع مقدار خام هر ماده × بهای واحد / خروجی استاندارد|نسخه رسپی و بهای مستند در تاریخ|
-|product.gross_margin|درآمد خالص محصول منهای بهای تمام‌شده تقسیم بر درآمد خالص|فروش خالص از برگشت/تخفیف و بهای سازگار؛ هزینه عملیاتی جدا|
-|inventory.days_on_hand|موجودی قابل مصرف / متوسط مصرف روزانه در پنجره اعلام‌شده|موجودی و مصرف با دوره کافی؛ مصرف صفر تعریف‌نشده|
-|data.coverage|پوشش ورودی‌های موردنیاز مسئله|رسیدها، دوره فروش، شمارش‌ها و رسپی‌های پوشش‌دهنده|
+| inventory.waste_rate | Recorded waste / input to the relevant process | Reason, units and process; zero denominator is undefined. |
+| recipe.standard_food_cost | Sum of raw ingredient quantity × unit cost / standard output | Recipe version and dated cost evidence. |
+| product.gross_margin | (Net product revenue − cost of goods) / net revenue | Returns/discounts and compatible cost; operating expenses separate. |
+| inventory.days_on_hand | Usable stock / average daily consumption in a stated window | Sufficient inventory/usage history; zero use is undefined. |
+| data.coverage | Coverage of the evidence required by the question | Receipts, sales period, counts and applicable recipes. |
 
-برای سوپرمارکت فروش مستقیم SKU معمولاً به رسپی نیاز ندارد؛ واحدهای بسته، برگشت، ضایعات، انقضا و شمارش مهم‌اند. برای کافه دوز قهوه، شیر، نوشیدنی سفارشی و پرت تنظیم دستگاه باید ثبت شوند. ابزار مشترک است و قواعد ورودی صنعت تفاوت دارند.
+Direct supermarket SKU sales generally need no recipe; packs, returns, waste, expiry and counts matter. Cafes need coffee dose, milk, custom drinks and setup waste. Shared tools use industry-specific input contracts.

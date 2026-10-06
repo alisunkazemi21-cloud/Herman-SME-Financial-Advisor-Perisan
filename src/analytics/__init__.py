@@ -1,1 +1,1 @@
-"""محاسبات مستقل از مدل زبانی."""
+"""Calculations independent of language models."""

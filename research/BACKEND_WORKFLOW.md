@@ -1,93 +1,101 @@
-# طراحی بک‌اند هرمان — بیزینس دارای سابقه و مشاور سریع
+# Herman backend design: business history and Quick Advisor
 
-## جهت محصول و وضعیت
-درخواست ۲۰۲۶/۱۰/۰۵: توسعه رابط فعلاً کنار گذاشته می‌شود. هدف فعلی، گردش کار کامل بک‌اند، مدل داده چندبیزینسی، تعریف دقیق شاخص‌ها و اجرای تطبیق مواد اولیه با رسپی و فروش است. کد محلی قبلی نمونه محاسبات بود؛ دفتر JSONL تک‌کاربره و مسیرهای فایل آن مبنای یک سرویس هزاربیزینسی نیستند.
+## Product direction and status
 
-این سند قرارداد طراحی است، نه ادعای اجرای قابلیت‌ها. وضعیت پیاده‌سازی و آزمون هر بخش باید جدا ثبت شود.
+On 2026-10-05 the user deferred interface development and prioritized the backend workflow, multi-business data model, exact metric definitions and recipe/sales inventory reconciliation. The earlier local calculator and single-user JSONL ledger are not the foundation for a 1,000-business service.
 
-## دو حالت استفاده، یک مجموعه ابزار محاسبه
+This is a design contract. Implementation and acceptance evidence are tracked separately in [backend acceptance](BACKEND_ACCEPTANCE.md), [document queue](DOCUMENT_QUEUE.md) and [tabular imports](TABULAR_IMPORTS.md).
 
-|موضوع|فضای بیزینس|مشاور سریع|
+## Two modes, shared calculation tools
+
+| Concern | Business workspace | Quick Advisor |
 |---|---|---|
-|زمینه|پروفایل، شعب، اسناد و رکوردهای مجاز همان بیزینس|فقط سؤال و فایل‌های همین نشست|
-|حافظه|اطلاعات تأییدشده، تصمیم‌ها و تحلیل‌های دارای نسخه|بدون بازیابی سابقه بیزینس و بدون ایجاد رکورد مالی پایدار|
-|ثبت|پیشنهاد تغییر، بازبینی انسانی، رویداد قطعی|پیش‌نویس پاسخ؛ ثبت در بیزینس فقط با انتخاب و تأیید صریح جداگانه|
-|داده ناقص|درخواست سند/اطلاعات مشخص از مدیر|پرسش تکمیلی یا پاسخ مشروط با فرض‌های آشکار|
-|ذخیره‌سازی|طبق سیاست نگهداری همان بیزینس|پیشنهاد پیش‌فرض: فقط حافظه موقت نشست با انقضای کوتاه؛ جزئیات TTL هنوز تصمیم محصول است|
+| Context | Authorized profile, branches, documents and records for one business | Only the question and files in the current session |
+| Memory | Confirmed facts, decisions and versioned analyses | No business-history retrieval or permanent financial posting |
+| Writes | Proposals, human review, confirmed events | Draft response; saving to a business requires a separate explicit action/review |
+| Missing data | Request specific missing evidence | Ask a follow-up or give a conditional answer with stated assumptions |
+| Retention | Business retention policy | Proposed short-lived session memory; exact conversational TTL remains a product decision |
 
-هر دو حالت از توابع مالی یکسان استفاده می‌کنند. تفاوت در دامنه دسترسی و ماندگاری اطلاعات است؛ دو موتور مستقل ساخته نمی‌شود. «بدون سابقه» فعلاً به معنای عدم استفاده از داده‌های قبلی و عدم ثبت پایدار محتوا در نظر گرفته شده است.
+Both modes use the same financial functions. Access scope and persistence differ. The implemented Quick calculator is stateless; it is not yet a conversational advisor.
 
-## گردش کامل یک درخواست
-۱. احراز هویت و تعیین عضویت/نقش کاربر؛ business_id ارسالی به‌تنهایی مجوز نیست.
-۲. ایجاد مسئله با سؤال، دوره، شعبه، انبار و شاخص هدف؛ تشخیص نوع درخواست.
-۳. تعیین حداقل شواهد لازم و اعلام داده‌های مفقود پیش از محاسبه.
-۴. ورود فایل یا داده API، ثبت هش، شناسه بارگذاری، نوع، حجم، زمان، کاربر و وضعیت پردازش؛ عملیات تکراری دوباره ثبت مالی نمی‌سازد.
-۵. نگهداری اصل سند، استخراج متن/ردیف/سلول و مقدارهای نامزد با اطمینان؛ متن سند دستور اجرایی نیست.
-۶. نرمال‌سازی رقم، تاریخ، ریال/تومان و واحد کالا؛ تطبیق نام‌ها با کاتالوگ همان بیزینس. «گوشت»، «گوشت چرخ‌کرده» و «گوشت پخته» خودکار یکسان فرض نمی‌شوند.
-۷. پیشنهاد رکورد تایپ‌دار همراه منشأ؛ بازبینی تعارض، سند تکراری، کسری اطلاعات و تأیید انسانی.
-۸. ثبت رویداد تأییدشده در تراکنش اتمی و به‌روزرسانی نماهای قابل بازسازی. اصلاح، رویداد جدید است.
-۹. محاسبه با نسخه مشخص ابزار، داده‌های تأییدشده و snapshot تاریخ؛ ثبت نتیجه و خطا/عدم قطعیت.
-۱۰. ایجنت نتیجه را توضیح می‌دهد: چه اتفاقی افتاده، بر چه داده‌ای تکیه دارد، چه چیزی معلوم نیست و اقدام قابل بررسی چیست.
-۱۱. بازخورد و اصلاح کاربر، اتصال به نسخه قبلی و محاسبه مجدد؛ پاسخ قبلی بی‌صدا بازنویسی نمی‌شود.
+## End-to-end request workflow
 
-## ساختمان داده مشترک
-به‌جای یک JSON بزرگ برای هر بیزینس، موجودیت‌های مرتبط و دارای شناسه پایدار نگهداری می‌شوند:
+1. Authenticate and resolve membership/role. A submitted business ID is not authorization.
+2. Define the question, period, branch, warehouse and target metric; classify the request.
+3. Identify the minimum required evidence and report missing inputs before calculation.
+4. Ingest a file/API payload with hash, upload ID, type, size, time, actor and processing state. Retries must not duplicate financial events.
+5. Preserve original bytes and extracted text/rows/cells with candidate values and confidence. Document text is data, never executable instructions.
+6. Normalize digits, dates, IRR/IRT and quantities. Match the business catalog explicitly; raw meat, minced meat and cooked meat are not automatically interchangeable.
+7. Propose typed records with provenance. Review conflicts, duplicates and missing information before approval.
+8. Commit approved events atomically and update rebuildable views. Corrections are new events.
+9. Calculate using versioned tools, reviewed inputs and a time-specific snapshot. Persist results and uncertainty/errors.
+10. Explain what happened, the supporting evidence, what remains unknown and what action a manager can review.
+11. Link feedback/corrections to earlier versions and recalculate. Do not silently rewrite an earlier answer.
 
-|حوزه|موجودیت‌ها|قاعده اصلی|
+## Shared data model
+
+Use linked entities with stable IDs, not one large JSON document per business.
+
+| Domain | Planned entities | Main rule |
 |---|---|---|
-|دسترسی|users، businesses، memberships، credentials|یک کاربر ممکن است عضو چند بیزینس باشد؛ نقش در همان عضویت تعریف می‌شود|
-|ساختار کسب‌وکار|business_profiles، branches، warehouses، fiscal_periods|صنعت، واحد پول، تقویم، منطقه زمانی و سیاست‌ها نسخه دارند|
-|سند|documents، document_versions، extraction_runs، extracted_fields، evidence_links|اصل فایل مستقل؛ هر فیلد محل دقیق و نسخه استخراج دارد|
-|کاتالوگ|items، item_aliases، units، item_unit_conversions|SKU و تبدیل بسته به واحد پایه مخصوص همان بیزینس/کالا|
-|انبار|stock_movements، stock_counts، stock_count_lines، lots|گردش، شمارش واقعی، ضایعات، برگشت و انتقال از هم متمایزند|
-|رسپی و تولید|recipes، recipe_versions، recipe_lines، production_batches|نسخه معتبر هنگام تولید/سرو؛ میزان خام/خالص و بازده مشخص|
-|فروش و خرید|sales، sale_lines، purchase_receipts، receipt_lines|وضعیت سفارش، تاریخ تحقق، واحد و پیوند سند ضروری|
-|مالی|journal_entries، journal_lines، approvals، reversals|تراز دوطرفه، بدون تغییر سابقه قطعی و با شاهد|
-|تحلیل|metric_definitions، analysis_runs، findings، finding_evidence|تعریف و نسخه شاخص، ورودی‌ها، خروجی‌ها و محدودیت‌ها|
-|شناخت بیزینس|business_facts، fact_versions، confirmed_policies|دانسته تأییدشده از فرض و ادعای استخراج‌شده جداست|
-|گفت‌وگو|cases، conversations، messages، tool_runs|تاریخچه متنی جایگزین موجودی، دفتر یا عدد قطعی نیست|
-|اجرا|jobs، job_attempts، audit_events، outbox_events|اجرای مجدد ایمن، retry محدود، شناسه همبستگی و ثبت علت شکست|
+| Access | users, businesses, memberships, credentials | A user can belong to several businesses; roles belong to memberships. |
+| Business structure | profiles, branches, warehouses, fiscal periods | Version industry, currency, calendar, timezone and policies. |
+| Evidence | documents, versions, extraction runs, extracted fields, links | Separate original bytes; retain field locator and extraction version. |
+| Catalog | items, aliases, units, item conversions | SKU and pack conversions are business/item specific. |
+| Inventory | movements, counts, count lines, lots | Distinguish physical counts, waste, returns and transfers. |
+| Recipes/production | recipes, versions, lines, production batches | Use the version valid at production/service time; define raw/net quantities and yield. |
+| Sales/purchases | sales, lines, receipts, receipt lines | Preserve fulfillment status, event date, units and evidence. |
+| Finance | journal entries/lines, approvals, reversals | Balanced entries, immutable confirmed history and evidence. |
+| Analysis | metric definitions, runs, findings, finding evidence | Record metric version, inputs, outputs and limitations. |
+| Business knowledge | facts, versions, confirmed policies | Separate confirmed facts from assumptions/extracted claims. |
+| Conversation | cases, conversations, messages, tool runs | Text history does not replace inventory, journals or verified numbers. |
+| Execution | jobs, attempts, audit events, outbox | Safe retries, bounded attempts, correlation and failure reasons. |
 
-سند ناشناخته نیز ذخیره و دسته‌بندی می‌شود، اما تا تعریف نگاشت معتبر وارد محاسبات قطعی نمی‌شود. هسته مشترک شامل پول، کالا، مقدار، زمان، طرف معامله و شاهد است؛ قابلیت‌های رستوران/کافه/فروشگاه به آن اضافه می‌شوند.
+Unknown document types may be stored/classified but cannot enter confirmed calculations without a valid mapping. The common core is money, item, quantity, time, counterparty and evidence; restaurant/cafe/retail capabilities extend it.
 
-## حافظه و شناخت بیزینس
-سه سطح مستقل: (۱) واقعیت‌های ساخت‌یافته تأییدشده، (۲) دانش متنی قابل بازیابی با شاهد و اعتبار زمانی، (۳) تاریخچه گفتگو. ایجنت برای عدد ابتدا ابزار ساخت‌یافته را صدا می‌زند؛ جست‌وجوی معنایی فقط برای یافتن توضیح/شاهد است. خلاصه گفتگو بدون تأیید به واقعیت مالی تبدیل نمی‌شود. تعارض دو سند به finding تبدیل می‌شود، نه انتخاب خودکار یکی از آن‌ها.
+## Business memory
 
-## زیرساخت پیشنهادی MVP
-یک برنامه Python ماژولار، PostgreSQL برای داده‌های ساخت‌یافته، مخزن فایل قابل تعویض محلی/S3-compatible و worker جدا برای OCR و تحلیل طولانی. صف پایدار می‌تواند ابتدا در PostgreSQL باشد. افزودن Redis، پایگاه برداری، microservice و شاردینگ تنها با شواهد نیاز انجام می‌شود.
+Keep three layers separate: confirmed structured facts, retrievable text with evidence/validity dates, and conversation history. For numbers, call structured tools first. Semantic retrieval locates explanations/evidence; a conversation summary does not become a financial fact without approval. Conflicting documents produce a finding rather than an automatic choice of one source.
 
-همه جدول‌های متعلق به بیزینس business_id دارند. شناسه‌های یکتا و کلیدهای خارجی مرکب مانع پیوند بین دو بیزینس می‌شوند. سرویس از نقش دیتابیس بدون superuser/BYPASSRLS استفاده می‌کند؛ RLS به‌همراه کنترل عضویت در سرویس و آزمون منفی اجباری است. دامنه بیزینس به صورت transaction-local تعیین می‌شود تا pool اتصال آن را به درخواست بعدی نشت ندهد. مجوز فایل، cache، job و بازیابی متنی هم همان دامنه را رعایت می‌کند.
+## MVP infrastructure
 
-مبالغ و مقادیر از NUMERIC/Decimal استفاده می‌کنند؛ قیود precision/scale و گرد کردن هر واحد صریح است. timestamp واقعی با منطقه زمانی و نمایش شمسی جدا نگه داشته می‌شود. زمان وقوع و زمان ثبت دو ستون متفاوت‌اند؛ سند دیررس باید دوره متاثر را برای محاسبه مجدد علامت بزند.
+Start with one modular Python application, PostgreSQL for structured data, replaceable local/S3-compatible blob storage and separate workers for OCR/long analysis. PostgreSQL can provide the initial durable queue. Add Redis, vector storage, microservices or sharding only when measured need justifies them.
 
-## ایندکس دیتابیس در برابر شاخص کسب‌وکار
-«شاخص» در این پروژه به دو مفهوم جدا اشاره می‌کند: تعریف KPI مالی/عملیاتی و index برای سرعت بازیابی. تعریف KPI در METRICS_CATALOG.md است.
+Every business-owned table carries `business_id`. Composite foreign keys prevent cross-business links. Use a non-owner runtime role without superuser/BYPASSRLS privileges, membership checks, RLS and negative tests. Set scope transaction-locally so reused connections do not leak it. Scope files, caches, jobs and text retrieval consistently.
 
-ایندکس‌های اولیه پیشنهادی براساس مسیرهای خواندن:
-- عضویت: یکتایی (business_id, user_id).
-- گردش انبار: (business_id, warehouse_id, item_id, occurred_at, id).
-- فروش: (business_id, branch_id, fulfilled_at, id) و کلید خارجی ردیف فروش در همان بیزینس.
-- نسخه رسپی: (business_id, product_id, effective_from) با منع بازه معتبر همپوشان برای همان زمینه.
-- سند: (business_id, status, received_at) و شناسه idempotency در همان بیزینس؛ یک هش مشابه لزوماً یک رویداد تجاری نیست.
-- رویداد ممیزی: (business_id, occurred_at, id).
-- صف: index محدود روی وضعیت‌های آماده و زمان اجرای بعدی.
+Store amounts/quantities with NUMERIC/Decimal and explicit precision/rounding contracts. Keep timezone-aware event timestamps separate from Jalali display and from recording time. A late document should eventually mark affected periods for recalculation.
 
-ایندکس نهایی با EXPLAIN ANALYZE و بار واقعی انتخاب می‌شود؛ اضافه کردن index به همه ستون‌ها هدف نیست.
+## Database indexes versus business metrics
 
-## قرارداد ظرفیت، نه ادعای ظرفیت
-هدف حداقل ۱۰۰۰ بیزینس است؛ تعداد بیزینس بدون حجم سند، گردش و همزمانی معیار کافی نیست. پروفایل آزمون پیشنهادی اولیه: ۱۰۰۰ بیزینس، مجموع یک میلیون گردش کالا، چند بیزینس پرحجم و ۲۵ درخواست همزمان. حجم اسناد و هدف تأخیر پس از اولین اندازه‌گیری با مشخصات سخت‌افزار ثبت می‌شود. OCR در صف جداست و نباید زمان API خواندن را اشغال کند.
+Business KPI definitions are in [METRICS_CATALOG](METRICS_CATALOG.md). Database indexes address query access paths:
 
-معیار پذیرش: صفر دسترسی بین‌بیزینسی، صفر ثبت تکراری با retry، تراز مالی/مقداری صحیح، پیوند کامل شواهد و گزارش p50/p95/p99 با تعداد خطاها. هیچ ادعای «پشتیبانی از هزار بیزینس» قبل از آزمون روی PostgreSQL واقعی منتشر نمی‌شود.
+- Membership uniqueness: `(business_id, user_id)`.
+- Inventory period reads: `(business_id, warehouse_id, item_id, occurred_at, id)`.
+- Fulfilled sales: business/branch/time/ID, with same-business line references.
+- Recipe validity: business/product/effective time; the design calls for no conflicting approved intervals.
+- Documents: scoped processing/time indexes, scoped idempotency and content-hash lookup. Identical bytes do not always identify the same business event.
+- Audit: business/time/ID.
+- Queue: partial indexes for ready states and next attempt time.
 
-## ترتیب پیاده‌سازی
-۱. پروفایل، عضویت، دامنه بیزینس، schema/migration و لاگ ممیزی.
-۲. ورودی سند و شواهد، صف پردازش، نامزد استخراج و تأیید.
-۳. کالا، واحد، انبار، شمارش، خرید/انتقال/ضایعات، فروش و رسپی نسخه‌دار.
-۴. مسیر عمودی «چرا مصرف گوشت این ماه با موجودی نمی‌خواند؟» تا پاسخ مستند.
-۵. ابزارهای ایجنت، دانش تأییدشده و حالت quick بدون اتصال به سابقه.
-۶. آزمون ۱۰۰۰ بیزینس و همزمانی، بازیابی خطا و backup/restore؛ سپس توسعه سایر مسائل مالی.
+Use EXPLAIN ANALYZE and realistic workloads to choose final indexes. Indexing every column is not the goal.
 
-## منابع فنی
-- [PostgreSQL RLS](https://www.postgresql.org/docs/current/ddl-rowsecurity.html): سیاست سطری به‌تنهایی برای نقش مالک/superuser کافی نیست.
-- [NUMERIC](https://www.postgresql.org/docs/current/datatype-numeric.html): نوع عدد دقیق برای ذخیره مبالغ و مقادیر با قرارداد گرد کردن.
-- [ایندکس مرکب](https://www.postgresql.org/docs/current/indexes-multicolumn.html): ترتیب ستون‌ها باید با فیلترهای واقعی هماهنگ شود.
+## Capacity contract
+
+The target is at least 1,000 businesses, but tenant count alone is insufficient. The initial profile is 1,000 tenants, one million inventory movements, skewed tenant sizes and 25 concurrent requests. Report hardware, document volumes, p50/p95/p99 and errors. OCR must not occupy the normal read API path.
+
+Acceptance requires no cross-business access, no duplicate posting on retry, correct quantities/balances and complete provenance. The completed synthetic PostgreSQL read benchmark is documented separately; it does not certify full ingestion, reconciliation, OCR or agent capacity.
+
+## Implementation sequence
+
+1. Profiles, memberships, tenant scope, migrations and audit.
+2. Document evidence, durable processing, extraction candidates and review.
+3. Catalog, units, warehouses, counts, receipts/transfers/waste, fulfilled sales and recipe versions.
+4. End-to-end explanation of a monthly ingredient discrepancy.
+5. Agent tools, confirmed knowledge and Quick without business-history retrieval.
+6. Full 1,000-business concurrency, recovery and backup/restore validation, then broader financial tools.
+
+## Technical references
+
+- [PostgreSQL RLS](https://www.postgresql.org/docs/current/ddl-rowsecurity.html): policies alone do not constrain superusers/owners in the same way as a restricted runtime role.
+- [NUMERIC](https://www.postgresql.org/docs/current/datatype-numeric.html): exact numeric storage with explicit precision/scale.
+- [Multicolumn indexes](https://www.postgresql.org/docs/current/indexes-multicolumn.html): column order should reflect actual filters.

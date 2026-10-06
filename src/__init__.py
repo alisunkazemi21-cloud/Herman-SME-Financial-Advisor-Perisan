@@ -1,1 +1,1 @@
-"""مشاور مالی فارسی."""
+"""Persian financial advisor."""

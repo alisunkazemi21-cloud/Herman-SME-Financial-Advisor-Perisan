@@ -15,6 +15,7 @@ from src.analytics.benchmarks import BenchmarkRequest, compare
 from src.analytics.forecast import MonthlyCashFlow, forecast_cashflow
 from src.analytics.ratios import FinancialStatement, compute_ratios
 from src.models import Evidence, Fact, Model
+from src.reporting import render_run_markdown
 
 
 class RunInput(Model):
@@ -73,40 +74,9 @@ def run_analysis(input_path: Path, output_root: Path) -> Path:
               " این گزارش پیشنهاد تخصیص سرمایه یا ادعای انطباق قانونی ندارد."}
     manifest = directory / "manifest.json"
     manifest.write_text(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
-    table = "\n".join(f"|{r.name_fa}|{r.value if r.value is not None else 'تعریف‌نشده'}|{r.formula_fa}|"
-                      for r in ratios)
-    forecast_table = "\n".join(f"|{p['month']}|{p['estimate']:.0f}|{p['lower']:.0f}|{p['upper']:.0f}|"
-                               for p in forecast["predictions"])
-    benchmark_table = "نرخ مستند وارد نشده است؛ مقایسه‌ای محاسبه نشده است."
-    if result["benchmarks"]:
-        benchmark_rows = []
-        for benchmark in result["benchmarks"]:
-            label = "دلار آمریکا" if benchmark["asset"] == "USD" else "گرم طلای ۱۸عیار"
-            benchmark_rows.append(f"|{label}|{benchmark['start_date']}|{benchmark['end_date']}|"
-                                  f"{benchmark['amount_irr']}|{benchmark['ending_value_irr']}|"
-                                  f"{benchmark['nominal_return']}|")
-        benchmark_table = ("|دارایی|شروع|پایان|مبلغ اولیه ریال|ارزش فرضی پایان ریال|بازده اسمی به صورت کسر|\n"
-                           "|---|---|---|---|---|---|\n" + "\n".join(benchmark_rows) +
-                           "\n\nمقایسه فرضی بدون کارمزد، مالیات و تعدیل تورم؛ توصیه خرید نیست.")
-    text = (f"# گزارش مالی {data.business_name}\n\nشناسه اجرا: `{run_id}`\n\n{result['note_fa']}\n\n"
-            f"هش ورودی: `{result['input_sha256']}`\n\nواحد: ریال؛ مقادیر نسبت‌ها کسر هستند.\n\n"
-            f"|نسبت|مقدار|فرمول|\n|---|---|---|\n{table}\n\n"
-            f"## عدم قطعیت\n\n{forecast.get('warning_fa', '')}\n\n"
-            f"{forecast['diagnostics']['recommendation_fa']}\n\n"
-            f"سطح اسمی بازه: {forecast['coverage']:.0%}\n\n"
-            f"|ماه|برآورد|کران پایین|کران بالا|\n|---|---|---|---|\n{forecast_table}\n\n"
-            f"## مقایسه دلار و طلا\n\n{benchmark_table}\n\n"
-            f"## پیشنهاد بررسی\n\n{result['advice_fa']}\n\n"
-            "جزئیات پیش‌بینی، منشأ هر مقدار و نرخ‌های مقایسه در manifest.json همین اجرا موجود است.\n")
+    text, chapter, narrative = render_run_markdown(result)
     (directory / "README.md").write_text(text, encoding="utf-8")
     slug = run_id.replace("/", "_")
-    chapter = (f"# فصل پژوهش — {run_id}\n\n" + text +
-               "\n## روش\n\nمحاسبات Decimal از صورت مالی بررسی‌شده؛ پیش‌بینی پایه با آزمون ADF و غربال وقفه ۱۲. "
-               "بازه‌ها از خطاهای تاریخی bootstrap می‌شوند؛ ارزیابی مستقل روی کسب‌وکار واقعی انجام نشده است. "
-               "شاهد هر ورودی در بایگانی اجرای مربوط با نام SHA256 نگه داشته شده است.\n")
-    narrative = (f"# خلاصه برای صاحب کسب‌وکار\n\nشناسه اجرا: `{run_id}`\n\n{result['note_fa']}\n\n"
-                 f"{result['advice_fa']}\n\n{forecast.get('warning_fa', '')}\n\n"
-                 "این گزارش جای تصمیم حسابدار را نمی‌گیرد. جدول نسبت‌ها و حدود پیش‌بینی را در گزارش فنی همین اجرا ببینید.\n")
     for relative, content in ((f"research/CHAPTERS/{slug}.md", chapter),
                                (f"reports/{slug}_technical_fa.md", text), (f"media/{slug}_fa.md", narrative)):
         target = output_root / relative
@@ -115,9 +85,9 @@ def run_analysis(input_path: Path, output_root: Path) -> Path:
     # Each run remains immutable; publish daily views and the common pointer under one lock.
     with FileLock(str(output_root / "runs" / "publication.lock"), timeout=10):
         date_label = now.strftime("%Y-%m-%d")
-        daily_index = (f"# آخرین اجرای روز {date_label}\n\nشناسه اجرا: `{run_id}`\n\n"
-                       f"[گزارش کامل]({directory.name}/README.md) · "
-                       f"[شواهد و نتایج]({directory.name}/manifest.json)\n")
+        daily_index = (f"# Latest run for {date_label}\n\nRun ID: `{run_id}`\n\n"
+                       f"[Full report]({directory.name}/README.md) · "
+                       f"[Evidence and results]({directory.name}/manifest.json)\n")
         for target, content in ((directory.parent / "README.md", daily_index),
                                  (output_root / "reports" / f"{date_label}_technical_fa.md", text),
                                  (output_root / "media" / "narrative_fa.md", narrative)):

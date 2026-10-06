@@ -1,1 +1,1 @@
-"""هسته سرویس چندبیزینسی هرمان؛ مستقل از رابط کاربری."""
+"""Herman multi-business service core, independent of the interface."""
