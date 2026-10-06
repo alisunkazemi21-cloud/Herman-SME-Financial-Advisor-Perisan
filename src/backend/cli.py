@@ -5,9 +5,10 @@ import argparse
 import hashlib
 import os
 import secrets
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import psycopg
 
@@ -24,6 +25,15 @@ def main() -> None:
     serve = sub.add_parser("serve")
     serve.add_argument("--port", type=int, default=8000)
     serve.add_argument("--blob-root", type=Path, default=Path("data/backend/blobs"))
+    worker = sub.add_parser("worker-once", help="Claim and process at most one job for one authorized business")
+    worker.add_argument("--business", type=UUID, required=True)
+    worker.add_argument("--credential-file", type=Path, required=True)
+    worker.add_argument("--blob-root", type=Path, default=Path("data/backend/blobs"))
+    continuous = sub.add_parser("worker", help="Continuously process one authorized business")
+    continuous.add_argument("--business", type=UUID, required=True)
+    continuous.add_argument("--credential-file", type=Path, required=True)
+    continuous.add_argument("--blob-root", type=Path, default=Path("data/backend/blobs"))
+    continuous.add_argument("--poll-seconds", type=int, choices=range(1, 61), default=2)
     args = parser.parse_args()
     if args.command == "migrate":
         migrate(os.environ["HERMAN_ADMIN_DSN"])
@@ -41,6 +51,22 @@ def main() -> None:
                 target.flush()
                 os.fsync(target.fileno())
         print(f"User {identity} provisioned; credential saved to the requested private file (30 days).")
+    elif args.command in ("worker-once", "worker"):
+        from src.backend.jobs import ExtractionQueue
+        from src.backend.service import Service
+        from src.backend.worker import process_one
+        queue = ExtractionQueue(Service(Database(os.environ["HERMAN_DATABASE_DSN"]), args.blob_root))
+        try:
+            while True:
+                identity = process_one(queue, args.credential_file.read_text(encoding="utf-8").strip(), args.business)
+                if identity:
+                    print(f"Handled job {identity}", flush=True)
+                if args.command == "worker-once":
+                    break
+                if identity is None:
+                    time.sleep(args.poll_seconds)
+        except KeyboardInterrupt:
+            print("Worker stopped; unfinished leases remain recoverable.")
     else:
         import uvicorn
 

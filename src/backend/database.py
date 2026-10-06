@@ -18,7 +18,7 @@ class AccessDenied(PermissionError):
 class Database:
     def __init__(self, dsn: str) -> None:
         self.dsn = dsn
-        with psycopg.connect(dsn) as c:
+        with psycopg.connect(dsn, connect_timeout=10) as c:
             unsafe = c.execute("SELECT EXISTS (SELECT 1 FROM pg_roles WHERE "
                 "(rolsuper OR rolbypassrls OR rolcreaterole OR rolcreatedb) "
                 "AND pg_has_role(current_user,oid,'MEMBER'))").fetchone()[0]
@@ -31,7 +31,7 @@ class Database:
         if not 32 <= len(token) <= 256:
             raise AccessDenied("اعتبار دسترسی نامعتبر است")
         digest = hashlib.sha256(token.encode()).hexdigest()
-        with psycopg.connect(self.dsn) as connection:
+        with psycopg.connect(self.dsn, connect_timeout=10) as connection:
             user_id = connection.execute("SELECT herman.authenticate(%s)", (digest,)).fetchone()[0]
         if user_id is None:
             raise AccessDenied("اعتبار دسترسی نامعتبر یا منقضی است")
@@ -39,9 +39,11 @@ class Database:
 
     @contextmanager
     def transaction(self, user_id: UUID, business_id: UUID | None = None,
-                    write: bool = False, reviewer: bool = False) -> Iterator[psycopg.Connection]:
-        with psycopg.connect(self.dsn, row_factory=dict_row) as connection:
-            connection.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ")
+                    write: bool = False, reviewer: bool = False,
+                    snapshot: bool = True) -> Iterator[psycopg.Connection]:
+        with psycopg.connect(self.dsn, row_factory=dict_row, connect_timeout=10) as connection:
+            if snapshot:
+                connection.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ")
             connection.execute("SELECT set_config('herman.user_id',%s,true)", (str(user_id),))
             if business_id is not None:
                 connection.execute("SELECT set_config('herman.business_id',%s,true)", (str(business_id),))
@@ -54,16 +56,18 @@ class Database:
 
 def migrate(admin_dsn: str, runtime_role: str = "herman_app") -> None:
     """Apply the versioned schema under a migration lock; login password is provisioned separately."""
-    with psycopg.connect(admin_dsn) as connection:
+    with psycopg.connect(admin_dsn, connect_timeout=10) as connection:
         connection.execute("SELECT pg_advisory_xact_lock(48732001)")
         existing = connection.execute("SELECT to_regclass('herman.schema_migrations')").fetchone()[0]
         if existing is None:
             connection.execute(Path(__file__).with_name("schema.sql").read_text(encoding="utf-8"))
         versions = {row[0] for row in connection.execute("SELECT version FROM herman.schema_migrations")}
-        if not versions <= {1, 2} or 1 not in versions:
+        if not versions <= {1, 2, 3} or 1 not in versions:
             raise ValueError("unsupported database schema version")
         if 2 not in versions:
             connection.execute(Path(__file__).with_name("migration_002.sql").read_text(encoding="utf-8"))
+        if 3 not in versions:
+            connection.execute(Path(__file__).with_name("migration_003.sql").read_text(encoding="utf-8"))
         if connection.execute("SELECT 1 FROM pg_roles WHERE rolname=%s", (runtime_role,)).fetchone() is None:
             connection.execute(sql.SQL("CREATE ROLE {} NOLOGIN NOSUPERUSER NOBYPASSRLS").format(
                 sql.Identifier(runtime_role)))
@@ -78,11 +82,13 @@ def migrate(admin_dsn: str, runtime_role: str = "herman_app") -> None:
         connection.execute(sql.SQL("GRANT USAGE ON SCHEMA herman TO {}").format(sql.Identifier(runtime_role)))
         tables = ["businesses", "warehouses", "documents", "items", "unit_conversions", "records", "approvals",
                   "stock_counts", "stock_movements", "recipes", "recipe_lines", "fulfillments",
-                  "analysis_runs", "audit_events", "idempotency_keys"]
+                  "analysis_runs", "audit_events", "idempotency_keys", "extraction_jobs", "extractions"]
         for table in tables:
             connection.execute(sql.SQL("GRANT SELECT, INSERT ON herman.{} TO {}").format(
                 sql.Identifier(table), sql.Identifier(runtime_role)))
         connection.execute(sql.SQL("REVOKE INSERT ON herman.businesses FROM {}").format(sql.Identifier(runtime_role)))
+        connection.execute(sql.SQL("GRANT UPDATE(status,attempts,available_at,lease_token,leased_until,error_code) "
+            "ON herman.extraction_jobs TO {}").format(sql.Identifier(runtime_role)))
         for function in ("user_id()", "business_id()", "member_role(uuid)", "authenticate(text)",
                          "create_business(text,text,text)", "list_businesses()"):
             connection.execute(sql.SQL("GRANT EXECUTE ON FUNCTION herman." + function + " TO {}").format(

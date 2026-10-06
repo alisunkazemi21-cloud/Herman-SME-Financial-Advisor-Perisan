@@ -20,6 +20,7 @@ from src.backend.inventory import (
     UnitConversion,
     reconcile_inventory,
 )
+from src.backend.jobs import ExtractionInput, ExtractionQueue
 from src.backend.service import AnalysisInput, Conflict, NotFound, Service, Warehouse
 from src.models import Model
 
@@ -37,6 +38,7 @@ class DecisionInput(Model):
 def create_app(database: Database, blob_root: Path) -> FastAPI:
     app = FastAPI(title="Herman SME backend", version="0.2.0")
     service = Service(database, blob_root)
+    queue = ExtractionQueue(service)
     bearer = HTTPBearer(auto_error=False)
 
     def actor(credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)]) -> UUID:
@@ -75,6 +77,18 @@ def create_app(database: Database, blob_root: Path) -> FastAPI:
     @app.get("/health")
     def health():
         return {"status": "ok"}
+
+    @app.post("/businesses/{business}/document-jobs", status_code=202)
+    def enqueue(business: UUID, value: ExtractionInput, user: Actor, key: Key):
+        return {"id": queue.enqueue(user, business, key, value)}
+
+    @app.get("/businesses/{business}/document-jobs")
+    def jobs(business: UUID, user: Actor, after: UUID | None = None, limit: int = 50):
+        return queue.list(user, business, after, limit)
+
+    @app.get("/businesses/{business}/document-jobs/{identity}")
+    def job(business: UUID, identity: UUID, user: Actor):
+        return queue.read(user, business, identity)
 
     @app.get("/businesses")
     def businesses(user: Actor):
