@@ -95,7 +95,7 @@ After the paginated reading, source-byte validation and migration changes, all 2
 
 This is the first backend milestone, not completion of the approved whole application:
 
-- Durable queue and extraction retry/recovery are now implemented: [checkpoint 2](DOCUMENT_QUEUE.md). Mapping extracted candidates to typed business proposals remains the next checkpoint.
+- Durable queue and extraction retry/recovery are implemented: [checkpoint 2](DOCUMENT_QUEUE.md). Explicit CSV/XLSX row mapping to count/movement/fulfillment proposals is implemented in [checkpoint 3](TABULAR_IMPORTS.md); free-text and recipe mapping remain outstanding.
 - General financial journal migration into tenant-scoped PostgreSQL and further financial KPI tools.
 - Full agent orchestration, verified business knowledge/retrieval, conversation memory and conversational Quick Advisor.
 - Correction/supersession of previously approved records and unit/catalog definitions; records currently remain immutable. Recipe overlap is detected by the calculator and produces incomplete results; preventing concurrent overlapping approvals at database level is still outstanding. Plan bounded recipe intervals when recording future versions.

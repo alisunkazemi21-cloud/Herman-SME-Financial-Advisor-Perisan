@@ -15,6 +15,7 @@ from psycopg.types.json import Jsonb
 from pydantic import Field
 
 from src.backend.database import Database
+from src.backend.duplicates import document_matches, record_matches
 from src.backend.inventory import (
     Count,
     Coverage,
@@ -100,7 +101,19 @@ class Service:
                                              (business, identity)).fetchall()
             decision = c.execute("SELECT * FROM herman.approvals WHERE business_id=%s AND record_id=%s",
                                  (business, identity)).fetchone()
-            return dict(source=source, detail=detail, decision=decision)
+            origin = c.execute("SELECT s.*,b.mapping,e.parser_version,e.source_sha256 FROM herman.record_sources s "
+                "JOIN herman.import_batches b ON (b.business_id,b.id)=(s.business_id,s.batch_id) "
+                "JOIN herman.extractions e ON (e.business_id,e.id)=(s.business_id,s.extraction_id) "
+                "WHERE s.business_id=%s AND s.id=%s", (business, identity)).fetchone()
+            return dict(source=source, detail=detail, decision=decision, origin=origin,
+                        duplicate_candidates=record_matches(c, business, identity))
+
+    def document_duplicates(self, actor: UUID, business: UUID, identity: UUID) -> dict:
+        with self.database.transaction(actor, business) as c:
+            if not c.execute("SELECT 1 FROM herman.documents WHERE business_id=%s AND id=%s",
+                             (business, identity)).fetchone():
+                raise NotFound("سند موجود نیست")
+            return dict(documents=document_matches(c, business, identity), reason="identical_file_sha256")
 
     def create_business(self, actor: UUID, name: str, industry: str, key: str) -> UUID:
         for attempt in range(3):
@@ -177,7 +190,8 @@ class Service:
                     if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
                         raise Conflict("فایل شاهد با هش ثبت‌شده همخوانی ندارد")
                 else:
-                    temporary = folder / (digest + "." + str(uuid4()) + ".tmp")
+                    # Keep staging names short enough for Windows paths; the published name is still the full hash.
+                    temporary = folder / (uuid4().hex + ".tmp")
                     with temporary.open("xb") as target:
                         target.write(content)
                         target.flush()
@@ -219,34 +233,51 @@ class Service:
     def propose(self, actor: UUID, business: UUID, key: str, value: Count | Movement | Recipe | Fulfillment) -> UUID:
         if value.business_id != business or value.status != "proposed":
             raise ValueError("رکورد باید متعلق به بیزینس و در وضعیت پیشنهاد باشد")
+        kind = "movement" if isinstance(value, Movement) else (
+            "count" if isinstance(value, Count) else "recipe" if isinstance(value, Recipe) else "fulfillment")
+        return self._write(actor, business, key, kind + ".proposed", value.model_dump(mode="json"),
+                           lambda c: self._insert_proposal(c, actor, business, value))
+
+    def _insert_proposal(self, c, actor, business, value) -> UUID:
+        if value.business_id != business or value.status != "proposed":
+            raise ValueError("پیشنهاد با دامنه بیزینس همخوانی ندارد")
         kind, table = ("movement", "stock_movements") if isinstance(value, Movement) else (
             ("count", "stock_counts") if isinstance(value, Count) else (
                 ("recipe", "recipes") if isinstance(value, Recipe) else ("fulfillment", "fulfillments")))
 
-        def store(c):
-            fields = value.model_dump()
-            fields.pop("status")
-            evidence = fields.pop("evidence")
-            insert(c, "records", dict(business_id=business, id=value.id, kind=kind, created_by=actor, **evidence))
-            lines = fields.pop("lines", None)
-            insert(c, table, fields)
-            for line in lines or ():
-                insert(c, "recipe_lines", dict(business_id=business, recipe_id=value.id, **line))
-            return value.id
+        fields = value.model_dump()
+        fields.pop("status")
+        evidence = fields.pop("evidence")
+        insert(c, "records", dict(business_id=business, id=value.id, kind=kind, created_by=actor, **evidence))
+        lines = fields.pop("lines", None)
+        insert(c, table, fields)
+        for line in lines or ():
+            insert(c, "recipe_lines", dict(business_id=business, recipe_id=value.id, **line))
+        return value.id
 
-        return self._write(actor, business, key, kind + ".proposed", value.model_dump(mode="json"), store)
-
-    def approve(self, actor: UUID, business: UUID, key: str, record_id: UUID, approved: bool, reason: str) -> UUID:
+    def approve(self, actor: UUID, business: UUID, key: str, record_id: UUID, approved: bool, reason: str,
+                duplicate_resolution: str | None = None) -> UUID:
         if not 1 <= len(reason.strip()) <= 2000:
             raise ValueError("دلیل بررسی لازم است")
+        if duplicate_resolution not in (None, "same_event", "distinct_event"):
+            raise ValueError("تصمیم تکرار نامعتبر است")
+        if approved and duplicate_resolution == "same_event":
+            raise ValueError("رکورد تکراری همان رویداد نباید تأیید شود")
 
         def store(c):
+            duplicates = record_matches(c, business, record_id)
+            if not duplicates["found"]:
+                raise NotFound("رکورد موجود نیست")
+            if duplicates["requires_resolution"] and approved and duplicate_resolution != "distinct_event":
+                raise Conflict("نامزد تکرار وجود دارد؛ برای تأیید، مستقل بودن رویداد را با دلیل تأیید کنید")
             insert(c, "approvals", dict(business_id=business, record_id=record_id, approved=approved,
-                                        actor_id=actor, reason_fa=reason))
+                                        actor_id=actor, reason_fa=reason, duplicate_resolution=duplicate_resolution))
             return record_id
 
-        return self._write(actor, business, key, "record.reviewed",
-                           dict(record_id=str(record_id), approved=approved, reason=reason), store, reviewer=True)
+        payload = dict(record_id=str(record_id), approved=approved, reason=reason)
+        if duplicate_resolution is not None:
+            payload["duplicate_resolution"] = duplicate_resolution
+        return self._write(actor, business, key, "record.reviewed", payload, store, reviewer=True)
 
     def analyze(self, actor: UUID, business: UUID, key: str, value: AnalysisInput) -> UUID:
         if value.scope.business_id != business:
@@ -312,10 +343,18 @@ class Service:
                 if hashlib.sha256(content).hexdigest() != source["sha256"]:
                     raise Conflict("فایل شاهد تغییر کرده است؛ تحلیل ثبت نشد")
             result = reconcile_inventory(request).model_dump(mode="json")
+            record_ids = [row.id for row in (*request.movements, *request.recipes, *request.fulfillments)]
+            record_ids.extend(row.id for row in (request.opening, request.closing) if row is not None)
+            provenance = c.execute("SELECT s.*,b.mapping,e.source_sha256,e.parser_version FROM herman.record_sources s "
+                "JOIN herman.import_batches b ON (b.business_id,b.id)=(s.business_id,s.batch_id) "
+                "JOIN herman.extractions e ON (e.business_id,e.id)=(s.business_id,s.extraction_id) "
+                "WHERE s.business_id=%s AND s.id=ANY(%s::uuid[]) ORDER BY s.id", (business, record_ids)).fetchall()
+            # Convert UUIDs to JSON strings without altering numeric calculator inputs.
+            provenance_json = json.loads(json.dumps(provenance, default=str, ensure_ascii=False))
             identity = uuid4()
             insert(c, "analysis_runs", dict(business_id=business, id=identity, actor_id=actor,
                 input_sha256=hashlib.sha256(canonical(snapshot).encode()).hexdigest(),
-                input_snapshot=Jsonb(snapshot), result=Jsonb(result)))
+                input_snapshot=Jsonb(snapshot), result=Jsonb(result), source_provenance=Jsonb(provenance_json)))
             return identity
 
         # Completeness and materiality assertions are reviewed inputs, not model guesses.

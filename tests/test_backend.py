@@ -108,7 +108,8 @@ def test_authenticated_roles_and_document_access(backend):
     with pytest.raises(AccessDenied):
         service.approve(b["editor"], b["business"], "approve", uuid4(), True, "reason")
     with pytest.raises(psycopg.errors.InsufficientPrivilege), db.transaction(b["editor"], b["business"]) as c:
-        c.execute("INSERT INTO herman.approvals VALUES(%s,%s,true,%s,'forged',now())",
+        c.execute("INSERT INTO herman.approvals(business_id,record_id,approved,actor_id,reason_fa,created_at) "
+                  "VALUES(%s,%s,true,%s,'forged',now())",
                   (b["business"], uuid4(), b["editor"]))
     with pytest.raises(psycopg.errors.InsufficientPrivilege), db.transaction(b["owner"], b["business"]) as c:
         c.execute("INSERT INTO herman.audit_events VALUES(%s,%s,%s,'forged',NULL,%s,now())",

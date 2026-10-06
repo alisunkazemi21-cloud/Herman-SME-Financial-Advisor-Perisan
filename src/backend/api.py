@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 import psycopg
@@ -10,6 +10,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import Field, ValidationError
 
 from src.backend.database import AccessDenied, Database
+from src.backend.imports import TabularImport, TabularImporter
 from src.backend.inventory import (
     Count,
     Fulfillment,
@@ -33,12 +34,14 @@ class BusinessInput(Model):
 class DecisionInput(Model):
     approved: bool
     reason_fa: str = Field(min_length=1, max_length=2000)
+    duplicate_resolution: Literal["same_event", "distinct_event"] | None = None
 
 
 def create_app(database: Database, blob_root: Path) -> FastAPI:
     app = FastAPI(title="Herman SME backend", version="0.2.0")
     service = Service(database, blob_root)
     queue = ExtractionQueue(service)
+    importer = TabularImporter(service)
     bearer = HTTPBearer(auto_error=False)
 
     def actor(credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)]) -> UUID:
@@ -78,6 +81,15 @@ def create_app(database: Database, blob_root: Path) -> FastAPI:
     def health():
         return {"status": "ok"}
 
+    @app.post("/businesses/{business}/tabular-imports", status_code=201)
+    def import_rows(business: UUID, value: TabularImport, user: Actor, key: Key):
+        identity = importer.create(user, business, key, value)
+        return importer.read(user, business, identity)
+
+    @app.get("/businesses/{business}/tabular-imports/{identity}")
+    def import_batch(business: UUID, identity: UUID, user: Actor):
+        return importer.read(user, business, identity)
+
     @app.post("/businesses/{business}/document-jobs", status_code=202)
     def enqueue(business: UUID, value: ExtractionInput, user: Actor, key: Key):
         return {"id": queue.enqueue(user, business, key, value)}
@@ -108,7 +120,8 @@ def create_app(database: Database, blob_root: Path) -> FastAPI:
                 raise HTTPException(413, "حداکثر اندازه سند ۱۰ مگابایت است")
         identity = await run_in_threadpool(service.document, user, business, key, filename,
             request.headers.get("content-type", "application/octet-stream"), bytes(content))
-        return {"id": identity}
+        duplicates = await run_in_threadpool(service.document_duplicates, user, business, identity)
+        return {"id": identity, "duplicate_candidates": duplicates}
 
     @app.get("/businesses/{business}/documents/{identity}")
     def read_document(business: UUID, identity: UUID, user: Actor):
@@ -116,6 +129,10 @@ def create_app(database: Database, blob_root: Path) -> FastAPI:
         return Response(content, media_type="application/octet-stream",
                         headers={"Content-Disposition": "attachment", "X-Content-Type-Options": "nosniff",
                                  "Cache-Control": "no-store"})
+
+    @app.get("/businesses/{business}/documents/{identity}/duplicates")
+    def document_duplicates(business: UUID, identity: UUID, user: Actor):
+        return service.document_duplicates(user, business, identity)
 
     @app.post("/businesses/{business}/warehouses", status_code=201)
     def warehouse(business: UUID, value: Warehouse, user: Actor, key: Key):
@@ -147,7 +164,8 @@ def create_app(database: Database, blob_root: Path) -> FastAPI:
 
     @app.post("/businesses/{business}/records/{identity}/decision", status_code=201)
     def decision(business: UUID, identity: UUID, value: DecisionInput, user: Actor, key: Key):
-        return {"id": service.approve(user, business, key, identity, value.approved, value.reason_fa)}
+        return {"id": service.approve(user, business, key, identity, value.approved, value.reason_fa,
+                                      value.duplicate_resolution)}
 
     @app.post("/businesses/{business}/inventory-analyses", status_code=201)
     def analyze(business: UUID, value: AnalysisInput, user: Actor, key: Key):

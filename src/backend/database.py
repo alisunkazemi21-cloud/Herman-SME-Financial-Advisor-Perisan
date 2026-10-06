@@ -62,12 +62,16 @@ def migrate(admin_dsn: str, runtime_role: str = "herman_app") -> None:
         if existing is None:
             connection.execute(Path(__file__).with_name("schema.sql").read_text(encoding="utf-8"))
         versions = {row[0] for row in connection.execute("SELECT version FROM herman.schema_migrations")}
-        if not versions <= {1, 2, 3} or 1 not in versions:
+        if not versions <= {1, 2, 3, 4, 5} or 1 not in versions:
             raise ValueError("unsupported database schema version")
         if 2 not in versions:
             connection.execute(Path(__file__).with_name("migration_002.sql").read_text(encoding="utf-8"))
         if 3 not in versions:
             connection.execute(Path(__file__).with_name("migration_003.sql").read_text(encoding="utf-8"))
+        if 4 not in versions:
+            connection.execute(Path(__file__).with_name("migration_004.sql").read_text(encoding="utf-8"))
+        if 5 not in versions:
+            connection.execute(Path(__file__).with_name("migration_005.sql").read_text(encoding="utf-8"))
         if connection.execute("SELECT 1 FROM pg_roles WHERE rolname=%s", (runtime_role,)).fetchone() is None:
             connection.execute(sql.SQL("CREATE ROLE {} NOLOGIN NOSUPERUSER NOBYPASSRLS").format(
                 sql.Identifier(runtime_role)))
@@ -82,7 +86,8 @@ def migrate(admin_dsn: str, runtime_role: str = "herman_app") -> None:
         connection.execute(sql.SQL("GRANT USAGE ON SCHEMA herman TO {}").format(sql.Identifier(runtime_role)))
         tables = ["businesses", "warehouses", "documents", "items", "unit_conversions", "records", "approvals",
                   "stock_counts", "stock_movements", "recipes", "recipe_lines", "fulfillments",
-                  "analysis_runs", "audit_events", "idempotency_keys", "extraction_jobs", "extractions"]
+                  "analysis_runs", "audit_events", "idempotency_keys", "extraction_jobs", "extractions",
+                  "import_batches", "record_sources"]
         for table in tables:
             connection.execute(sql.SQL("GRANT SELECT, INSERT ON herman.{} TO {}").format(
                 sql.Identifier(table), sql.Identifier(runtime_role)))
