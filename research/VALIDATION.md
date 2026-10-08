@@ -38,3 +38,9 @@ Kalameh is now the preferred dashboard/chart font, using an installed copy when 
 ## Graphify checkpoint — 2026-10-08
 
 Pinned local Graphify/SQL setup, code-only graph build, bounded workflow query, path query, HTML/report generation and excluded-path checks passed. See [verification and limits](GRAPHIFY.md). No application behavior changed; token savings remain unmeasured.
+
+## Advisor context and portfolio checkpoint — 2026-10-08
+
+The full PostgreSQL-enabled suite passed 122 tests; one real OCR test remained skipped. Fourteen new tests cover review gates, validity boundaries, conflicts, idempotent concurrent proposals, role enforcement, tenant isolation, evidence tampering, immutable decisions, read-only context, Quick isolation, output bounds, exact financial formulas, portfolio pagination and API behavior. After the final boolean response-type correction, its portfolio acceptance test passed again. Ruff and whitespace checks passed. Local warnings concern the test-client dependency and Windows temporary-directory cleanup; no application test failed in the final full run.
+
+Graphify's local code-only index was refreshed. No model-quality, OCR-accuracy or full portfolio capacity claim is made. Screen rendering remains deferred by the user. See [the API and metric contract](ADVISOR_PORTFOLIO.md).

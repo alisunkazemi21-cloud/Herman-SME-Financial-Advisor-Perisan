@@ -35,3 +35,7 @@ Still outstanding: conversational agents and verified memory; full tenant-scoped
 ## Documentation language — 2026-10-06
 
 The user requested English documentation at every checkpoint. Repository prose and generated Markdown are being translated; app language and source data remain Persian. This changes presentation, not financial values, stored evidence or previous test results.
+
+## Advisor and portfolio checkpoint — 2026-10-08
+
+Added reviewed business knowledge, bounded read-only business context, request-only Quick context, authorized-business portfolio summaries, reviewed financial snapshots and Decimal cash-flow/five-indicator payloads. The user selected backend data now and screen later. Conversational orchestration and evaluated model answers remain outstanding. See [contract and limitations](ADVISOR_PORTFOLIO.md).

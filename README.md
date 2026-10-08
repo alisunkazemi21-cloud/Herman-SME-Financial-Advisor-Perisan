@@ -90,3 +90,7 @@ Use Kalameh for Persian typography; its webfont files are pending, so the protot
 ## Workflow inspection
 
 [Graphify setup and bounded queries](research/GRAPHIFY.md) provide a local code graph for navigating backend workflows. Refresh it at code checkpoints; graph relationships are not live job telemetry or financial evidence.
+
+## Business knowledge and portfolio
+
+[Advisor context and portfolio API](research/ADVISOR_PORTFOLIO.md) provides reviewed knowledge, isolated Quick context, business highlights, five financial indicators and cash-flow waterfall data. Financial values require reviewed, evidenced inputs; the visible portfolio screen remains deferred.

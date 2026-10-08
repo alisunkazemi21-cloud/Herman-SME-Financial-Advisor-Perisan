@@ -7,8 +7,16 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from pydantic import Field, ValidationError
+from pydantic import AwareDatetime, Field, ValidationError
 
+from src.backend.advisor import (
+    BusinessAdvisor,
+    BusinessContextInput,
+    KnowledgeDecision,
+    KnowledgeProposal,
+    QuickContextInput,
+    quick_context,
+)
 from src.backend.database import AccessDenied, Database
 from src.backend.imports import TabularImport, TabularImporter
 from src.backend.inventory import (
@@ -22,6 +30,7 @@ from src.backend.inventory import (
     reconcile_inventory,
 )
 from src.backend.jobs import ExtractionInput, ExtractionQueue
+from src.backend.portfolio import FinancialPortfolio, FinancialSnapshot
 from src.backend.service import AnalysisInput, Conflict, NotFound, Service, Warehouse
 from src.models import Model
 
@@ -40,6 +49,8 @@ class DecisionInput(Model):
 def create_app(database: Database, blob_root: Path) -> FastAPI:
     app = FastAPI(title="Herman SME backend", version="0.2.0")
     service = Service(database, blob_root)
+    advisor = BusinessAdvisor(service)
+    financial = FinancialPortfolio(service)
     queue = ExtractionQueue(service)
     importer = TabularImporter(service)
     bearer = HTTPBearer(auto_error=False)
@@ -183,6 +194,53 @@ def create_app(database: Database, blob_root: Path) -> FastAPI:
     @app.get("/businesses/{business}/resources/{resource}")
     def resources(business: UUID, resource: str, user: Actor, after: UUID | None = None, limit: int = 50):
         return service.page(user, business, resource, after, limit)
+
+    @app.post("/businesses/{business}/financial-snapshots", status_code=201)
+    def financial_proposal(business: UUID, value: FinancialSnapshot, user: Actor, key: Key):
+        return {"id": financial.propose(user, business, key, value)}
+
+    @app.get("/businesses/{business}/financial-snapshots/{identity}")
+    def financial_record(business: UUID, identity: UUID, user: Actor, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return financial.read(user, business, identity)
+
+    @app.post("/businesses/{business}/financial-snapshots/{identity}/decision", status_code=201)
+    def financial_decision(business: UUID, identity: UUID, value: KnowledgeDecision, user: Actor, key: Key):
+        return {"id": financial.decide(user, business, key, identity, value.approved, value.reason_fa)}
+
+    @app.get("/advisor/portfolio")
+    def portfolio(effective_at: AwareDatetime, user: Actor, response: Response,
+                  after: UUID | None = None, limit: int = 10):
+        response.headers["Cache-Control"] = "no-store"
+        return advisor.portfolio(user, effective_at, after, limit)
+
+    @app.get("/businesses/{business}/overview")
+    def business_overview(business: UUID, effective_at: AwareDatetime, user: Actor, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return advisor.overview(user, business, effective_at)
+
+    @app.post("/businesses/{business}/knowledge", status_code=201)
+    def propose_knowledge(business: UUID, value: KnowledgeProposal, user: Actor, key: Key):
+        return {"id": advisor.propose(user, business, key, value)}
+
+    @app.get("/businesses/{business}/knowledge/{identity}")
+    def knowledge(business: UUID, identity: UUID, user: Actor, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return advisor.claim(user, business, identity)
+
+    @app.post("/businesses/{business}/knowledge/{identity}/decision", status_code=201)
+    def review_knowledge(business: UUID, identity: UUID, value: KnowledgeDecision, user: Actor, key: Key):
+        return {"id": advisor.decide(user, business, key, identity, value)}
+
+    @app.post("/businesses/{business}/advisor/context")
+    def business_context(business: UUID, value: BusinessContextInput, user: Actor, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return advisor.context(user, business, value)
+
+    @app.post("/quick/advisor/context")
+    def request_context(value: QuickContextInput, user: Actor, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return quick_context(value)
 
     @app.post("/quick/inventory")
     def quick(value: InventoryRequest, user: Actor, response: Response):

@@ -55,3 +55,7 @@ Record the method and cost version. The latest purchase price must not silently 
 | data.coverage | Coverage of the evidence required by the question | Receipts, sales period, counts and applicable recipes. |
 
 Direct supermarket SKU sales generally need no recipe; packs, returns, waste, expiry and counts matter. Cafes need coffee dose, milk, custom drinks and setup waste. Shared tools use industry-specific input contracts.
+
+## Portfolio financial indicators
+
+Version `portfolio.financial.v1` derives revenue, net income, net cash flow, current ratio and net margin from reviewed financial snapshots. Cash-flow chart data and numerical constants carry field-level evidence. See [formulas, units and unavailable-value behavior](ADVISOR_PORTFOLIO.md). These inputs are not automatic journal totals.
