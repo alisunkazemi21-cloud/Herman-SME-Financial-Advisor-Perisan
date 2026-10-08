@@ -1,4 +1,7 @@
+import hashlib
+import json
 from pathlib import Path
+from threading import BoundedSemaphore
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -9,6 +12,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import AwareDatetime, Field, ValidationError
 
+from src.ai_agent.agent import FinancialAgent
 from src.backend.advisor import (
     BusinessAdvisor,
     BusinessContextInput,
@@ -46,7 +50,7 @@ class DecisionInput(Model):
     duplicate_resolution: Literal["same_event", "distinct_event"] | None = None
 
 
-def create_app(database: Database, blob_root: Path) -> FastAPI:
+def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent | None = None) -> FastAPI:
     app = FastAPI(title="Herman SME backend", version="0.2.0")
     service = Service(database, blob_root)
     advisor = BusinessAdvisor(service)
@@ -54,6 +58,7 @@ def create_app(database: Database, blob_root: Path) -> FastAPI:
     queue = ExtractionQueue(service)
     importer = TabularImporter(service)
     bearer = HTTPBearer(auto_error=False)
+    inference_slot = BoundedSemaphore(1)
 
     def actor(credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)]) -> UUID:
         if credentials is None:
@@ -241,6 +246,32 @@ def create_app(database: Database, blob_root: Path) -> FastAPI:
     def request_context(value: QuickContextInput, user: Actor, response: Response):
         response.headers["Cache-Control"] = "no-store"
         return quick_context(value)
+
+    def draft(context: dict) -> dict:
+        if draft_agent is None or not inference_slot.acquire(blocking=False):
+            raise HTTPException(503, "مدل محلی فعال نیست یا در حال پاسخ‌گویی است",
+                                headers={"Cache-Control": "no-store", "Retry-After": "5"})
+        try:
+            answer = draft_agent.advise(context)
+        except (OSError, ValueError, TimeoutError):
+            raise HTTPException(503, "پاسخ معتبر از مدل محلی دریافت نشد؛ زمینه محاسبه‌شده همچنان قابل دریافت است",
+                                headers={"Cache-Control": "no-store"}) from None
+        finally:
+            inference_slot.release()
+        digest = hashlib.sha256(json.dumps(context, ensure_ascii=False, sort_keys=True,
+                                           separators=(",", ":")).encode("utf-8")).hexdigest()
+        return dict(status="draft", verified=False, persisted=False,
+                    context_sha256=digest, context=context, draft=answer)
+
+    @app.post("/businesses/{business}/advisor/draft")
+    def business_draft(business: UUID, value: BusinessContextInput, user: Actor, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return draft(advisor.context(user, business, value))
+
+    @app.post("/quick/advisor/draft")
+    def quick_draft(value: QuickContextInput, user: Actor, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return draft(quick_context(value))
 
     @app.post("/quick/inventory")
     def quick(value: InventoryRequest, user: Actor, response: Response):

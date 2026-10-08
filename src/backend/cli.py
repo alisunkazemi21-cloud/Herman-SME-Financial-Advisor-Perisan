@@ -25,6 +25,8 @@ def main() -> None:
     serve = sub.add_parser("serve")
     serve.add_argument("--port", type=int, default=8000)
     serve.add_argument("--blob-root", type=Path, default=Path("data/backend/blobs"))
+    serve.add_argument("--advisor-model", help="Enable Persian drafts using this already installed Ollama model")
+    serve.add_argument("--advisor-url", default="http://127.0.0.1:11434", help="Explicit loopback Ollama URL")
     worker = sub.add_parser("worker-once", help="Claim and process at most one job for one authorized business")
     worker.add_argument("--business", type=UUID, required=True)
     worker.add_argument("--credential-file", type=Path, required=True)
@@ -70,8 +72,11 @@ def main() -> None:
     else:
         import uvicorn
 
+        from src.ai_agent.agent import AgentConfig, FinancialAgent
         from src.backend.api import create_app
-        app = create_app(Database(os.environ["HERMAN_DATABASE_DSN"]), args.blob_root)
+        draft_agent = (FinancialAgent(AgentConfig(model=args.advisor_model, base_url=args.advisor_url))
+                       if args.advisor_model else None)
+        app = create_app(Database(os.environ["HERMAN_DATABASE_DSN"]), args.blob_root, draft_agent=draft_agent)
         uvicorn.run(app, host="127.0.0.1", port=args.port, access_log=False)
 
 

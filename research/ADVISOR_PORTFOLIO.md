@@ -31,7 +31,7 @@ All routes require the existing bearer credential. Proposal and decision routes 
 
 A knowledge proposal has `key` (lowercase ASCII identifier, up to 80 characters), `statement_fa` (up to 2,000 characters), `evidence` with `document_id` and `locator`, and `valid_from`/optional `valid_to`. The server assigns identity and author. Documents must belong to the same business; their original bytes are hash-verified during proposal, approval and context retrieval.
 
-Business context accepts `question_fa`, `effective_at`, up to ten unique `knowledge_keys`, and optional `analysis_id`. Only approved, currently applicable claims enter context. Groups are `missing`, `confirmed` or `conflict`. Different overlapping approved statements remain visible as a conflict; matching text retains all evidence. Pending/rejected/expired claims do not become context knowledge.
+Business context accepts `question_fa`, `effective_at`, up to ten unique `knowledge_keys`, optional `analysis_id`, and `include_financial` (default false). The latter retrieves the latest eligible reviewed financial snapshot and its five indicators in the same scoped transaction. Only approved, currently applicable claims enter context. Groups are `missing`, `confirmed` or `conflict`. Different overlapping approved statements remain visible as a conflict; matching text retains all evidence. Pending/rejected/expired claims do not become context knowledge.
 
 Selected analyses preserve exact result strings, metric version, input hash, source provenance and stored explanation. They are snapshots: later documents may require a new analysis. Narrative knowledge is never fed into the numeric reconciliation engine. Questions and claims remain untrusted data, not instructions to call tools. The context builder exposes no model-controlled tool dispatcher and makes no model calls.
 
@@ -72,3 +72,15 @@ Confirmed-record correction/supersession, conversational orchestration, evaluate
 ## Validation
 
 Full suite: 122 passed, one real OCR test skipped. The final portfolio boolean response correction also passed its targeted test; Ruff and whitespace checks passed. All new acceptance data is synthetic. See [validation record](VALIDATION.md).
+
+## Opt-in local draft responses
+
+Start the existing server with `--advisor-model <already-installed-model>` to enable drafts. `--advisor-url` defaults to `http://127.0.0.1:11434` and must be an explicit loopback HTTP URL. The application does not install or pull a model. Without the model flag, draft routes return 503 while context and portfolio routes remain available.
+
+`POST /businesses/{business}/advisor/draft` accepts the same typed request as business context, including optional `include_financial: true`. `POST /quick/advisor/draft` accepts the same request-only input as Quick context. The server builds context before invoking the model; credentials, arbitrary client context, tool names and provider configuration are not accepted in the request body.
+
+Responses contain `status: draft`, `verified: false`, `persisted: false`, the exact `context`, its canonical UTF-8 JSON SHA-256, and `draft` with Persian text/model/status. This hash identifies the context, not the correctness of model prose. Display model output as plain untrusted text and retain the calculated values/citations alongside it. A draft cannot approve knowledge or financial snapshots, alter records, or execute model-requested tool calls.
+
+Inference is limited to one active request per application process, with a transport timeout, 64 KiB input/response-byte limits, a 12,000-character content limit and a 1,024-token generation option. Oversized, partial, malformed and tool-call outputs are rejected. Disabled/busy/unavailable inference returns a generic 503 with no-store headers. Busy responses include Retry-After. No new application conversation storage is introduced; Ollama/service-log retention must be evaluated separately before real customer use.
+
+On 2026-10-08 the loopback Ollama API was unavailable and no executable was found on PATH. Automated tests use explicit stubs for model behavior; real model accuracy and prompt-injection resistance remain unverified. The software boundary prevents posting; it cannot certify that draft prose is factually correct.

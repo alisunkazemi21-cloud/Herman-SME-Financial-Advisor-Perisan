@@ -44,3 +44,9 @@ Pinned local Graphify/SQL setup, code-only graph build, bounded workflow query, 
 The full PostgreSQL-enabled suite passed 122 tests; one real OCR test remained skipped. Fourteen new tests cover review gates, validity boundaries, conflicts, idempotent concurrent proposals, role enforcement, tenant isolation, evidence tampering, immutable decisions, read-only context, Quick isolation, output bounds, exact financial formulas, portfolio pagination and API behavior. After the final boolean response-type correction, its portfolio acceptance test passed again. Ruff and whitespace checks passed. Local warnings concern the test-client dependency and Windows temporary-directory cleanup; no application test failed in the final full run.
 
 Graphify's local code-only index was refreshed. No model-quality, OCR-accuracy or full portfolio capacity claim is made. Screen rendering remains deferred by the user. See [the API and metric contract](ADVISOR_PORTFOLIO.md).
+
+## Local advisor draft checkpoint — 2026-10-08
+
+Full PostgreSQL-enabled suite: 135 passed, one real OCR test skipped. After adding explicit financial context selection, all 19 advisor-context/draft tests passed again, including the newly added financial-draft case. Ruff, CLI help and whitespace checks passed. Graphify was refreshed. The preceding portfolio commit also passed GitHub CI (run 37758175132).
+
+Tests cover malformed/partial/oversized/tool-call model responses, input limits before network access, authenticated scope before inference, context receipts, Quick's lack of scoped database reads, generic model failure responses, slot release and concurrent-capacity rejection. Stubbed model results verify software behavior only. The local Ollama API was unavailable and no Ollama executable was found on PATH; live model evaluation is not completed. No model download or user-data inference occurred.

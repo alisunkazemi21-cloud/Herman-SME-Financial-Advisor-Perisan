@@ -39,3 +39,7 @@ The user requested English documentation at every checkpoint. Repository prose a
 ## Advisor and portfolio checkpoint — 2026-10-08
 
 Added reviewed business knowledge, bounded read-only business context, request-only Quick context, authorized-business portfolio summaries, reviewed financial snapshots and Decimal cash-flow/five-indicator payloads. The user selected backend data now and screen later. Conversational orchestration and evaluated model answers remain outstanding. See [contract and limitations](ADVISOR_PORTFOLIO.md).
+
+## Local draft integration — 2026-10-08
+
+Business and Quick contexts now connect to an opt-in local Ollama draft route. Context receipts, output bounds and per-process inference limits are implemented. Review/ledger tools remain unavailable to the model. Financial portfolio indicators can be explicitly included in business context. Live Ollama was unavailable; real response-quality evaluation and conversational case history remain open.

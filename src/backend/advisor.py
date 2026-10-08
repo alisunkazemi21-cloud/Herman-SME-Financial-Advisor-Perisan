@@ -44,6 +44,7 @@ class BusinessContextInput(Model):
     effective_at: AwareDatetime
     knowledge_keys: tuple[KnowledgeKey, ...] = Field(default=(), max_length=10)
     analysis_id: UUID | None = None
+    include_financial: bool = False
 
     @model_validator(mode="after")
     def unique_keys(self) -> BusinessContextInput:
@@ -222,10 +223,18 @@ class BusinessAdvisor:
                 if row is None:
                     raise NotFound("تحلیل در این بیزینس موجود نیست")
                 analysis = row
+            financial = None
+            if value.include_financial:
+                profile = c.execute(
+                    "SELECT timezone FROM herman.businesses WHERE id=%s", (business,)
+                ).fetchone()
+                financial = FinancialPortfolio(self.service).summary(
+                    c, business, value.effective_at.astimezone(ZoneInfo(profile["timezone"])).date()
+                )
             explanation = (
                 analysis["result"]["explanation_fa"]
                 if analysis
-                else "تحلیلی انتخاب نشده است؛ از متن دانش به‌تنهایی نتیجه عددی ساخته نمی‌شود."
+                else "تحلیل موجودی انتخاب نشده است؛ مقادیر مالی فقط در بخش مالی تأییدشده قابل استفاده‌اند."
             )
             return bounded_context(
                 dict(
@@ -236,6 +245,7 @@ class BusinessAdvisor:
                     retrieved_at=datetime.now(timezone.utc),
                     knowledge=groups,
                     analysis=analysis,
+                    financial=financial,
                     persisted=False,
                     explanation_fa=explanation,
                     limitations_fa=[
