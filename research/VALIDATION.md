@@ -34,3 +34,7 @@ Translated repository prose and archived Markdown reports into English. Future M
 Validation: 108 tests passed, one real OCR fixture test skipped; Ruff and the Marimo notebook check passed. Local warnings concerned the test client's dependency deprecation, Windows temporary-directory cleanup and inaccessible user-level Marimo configuration; no test failed. No OCR accuracy or new capacity claim is made.
 
 Kalameh is now the preferred dashboard/chart font, using an installed copy when available. The user has no webfont files, so the bundled Vazirmatn/Tahoma fallback remains necessary; Kalameh rendering has not been visually verified. The user-requested `npx vibefarsi add contour` is recorded for a later UI checkpoint and was not executed in this backend/documentation checkpoint.
+
+## Graphify checkpoint — 2026-10-08
+
+Pinned local Graphify/SQL setup, code-only graph build, bounded workflow query, path query, HTML/report generation and excluded-path checks passed. See [verification and limits](GRAPHIFY.md). No application behavior changed; token savings remain unmeasured.

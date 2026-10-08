@@ -436,3 +436,11 @@ Safety: Agents propose. Typed Python computes. Humans approve.
 ## User UI preferences (2026-10-06)
 
 Use Kalameh for Persian typography. Font files are not yet available; prefer an installed Kalameh font and retain a fallback until webfont assets are supplied. For later UI checkpoints, use `npx vibefarsi add contour` after inspecting the package and the target project. UI expansion remains deferred while backend work continues.
+
+## graphify
+
+Use the project-local Graphify skill at `.codex/skills/graphify/SKILL.md` for `/graphify`.
+Run the pinned CLI via `./scripts/graphify.ps1`; do not install it into the application environment.
+For workflow/code questions, query the existing graph with `query "<question>" --budget 1500`, then read only the relevant source. Use `path` or `explain` to inspect relationships. Verify inferred edges against source/tests; fall back to targeted search when coverage is missing.
+After code checkpoints, refresh with `extract . --code-only --max-workers 2` and regenerate the report with `cluster-only .`. Keep `.graphifyignore` exclusions. Do not enable semantic extraction, model backends or external graph storage by default. This project policy overrides the upstream skill's full semantic pipeline.
+The graph is for code workflow inspection, not live queue monitoring or financial truth. Token savings are unmeasured. Generated graph artifacts stay local and are not committed.

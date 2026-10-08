@@ -69,3 +69,7 @@ Translate documentation, research, checkpoint reports, developer prose and gener
 The user selected Kalameh for Persian typography but has no font files available. Prefer locally installed Kalameh and retain the existing fallback; bundling Kalameh remains pending actual webfont files. Never relabel the Vazirmatn binary as Kalameh.
 
 For later UI checkpoints, the user requested `npx vibefarsi add contour`. When UI work resumes, inspect the package and target project before running that command, then verify Persian RTL and Kalameh typography. Do not scaffold a new interface in this documentation/backend checkpoint.
+
+## Graphify workflow inspection — 2026-10-06
+
+Use Graphify 0.9.77 in an isolated project-local environment, with code-only local AST indexing and bounded queries. Exclude runtime state, credentials and financial evidence. Refresh the graph at code checkpoints; verify graph findings against source and tests. Graphs describe code relationships, not live job status or authoritative financial facts. Token savings must be measured rather than assumed. No background watcher or semantic model backend is enabled by this checkpoint.

@@ -86,3 +86,7 @@ Research and decisions: [literature](research/LITERATURE.md), [decisions](resear
 ## Future UI preferences
 
 Use Kalameh for Persian typography; its webfont files are pending, so the prototype prefers an installed Kalameh font with the existing fallback. At the next UI checkpoint, inspect the package and project, then use `npx vibefarsi add contour`. Backend work remains the priority.
+
+## Workflow inspection
+
+[Graphify setup and bounded queries](research/GRAPHIFY.md) provide a local code graph for navigating backend workflows. Refresh it at code checkpoints; graph relationships are not live job telemetry or financial evidence.

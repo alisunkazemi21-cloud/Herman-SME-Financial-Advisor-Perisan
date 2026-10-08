@@ -1,0 +1,7 @@
+# Graphify checkpoint
+
+Graphify 0.9.77 is installed in an isolated local environment with SQL parsing. The code-only graph contains 530 nodes and 1,566 relationships across 26 communities. Workflow query, path query and report generation succeeded. Generated graphs remain local; financial evidence is excluded.
+
+This supports source navigation, not live runtime monitoring. Inferred edges and missing symbols require source verification. Token savings are not yet measured.
+
+[Setup, commands and verification](../../research/GRAPHIFY.md)

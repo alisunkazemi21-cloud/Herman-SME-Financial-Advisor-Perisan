@@ -12,3 +12,5 @@ dashboard-preview.html
 .runtime/
 .env
 *.secret
+
+graphify-out/

@@ -1,0 +1,14 @@
+# Graphify indexes source code only; business evidence and runtime state are excluded.
+.runtime/
+.venv/
+.git/
+.codex/
+.agents/
+graphify-out/
+data/
+runs/
+samples/
+research/benchmarks/
+*.secret
+.env
+.env.*
