@@ -96,3 +96,5 @@ Use Kalameh for Persian typography; its webfont files are pending, so the protot
 [Advisor context and portfolio API](research/ADVISOR_PORTFOLIO.md) provides reviewed knowledge, isolated Quick context, business highlights, five financial indicators and cash-flow waterfall data. Financial values require reviewed, evidenced inputs; the visible portfolio screen remains deferred.
 
 The backend can optionally generate Persian drafts from reviewed context: start `python -m src.backend.cli serve --advisor-model <installed-model>` with the existing runtime database configuration. See [draft routes and limitations](research/ADVISOR_PORTFOLIO.md#opt-in-local-draft-responses). Drafts are unverified and cannot post or approve records.
+
+[Persistent business cases](research/BUSINESS_CASES.md) save ordered questions, context receipts and optional local drafts. Continuations use bounded, explicitly unverified history and fresh reviewed context. Expected turn numbers prevent silent conversation branches; completed retries reuse their saved receipt. Quick retains no conversation history.

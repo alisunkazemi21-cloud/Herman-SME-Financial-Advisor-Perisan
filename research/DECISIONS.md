@@ -85,3 +85,11 @@ The user requested an overall authorized-business portfolio with knowledge highl
 ## Local draft response integration — 2026-10-08
 
 Connect reviewed context to the existing loopback Ollama adapter through opt-in server configuration. Business and Quick draft routes build their own typed context; callers cannot supply arbitrary retrieved context or choose tools/endpoints/models. Return the exact context and its SHA-256 beside an explicitly unverified Persian draft. No conversation persistence, model tool calls, posting or approval is introduced. Limit concurrent inference to one request per application process, bound input/output, and map timeout/malformed/unavailable model responses to a generic 503 without leaking transport details. Live model quality remains a separate validation gate.
+
+## Persistent business cases — 2026-10-09
+
+Add tenant-scoped append-only cases and ordered turns. A turn stores the typed request, exact context receipt and draft (or an explicitly requested deterministic context-only response). Historical text is bounded, labeled non-authoritative and never promoted to reviewed knowledge or numeric inputs. Quick has no case/history API.
+
+Use caller-supplied expected turn number with a unique business/case/turn constraint to reject stale concurrent continuations. Idempotency hashes the typed request, not nondeterministic model output; retries return the stored turn without repeating inference. Read and write roles are checked before context/model work and again at publication. Inference runs outside database transactions. Failure publishes no partial turn. Past context receipts remain immutable even when current knowledge changes. No model receives a database, write or approval tool.
+
+Completed retries avoid inference; concurrent requests may both infer before a single publication wins. This is a publication guarantee, not exactly-once model execution. Recheck the API credential after generation and membership at publication; these checks do not make credential revocation atomic with publication.

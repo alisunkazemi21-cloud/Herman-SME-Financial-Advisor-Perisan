@@ -43,3 +43,7 @@ Added reviewed business knowledge, bounded read-only business context, request-o
 ## Local draft integration — 2026-10-08
 
 Business and Quick contexts now connect to an opt-in local Ollama draft route. Context receipts, output bounds and per-process inference limits are implemented. Review/ledger tools remain unavailable to the model. Financial portfolio indicators can be explicitly included in business context. Live Ollama was unavailable; real response-quality evaluation and conversational case history remain open.
+
+## Business cases — 2026-10-09
+
+Persistent case history is now implemented with tenant isolation, immutable ordered turns, bounded non-authoritative history, exact context receipts, retry reuse and stale-continuation rejection. Quick remains stateless. See [case contract](BUSINESS_CASES.md). Real model evaluation, full tenant financial journals, reviewed corrections, semantic invoice matching, real OCR, accounting standards verification and full application capacity/restore testing remain outstanding.

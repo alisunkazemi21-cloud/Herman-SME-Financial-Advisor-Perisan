@@ -50,3 +50,11 @@ Graphify's local code-only index was refreshed. No model-quality, OCR-accuracy o
 Full PostgreSQL-enabled suite: 135 passed, one real OCR test skipped. After adding explicit financial context selection, all 19 advisor-context/draft tests passed again, including the newly added financial-draft case. Ruff, CLI help and whitespace checks passed. Graphify was refreshed. The preceding portfolio commit also passed GitHub CI (run 37758175132).
 
 Tests cover malformed/partial/oversized/tool-call model responses, input limits before network access, authenticated scope before inference, context receipts, Quick's lack of scoped database reads, generic model failure responses, slot release and concurrent-capacity rejection. Stubbed model results verify software behavior only. The local Ollama API was unavailable and no Ollama executable was found on PATH; live model evaluation is not completed. No model download or user-data inference occurred.
+
+## Persistent business cases — 2026-10-09
+
+Nine focused PostgreSQL tests passed. The final full PostgreSQL-enabled run passed 145 tests with one real OCR fixture test skipped in 179.56 seconds. Ruff and Git whitespace checks passed. The first full run was interrupted after errors and a prolonged stall; PostgreSQL logged an authentication timeout. A fresh connection succeeded, and the fail-fast full rerun passed without restarting PostgreSQL or changing application code. The final run reported 21 warnings; the successful result does not remove the outstanding real-engine validation gates.
+
+Tests cover immutable context receipts, completed retry reuse, bounded history without promotion to knowledge, tenant/role isolation, stale continuations, inference failure, concurrent publication, membership loss, authenticated endpoints and session revocation during inference. Model responses remain stubbed. No live-model quality or full application capacity claim is made.
+
+Graphify code-only extraction and report regeneration completed: 724 nodes, 2,103 relationships and 40 communities. The local report uses structural community names; token savings remain unmeasured. Backend documentation and checkpoint artifacts are synchronized; the Marimo prototype remains unchanged under the user's UI deferral.

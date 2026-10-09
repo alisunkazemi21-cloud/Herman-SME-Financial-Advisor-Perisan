@@ -21,6 +21,7 @@ from src.backend.advisor import (
     QuickContextInput,
     quick_context,
 )
+from src.backend.cases import BusinessCases, CaseInput, TurnInput
 from src.backend.database import AccessDenied, Database
 from src.backend.imports import TabularImport, TabularImporter
 from src.backend.inventory import (
@@ -55,6 +56,7 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
     service = Service(database, blob_root)
     advisor = BusinessAdvisor(service)
     financial = FinancialPortfolio(service)
+    cases = BusinessCases(service, advisor)
     queue = ExtractionQueue(service)
     importer = TabularImporter(service)
     bearer = HTTPBearer(auto_error=False)
@@ -262,6 +264,39 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
                                            separators=(",", ":")).encode("utf-8")).hexdigest()
         return dict(status="draft", verified=False, persisted=False,
                     context_sha256=digest, context=context, draft=answer)
+
+    @app.post("/businesses/{business}/advisor/cases", status_code=201)
+    def create_case(business: UUID, value: CaseInput, user: Actor, key: Key, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return {"id": cases.create(user, business, key, value)}
+
+    @app.get("/businesses/{business}/advisor/cases")
+    def case_list(business: UUID, user: Actor, response: Response, after: UUID | None = None, limit: int = 20):
+        response.headers["Cache-Control"] = "no-store"
+        return cases.page(user, business, after, limit)
+
+    @app.get("/businesses/{business}/advisor/cases/{case}/turns")
+    def turn_list(business: UUID, case: UUID, user: Actor, response: Response, after: int = 0, limit: int = 20):
+        response.headers["Cache-Control"] = "no-store"
+        return cases.turns(user, business, case, after, limit)
+
+    @app.get("/businesses/{business}/advisor/cases/{case}/turns/{identity}")
+    def turn_detail(business: UUID, case: UUID, identity: UUID, user: Actor, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return cases.read(user, business, case, identity)
+
+    @app.post("/businesses/{business}/advisor/cases/{case}/turns", status_code=201)
+    def append_turn(business: UUID, case: UUID, value: TurnInput, user: Actor, key: Key, response: Response,
+                    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)]):
+        response.headers["Cache-Control"] = "no-store"
+        def authenticated_draft(context: dict) -> dict:
+            receipt = draft(context)
+            # A revoked/expired credential must not publish after a slow model request.
+            if actor(credentials) != user:
+                raise AccessDenied("اعتبار دسترسی تغییر کرده است")
+            return receipt
+        identity = cases.append(user, business, case, key, value, authenticated_draft)
+        return cases.read(user, business, case, identity)
 
     @app.post("/businesses/{business}/advisor/draft")
     def business_draft(business: UUID, value: BusinessContextInput, user: Actor, response: Response):
