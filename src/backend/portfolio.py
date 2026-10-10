@@ -1,10 +1,10 @@
-"""Reviewed portfolio inputs and exact cash-flow/chart calculations; no journal inference."""
+"""Reviewed statement/report selection and shared exact cash-flow/chart calculations."""
 
 from __future__ import annotations
 
 import hashlib
 from datetime import date
-from decimal import localcontext
+from decimal import Decimal, localcontext
 from typing import Annotated, Literal
 from uuid import UUID, uuid4
 
@@ -64,9 +64,24 @@ class FinancialSnapshot(Model):
 
 
 def indicators(value: FinancialSnapshot) -> dict:
+    result = indicator_values(
+        {name: getattr(value, name).value for name in FIELDS}, value.period_start, value.period_end
+    )
+    result["evidence"] = {name: getattr(value, name).evidence.model_dump(mode="json") for name in FIELDS}
+    result["limitations_fa"] = [
+        "ورودی‌های این نما توسط انسان بررسی شده‌اند؛ از دفتر حسابداری به‌طور خودکار استخراج نشده‌اند.",
+        "نقد پایان دوره محاسبه‌شده است و جای تطبیق با مانده واقعی بانک یا صندوق را نمی‌گیرد.",
+        "مقادیر نسبت‌ها به صورت کسر هستند؛ برای نمایش درصد حاشیه سود در ۱۰۰ ضرب کنید.",
+    ]
+    return result
+
+
+def indicator_values(
+    v: dict[str, Decimal], period_start: date, period_end: date, precision: int = 40
+) -> dict:
+    """Shared arithmetic for separately validated statement and journal inputs."""
     with localcontext() as ctx:
-        ctx.prec = 40
-        v = {name: getattr(value, name).value for name in FIELDS}
+        ctx.prec = precision
         net = v["cash_inflows"] - v["cash_outflows"]
         closing = v["opening_cash"] + net
         metrics = dict(
@@ -101,8 +116,8 @@ def indicators(value: FinancialSnapshot) -> dict:
         return dict(
             metric_version="portfolio.financial.v1",
             currency="IRR",
-            period_start=value.period_start.isoformat(),
-            period_end=value.period_end.isoformat(),
+            period_start=period_start.isoformat(),
+            period_end=period_end.isoformat(),
             kpis=[
                 dict(
                     key=k,
@@ -110,7 +125,7 @@ def indicators(value: FinancialSnapshot) -> dict:
                     value=str(n) if n is not None else None,
                     unit="fraction" if k in ("current_ratio", "net_margin") else "IRR",
                     status="available" if n is not None else "undefined",
-                    reason_fa=None if n is not None else "مخرج صفر است؛ این نسبت قابل محاسبه نیست.",
+                    reason_fa=None if n is not None else "مخرج مثبت نیست؛ این نسبت قابل محاسبه نیست.",
                     input_fields=dependencies[k],
                 )
                 for k, n in metrics.items()
@@ -122,12 +137,6 @@ def indicators(value: FinancialSnapshot) -> dict:
                 steps=steps,
                 input_fields=["opening_cash", "cash_inflows", "cash_outflows"],
             ),
-            evidence={name: getattr(value, name).evidence.model_dump(mode="json") for name in FIELDS},
-            limitations_fa=[
-                "ورودی‌های این نما توسط انسان بررسی شده‌اند؛ از دفتر حسابداری به‌طور خودکار استخراج نشده‌اند.",
-                "نقد پایان دوره محاسبه‌شده است و جای تطبیق با مانده واقعی بانک یا صندوق را نمی‌گیرد.",
-                "مقادیر نسبت‌ها به صورت کسر هستند؛ برای نمایش درصد حاشیه سود در ۱۰۰ ضرب کنید.",
-            ],
         )
 
 
@@ -250,11 +259,16 @@ class FinancialPortfolio:
 
     def summary(self, c, business: UUID, effective_date: date) -> dict:
         rows = c.execute(
-            "SELECT s.*,d.created_by AS reviewed_by,d.created_at AS reviewed_at "
+            "SELECT * FROM (SELECT s.id,s.period_end,d.created_by AS reviewed_by,d.created_at AS reviewed_at,'statement' AS source_kind "
             "FROM herman.financial_snapshots s JOIN herman.financial_snapshot_decisions d "
             "ON (d.business_id,d.snapshot_id)=(s.business_id,s.id) "
-            "WHERE s.business_id=%s AND d.approved AND s.period_end<=%s ORDER BY s.period_end DESC,s.id LIMIT 2",
-            (business, effective_date),
+            "WHERE s.business_id=%s AND d.approved AND s.period_end<=%s UNION ALL "
+            "SELECT r.id,r.period_end,d.created_by,d.created_at,'journal_report' FROM herman.journal_reports r "
+            "JOIN herman.journal_report_decisions d ON (d.business_id,d.report_id)=(r.business_id,r.id) "
+            "WHERE r.business_id=%s AND d.approved AND r.period_end<=%s AND NOT EXISTS("
+            "SELECT 1 FROM herman.journal_report_decisions newer WHERE newer.business_id=r.business_id AND newer.supersedes=r.id AND newer.approved) "
+            ") candidates ORDER BY period_end DESC,id,source_kind LIMIT 2",
+            (business, effective_date, business, effective_date),
         ).fetchall()
         unavailable = [
             dict(key=k, label_fa=label, value=None, status="unavailable") for k, label in KPI_LABELS.items()
@@ -274,14 +288,24 @@ class FinancialPortfolio:
                 cashflow_diagram=None,
                 constants={},
                 candidate_ids=[str(r["id"]) for r in rows],
+                candidate_sources=[dict(id=str(r["id"]), source_kind=r["source_kind"]) for r in rows],
                 candidates_may_be_truncated=True,
                 reason_fa="برای آخرین پایان دوره چند صورت مالی تأیید شده است؛ انتخاب خودکار انجام نمی‌شود.",
             )
         row = rows[0]
-        value = FinancialSnapshot.model_validate(row["payload"])
+        if row["source_kind"] == "journal_report":
+            from src.backend.journal_reports import JournalReports
+
+            return JournalReports(self.service).summary(c, business, row["id"])
+        payload = c.execute(
+            "SELECT payload FROM herman.financial_snapshots WHERE business_id=%s AND id=%s",
+            (business, row["id"]),
+        ).fetchone()["payload"]
+        value = FinancialSnapshot.model_validate(payload)
         hashes = self._verify(c, business, value)
         return dict(
             status="confirmed",
+            source_kind="statement",
             snapshot_id=str(row["id"]),
             reviewed_by=str(row["reviewed_by"]),
             reviewed_at=row["reviewed_at"],

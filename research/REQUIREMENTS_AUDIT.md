@@ -51,3 +51,7 @@ Persistent case history is now implemented with tenant isolation, immutable orde
 ## Tenant financial journals — 2026-10-10
 
 The PostgreSQL backend now stores evidenced, balanced multi-line journal proposals, authenticated human decisions, custom business accounts, exact reversals and period trial balances. Pattern-based duplicate review protects approval, including concurrent first approvals. See [journal contract](JOURNALS.md). This closes the basic tenant journal/posting gap. Automated journal proposals/import mapping, account-to-statement classification, period closing, journal report receipts and advisor retrieval remain incomplete. Inventory/knowledge corrections, semantic invoice matching, real engines, official standards and full application capacity/restore evidence also remain outstanding.
+
+## Journal report integration — 2026-10-10
+
+Reviewed account mappings, immutable journal report receipts, five derived portfolio indicators, journal-level cash-flow data, freshness detection, reviewed report replacement and bounded advisor/case retrieval are implemented. See [report contract](JOURNAL_REPORTS.md). These are scoped management reports; statutory statements, closing controls, gross bank-flow classification, automatic journal proposals/import mapping and large batch reporting remain incomplete. Inventory/knowledge correction, semantic document matching, real engine evaluation, standards verification and operational capacity/restore gates remain open.

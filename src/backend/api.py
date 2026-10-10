@@ -36,6 +36,7 @@ from src.backend.inventory import (
     reconcile_inventory,
 )
 from src.backend.jobs import ExtractionInput, ExtractionQueue
+from src.backend.journal_reports import JournalReports, MappingInput, ReportInput, ReportReview, ReviewInput
 from src.backend.journals import AccountInput, JournalDates, JournalDecision, JournalInput, Journals
 from src.backend.portfolio import FinancialPortfolio, FinancialSnapshot
 from src.backend.service import AnalysisInput, Conflict, NotFound, Service, Warehouse
@@ -60,6 +61,7 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
     financial = FinancialPortfolio(service)
     cases = BusinessCases(service, advisor)
     journals = Journals(service)
+    journal_reports = JournalReports(service)
     queue = ExtractionQueue(service)
     importer = TabularImporter(service)
     bearer = HTTPBearer(auto_error=False)
@@ -101,6 +103,46 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
     @app.get("/health")
     def health():
         return {"status": "ok"}
+
+    @app.post("/businesses/{business}/journal/mappings", status_code=201)
+    def propose_mapping(business: UUID, value: MappingInput, user: Actor, key: Key, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return {"id": journal_reports.mapping(user, business, key, value)}
+
+    @app.get("/businesses/{business}/journal/mappings")
+    def journal_mappings(business: UUID, user: Actor, response: Response, after: UUID | None = None, limit: int = 20):
+        response.headers["Cache-Control"] = "no-store"
+        return journal_reports.page(user, business, "mappings", after, limit)
+
+    @app.get("/businesses/{business}/journal/mappings/{identity}")
+    def journal_mapping(business: UUID, identity: UUID, user: Actor, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return journal_reports.read_mapping(user, business, identity)
+
+    @app.post("/businesses/{business}/journal/mappings/{identity}/decision", status_code=201)
+    def decide_mapping(business: UUID, identity: UUID, value: ReviewInput, user: Actor, key: Key, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return {"id": journal_reports.review_mapping(user, business, key, identity, value)}
+
+    @app.post("/businesses/{business}/journal/reports", status_code=201)
+    def create_journal_report(business: UUID, value: ReportInput, user: Actor, key: Key, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return {"id": journal_reports.create(user, business, key, value)}
+
+    @app.get("/businesses/{business}/journal/reports")
+    def journal_report_list(business: UUID, user: Actor, response: Response, after: UUID | None = None, limit: int = 20):
+        response.headers["Cache-Control"] = "no-store"
+        return journal_reports.page(user, business, "reports", after, limit)
+
+    @app.get("/businesses/{business}/journal/reports/{identity}")
+    def journal_report(business: UUID, identity: UUID, user: Actor, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return journal_reports.read(user, business, identity)
+
+    @app.post("/businesses/{business}/journal/reports/{identity}/decision", status_code=201)
+    def decide_journal_report(business: UUID, identity: UUID, value: ReportReview, user: Actor, key: Key, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return {"id": journal_reports.review(user, business, key, identity, value)}
 
     @app.post("/businesses/{business}/journal/accounts", status_code=201)
     def create_account(business: UUID, value: AccountInput, user: Actor, key: Key, response: Response):

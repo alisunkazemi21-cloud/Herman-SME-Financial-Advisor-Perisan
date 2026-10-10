@@ -4,15 +4,17 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import date, datetime, timezone
 from typing import Annotated
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 from fastapi.encoders import jsonable_encoder
-from pydantic import AwareDatetime, Field, model_validator
+from pydantic import AwareDatetime, Field, model_serializer, model_validator
 
 from src.backend.inventory import EvidenceRef, InventoryRequest, reconcile_inventory
+from src.backend.journal_reports import JournalReports
 from src.backend.portfolio import FinancialPortfolio
 from src.backend.service import Conflict, NotFound, Service, insert
 from src.models import Model
@@ -45,6 +47,15 @@ class BusinessContextInput(Model):
     knowledge_keys: tuple[KnowledgeKey, ...] = Field(default=(), max_length=10)
     analysis_id: UUID | None = None
     include_financial: bool = False
+    journal_report_id: UUID | None = None
+
+    @model_serializer(mode="wrap")
+    def serialize_context(self, handler: Callable[[Model], dict]) -> dict:
+        # Preserve hashes of pre-report case requests when this optional selector is absent.
+        result = handler(self)
+        if self.journal_report_id is None:
+            result.pop("journal_report_id", None)
+        return result
 
     @model_validator(mode="after")
     def unique_keys(self) -> BusinessContextInput:
@@ -224,13 +235,17 @@ class BusinessAdvisor:
                     raise NotFound("تحلیل در این بیزینس موجود نیست")
                 analysis = row
             financial = None
+            profile = c.execute("SELECT timezone FROM herman.businesses WHERE id=%s", (business,)).fetchone()
+            effective_date = value.effective_at.astimezone(ZoneInfo(profile["timezone"])).date()
             if value.include_financial:
-                profile = c.execute(
-                    "SELECT timezone FROM herman.businesses WHERE id=%s", (business,)
-                ).fetchone()
                 financial = FinancialPortfolio(self.service).summary(
-                    c, business, value.effective_at.astimezone(ZoneInfo(profile["timezone"])).date()
+                    c, business, effective_date
                 )
+            journal = None
+            if value.journal_report_id:
+                journal = JournalReports(self.service).summary(c, business, value.journal_report_id)
+                if date.fromisoformat(str(journal["period_end"])) > effective_date:
+                    raise ValueError("پایان دوره گزارش دفتر پس از تاریخ درخواست است")
             explanation = (
                 analysis["result"]["explanation_fa"]
                 if analysis
@@ -246,6 +261,7 @@ class BusinessAdvisor:
                     knowledge=groups,
                     analysis=analysis,
                     financial=financial,
+                    journal=journal,
                     persisted=False,
                     explanation_fa=explanation,
                     limitations_fa=[

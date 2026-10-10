@@ -56,3 +56,7 @@ No real invoice set, OCR ground truth, live USD/gold rates or installed project 
 ## Journal persistence review — 2026-10-09
 
 Reviewed the PostgreSQL 17 [constraint-trigger contract](https://www.postgresql.org/docs/17/sql-createtrigger.html) and [row-security behavior](https://www.postgresql.org/docs/17/ddl-rowsecurity.html). Deferred row constraint triggers can check a journal after all lines have been inserted. Forced RLS and a restricted runtime role retain tenant boundaries; table owners and privileged administrators remain outside the application threat boundary. Implementation tests must exercise constraints through the restricted runtime role as well as through the API. No new accounting-standard claim follows from these database mechanisms.
+
+## Journal cash summary — 2026-10-10
+
+The IFRS Foundation's [IAS 7 reference text, paragraph 9](https://www.ifrs.org/content/dam/ifrs/publications/pdf-standards/english/2021/issued/part-a/ias-7-statement-of-cash-flows.pdf) excludes transfers within cash/cash equivalents from cash flows. This supports cancelling mapped internal transfers in our journal-based cash summary. It does not justify presenting journal-level net movements as gross bank flows, or asserting current Iranian/IFRS compliance. Our implementation is an explicitly scoped management summary; classification and accounting completeness still require human review.
