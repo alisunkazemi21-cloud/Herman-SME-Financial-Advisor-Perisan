@@ -47,3 +47,7 @@ Business and Quick contexts now connect to an opt-in local Ollama draft route. C
 ## Business cases — 2026-10-09
 
 Persistent case history is now implemented with tenant isolation, immutable ordered turns, bounded non-authoritative history, exact context receipts, retry reuse and stale-continuation rejection. Quick remains stateless. See [case contract](BUSINESS_CASES.md). Real model evaluation, full tenant financial journals, reviewed corrections, semantic invoice matching, real OCR, accounting standards verification and full application capacity/restore testing remain outstanding.
+
+## Tenant financial journals — 2026-10-10
+
+The PostgreSQL backend now stores evidenced, balanced multi-line journal proposals, authenticated human decisions, custom business accounts, exact reversals and period trial balances. Pattern-based duplicate review protects approval, including concurrent first approvals. See [journal contract](JOURNALS.md). This closes the basic tenant journal/posting gap. Automated journal proposals/import mapping, account-to-statement classification, period closing, journal report receipts and advisor retrieval remain incomplete. Inventory/knowledge corrections, semantic invoice matching, real engines, official standards and full application capacity/restore evidence also remain outstanding.

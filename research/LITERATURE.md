@@ -52,3 +52,7 @@ Preserve raw text, source hash, row/page location and extraction method. Confide
 ## Evidence gaps
 
 No real invoice set, OCR ground truth, live USD/gold rates or installed project Ollama model was provided at the initial review. Real-engine and advice-quality assessments are reported separately from software tests. Rates and investment suggestions in the original prompt are not treated as factual inputs.
+
+## Journal persistence review — 2026-10-09
+
+Reviewed the PostgreSQL 17 [constraint-trigger contract](https://www.postgresql.org/docs/17/sql-createtrigger.html) and [row-security behavior](https://www.postgresql.org/docs/17/ddl-rowsecurity.html). Deferred row constraint triggers can check a journal after all lines have been inserted. Forced RLS and a restricted runtime role retain tenant boundaries; table owners and privileged administrators remain outside the application threat boundary. Implementation tests must exercise constraints through the restricted runtime role as well as through the API. No new accounting-standard claim follows from these database mechanisms.

@@ -1,5 +1,6 @@
 import hashlib
 import json
+from datetime import date
 from pathlib import Path
 from threading import BoundedSemaphore
 from typing import Annotated, Literal
@@ -35,6 +36,7 @@ from src.backend.inventory import (
     reconcile_inventory,
 )
 from src.backend.jobs import ExtractionInput, ExtractionQueue
+from src.backend.journals import AccountInput, JournalDates, JournalDecision, JournalInput, Journals
 from src.backend.portfolio import FinancialPortfolio, FinancialSnapshot
 from src.backend.service import AnalysisInput, Conflict, NotFound, Service, Warehouse
 from src.models import Model
@@ -57,6 +59,7 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
     advisor = BusinessAdvisor(service)
     financial = FinancialPortfolio(service)
     cases = BusinessCases(service, advisor)
+    journals = Journals(service)
     queue = ExtractionQueue(service)
     importer = TabularImporter(service)
     bearer = HTTPBearer(auto_error=False)
@@ -98,6 +101,46 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
     @app.get("/health")
     def health():
         return {"status": "ok"}
+
+    @app.post("/businesses/{business}/journal/accounts", status_code=201)
+    def create_account(business: UUID, value: AccountInput, user: Actor, key: Key, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return {"id": journals.account(user, business, key, value)}
+
+    @app.get("/businesses/{business}/journal/accounts")
+    def journal_accounts(business: UUID, user: Actor, response: Response, after: str = "", limit: int = 50):
+        response.headers["Cache-Control"] = "no-store"
+        return journals.accounts(user, business, after, limit)
+
+    @app.post("/businesses/{business}/journal/entries", status_code=201)
+    def propose_journal(business: UUID, value: JournalInput, user: Actor, key: Key, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return {"id": journals.propose(user, business, key, value)}
+
+    @app.get("/businesses/{business}/journal/entries")
+    def journal_list(business: UUID, user: Actor, response: Response, after: UUID | None = None, limit: int = 50):
+        response.headers["Cache-Control"] = "no-store"
+        return journals.page(user, business, after, limit)
+
+    @app.get("/businesses/{business}/journal/entries/{identity}")
+    def journal_detail(business: UUID, identity: UUID, user: Actor, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return journals.read(user, business, identity)
+
+    @app.post("/businesses/{business}/journal/entries/{identity}/decision", status_code=201)
+    def journal_decision(business: UUID, identity: UUID, value: JournalDecision, user: Actor, key: Key, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return {"id": journals.decide(user, business, key, identity, value)}
+
+    @app.post("/businesses/{business}/journal/entries/{identity}/reversals", status_code=201)
+    def journal_reversal(business: UUID, identity: UUID, value: JournalDates, user: Actor, key: Key, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return {"id": journals.reverse(user, business, key, identity, value)}
+
+    @app.get("/businesses/{business}/journal/trial-balance")
+    def trial_balance(business: UUID, start: date, end: date, user: Actor, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return journals.trial_balance(user, business, start, end)
 
     @app.post("/businesses/{business}/tabular-imports", status_code=201)
     def import_rows(business: UUID, value: TabularImport, user: Actor, key: Key):

@@ -98,3 +98,5 @@ Use Kalameh for Persian typography; its webfont files are pending, so the protot
 The backend can optionally generate Persian drafts from reviewed context: start `python -m src.backend.cli serve --advisor-model <installed-model>` with the existing runtime database configuration. See [draft routes and limitations](research/ADVISOR_PORTFOLIO.md#opt-in-local-draft-responses). Drafts are unverified and cannot post or approve records.
 
 [Persistent business cases](research/BUSINESS_CASES.md) save ordered questions, context receipts and optional local drafts. Continuations use bounded, explicitly unverified history and fresh reviewed context. Expected turn numbers prevent silent conversation branches; completed retries reuse their saved receipt. Quick retains no conversation history.
+
+[Tenant financial journals](research/JOURNALS.md) add custom accounts, evidenced multi-line entries, human approvals, duplicate review, exact reversals and dated trial balances. Only approved entries affect balances. Financial amounts remain exact decimal strings; the portfolio still uses its separately reviewed statement snapshots.
