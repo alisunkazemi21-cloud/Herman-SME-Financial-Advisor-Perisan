@@ -3,15 +3,22 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal, localcontext
+from functools import partial
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, Field, model_validator
+from pydantic import AwareDatetime, BeforeValidator, Field, model_validator
 
-from src.models import Model, Money
+from src.models import Model, Money, decimal_precision
 
-Quantity = Annotated[Money, Field(ge=0, max_digits=24, decimal_places=6)]
-PositiveQuantity = Annotated[Money, Field(gt=0, max_digits=24, decimal_places=6)]
+Quantity = Annotated[
+    Money, Field(ge=0, max_digits=24, decimal_places=6),
+    BeforeValidator(partial(decimal_precision, digits=24, places=6)),
+]
+PositiveQuantity = Annotated[
+    Money, Field(gt=0, max_digits=24, decimal_places=6),
+    BeforeValidator(partial(decimal_precision, digits=24, places=6)),
+]
 Unit = Literal["g", "kg", "ml", "l", "each", "pack"]
 
 

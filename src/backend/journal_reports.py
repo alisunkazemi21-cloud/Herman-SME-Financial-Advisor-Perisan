@@ -15,6 +15,7 @@ from psycopg.types.json import Jsonb
 from pydantic import Field, model_validator
 
 from src.backend.inventory import EvidenceRef
+from src.backend.journal_sources import journal_origins
 from src.backend.journals import Code, Journals
 from src.backend.portfolio import KPI_LABELS, indicator_values
 from src.backend.service import Conflict, NotFound, Service, canonical, insert
@@ -293,6 +294,7 @@ class JournalReports:
                     accounts=accounts,
                     entries=entries,
                     lines=lines,
+                    import_provenance=journal_origins(c, business, [entry["id"] for entry in entries]),
                     document_hashes=hashes,
                 ),
                 8 * 1024 * 1024,

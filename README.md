@@ -93,6 +93,8 @@ Use Kalameh for Persian typography; its webfont files are pending, so the protot
 
 ## Business knowledge and portfolio
 
+Track development in the [milestone and capability map](research/PROGRESS.md): current checkpoint, delivered workflows, acceptance gates and the next intended work group.
+
 [Advisor context and portfolio API](research/ADVISOR_PORTFOLIO.md) provides reviewed knowledge, isolated Quick context, business highlights, five financial indicators and cash-flow waterfall data. Financial values require reviewed, evidenced inputs; the visible portfolio screen remains deferred.
 
 The backend can optionally generate Persian drafts from reviewed context: start `python -m src.backend.cli serve --advisor-model <installed-model>` with the existing runtime database configuration. See [draft routes and limitations](research/ADVISOR_PORTFOLIO.md#opt-in-local-draft-responses). Drafts are unverified and cannot post or approve records.
@@ -102,3 +104,5 @@ The backend can optionally generate Persian drafts from reviewed context: start 
 [Tenant financial journals](research/JOURNALS.md) add custom accounts, evidenced multi-line entries, human approvals, duplicate review, exact reversals and dated trial balances. Only approved entries affect balances. Financial amounts remain exact decimal strings.
 
 [Reviewed journal reports](research/JOURNAL_REPORTS.md) now connect journals to the portfolio and business advisor through explicit account mappings, saved input receipts and scope review. Reports flag new backdated postings, support reviewed replacements, and expose journal-based cash-flow data and five indicators without silently choosing between conflicting sources.
+
+[CSV/XLSX journal imports](research/JOURNAL_IMPORTS.md) provide an explicit mapping preview, atomic journal proposals and per-line extraction provenance. Reused source rows are blocked across repeated extraction and renamed identical files; human approval remains required before the entries affect reports.

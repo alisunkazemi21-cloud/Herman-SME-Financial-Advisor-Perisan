@@ -36,6 +36,7 @@ from src.backend.inventory import (
     reconcile_inventory,
 )
 from src.backend.jobs import ExtractionInput, ExtractionQueue
+from src.backend.journal_imports import JournalImport, JournalImporter
 from src.backend.journal_reports import JournalReports, MappingInput, ReportInput, ReportReview, ReviewInput
 from src.backend.journals import AccountInput, JournalDates, JournalDecision, JournalInput, Journals
 from src.backend.portfolio import FinancialPortfolio, FinancialSnapshot
@@ -62,6 +63,7 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
     cases = BusinessCases(service, advisor)
     journals = Journals(service)
     journal_reports = JournalReports(service)
+    journal_importer = JournalImporter(service)
     queue = ExtractionQueue(service)
     importer = TabularImporter(service)
     bearer = HTTPBearer(auto_error=False)
@@ -103,6 +105,26 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
     @app.get("/health")
     def health():
         return {"status": "ok"}
+
+    @app.post("/businesses/{business}/journal/imports/preview")
+    def preview_journal_import(business: UUID, value: JournalImport, user: Actor, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return journal_importer.preview(user, business, value)
+
+    @app.post("/businesses/{business}/journal/imports", status_code=201)
+    def import_journals(business: UUID, value: JournalImport, user: Actor, key: Key, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return {"id": journal_importer.create(user, business, key, value)}
+
+    @app.get("/businesses/{business}/journal/imports")
+    def journal_import_list(business: UUID, user: Actor, response: Response, after: UUID | None = None, limit: int = 20):
+        response.headers["Cache-Control"] = "no-store"
+        return journal_importer.page(user, business, after, limit)
+
+    @app.get("/businesses/{business}/journal/imports/{identity}")
+    def journal_import_detail(business: UUID, identity: UUID, user: Actor, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return journal_importer.read(user, business, identity)
 
     @app.post("/businesses/{business}/journal/mappings", status_code=201)
     def propose_mapping(business: UUID, value: MappingInput, user: Actor, key: Key, response: Response):

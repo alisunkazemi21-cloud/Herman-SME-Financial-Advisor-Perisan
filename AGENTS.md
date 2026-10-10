@@ -31,6 +31,7 @@ skills:
 - Write all repository documentation, research, decisions, checkpoint notes, technical reports, media narratives, code comments and developer-facing text in clear English.
 - Keep app-facing text, RTL presentation, Persian input/output data, fixtures, source documents and evidence in Persian where applicable. Persian literals in the code examples below are app/data examples, not a documentation-language requirement.
 - At every checkpoint, update the English documentation along with the implementation and validation evidence. Generated Markdown reports must also use English prose while preserving business names and source data verbatim.
+- Maintain `research/PROGRESS.md` at every checkpoint with stable milestone IDs, capability segments, current/next work, validation evidence and unresolved gates. Do not invent an overall completion percentage; distinguish verified scoped behavior from pending engine, capacity, accounting and UI acceptance.
 - Backend development is the current priority. Interface work is deferred at the user's request.
 - These later user preferences supersede the original prompt's broader Persian-language requirement. The original technical brief follows for reference.
 

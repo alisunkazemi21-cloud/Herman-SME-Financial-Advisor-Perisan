@@ -23,6 +23,23 @@ def exact_decimal(value: Any) -> Decimal:
 Money = Annotated[Decimal, BeforeValidator(exact_decimal)]
 
 
+def decimal_precision(value: Any, *, digits: int, places: int) -> Decimal:
+    """Validate significant places without context-sensitive Decimal.normalize()."""
+    result = exact_decimal(value)
+    if result.is_zero():
+        return result
+    _, coefficient, exponent = result.as_tuple()
+    length = len(coefficient)
+    while coefficient[length - 1] == 0:
+        length -= 1
+        exponent += 1
+    whole = max(length + exponent, 0)
+    fractional = max(-exponent, 0)
+    if whole > digits - places or fractional > places or whole + fractional > digits:
+        raise ValueError("دقت یا تعداد ارقام مقدار بیش از حد مجاز است")
+    return result
+
+
 class Model(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, str_strip_whitespace=True)
 

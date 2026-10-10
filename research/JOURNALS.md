@@ -47,7 +47,7 @@ An empty approved ledger yields zero calculated balances and an approved-entry c
 
 Synchronous reports support up to 1,000 accounts and 1,000 distinct source documents per business through the end date. Larger reports fail explicitly and need a future batch-report path; they are never truncated to plausible totals. The per-business bound does not limit the system to 1,000 businesses. Journal throughput and full application capacity have not been benchmarked.
 
-This trial balance is not an automatically classified statutory filing. The subsequent [journal-report checkpoint](JOURNAL_REPORTS.md) adds reviewed account mappings, saved receipts and advisor/portfolio selection alongside reviewed statement snapshots. Period closing, journal import mapping, automated journal proposals and statutory report classification remain future work. Interface work remains deferred.
+This trial balance is not an automatically classified statutory filing. The subsequent [journal-report checkpoint](JOURNAL_REPORTS.md) adds reviewed account mappings, saved receipts and advisor/portfolio selection alongside reviewed statement snapshots. [Journal imports](JOURNAL_IMPORTS.md) add explicit CSV/XLSX mapping and per-line origins. Period closing, inferred journal proposals and statutory report classification remain future work. Interface work remains deferred.
 
 ## Evidence
 

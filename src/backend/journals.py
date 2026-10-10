@@ -5,19 +5,25 @@ from __future__ import annotations
 import hashlib
 from datetime import date
 from decimal import Decimal, localcontext
+from functools import partial
 from typing import Annotated, Literal
 from uuid import UUID, uuid4
 
 from psycopg import Connection
-from pydantic import Field, model_validator
+from pydantic import BeforeValidator, Field, model_validator
 
 from src.backend.inventory import EvidenceRef
+from src.backend.journal_sources import journal_origins
 from src.backend.service import Conflict, NotFound, Service, insert
 from src.ingestion.normalizer import parse_jalali
-from src.models import Model, Money
+from src.models import Model, Money, decimal_precision
 
 Code = Annotated[str, Field(pattern=r"^[A-Za-z0-9_-]{1,32}$")]
-Amount = Annotated[Money, Field(gt=0, max_digits=28, decimal_places=6)]
+Amount = Annotated[
+    Money,
+    Field(gt=0, max_digits=28, decimal_places=6),
+    BeforeValidator(partial(decimal_precision, digits=28, places=6)),
+]
 
 
 class AccountInput(Model):
@@ -280,6 +286,7 @@ class Journals:
             return dict(
                 entry=row,
                 lines=lines,
+                origin=journal_origins(c, business, [identity]),
                 decision=decision,
                 evidence_sha256=hashes,
                 duplicate_candidates=matches[:20],

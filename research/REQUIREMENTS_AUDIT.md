@@ -30,7 +30,7 @@ On 2026-10-06, the durable queue added leases, retries, recovery after worker in
 
 The next checkpoint added atomic CSV/XLSX mapping to count/movement/fulfillment proposals, extraction provenance in analyses, source-row uniqueness, identical-file and matching-event detection, and explicit duplicate-review decisions. Validation: 108 passed, one real OCR test skipped. See [import and duplicate-detection contract](TABULAR_IMPORTS.md).
 
-Still outstanding: conversational agents and verified memory; full tenant-scoped financial journals; semantic invoice/amount matching; corrections to confirmed records; real OCR/model evaluation; official standards; backup/restore and full application capacity validation.
+At that checkpoint, outstanding work included conversational agents and verified memory, tenant-scoped financial journals, semantic invoice/amount matching, corrections to confirmed records, real OCR/model evaluation, official standards, backup/restore and full application capacity validation. Later sections record progress against these gaps.
 
 ## Documentation language — 2026-10-06
 
@@ -55,3 +55,9 @@ The PostgreSQL backend now stores evidenced, balanced multi-line journal proposa
 ## Journal report integration — 2026-10-10
 
 Reviewed account mappings, immutable journal report receipts, five derived portfolio indicators, journal-level cash-flow data, freshness detection, reviewed report replacement and bounded advisor/case retrieval are implemented. See [report contract](JOURNAL_REPORTS.md). These are scoped management reports; statutory statements, closing controls, gross bank-flow classification, automatic journal proposals/import mapping and large batch reporting remain incomplete. Inventory/knowledge correction, semantic document matching, real engine evaluation, standards verification and operational capacity/restore gates remain open.
+
+## Extracted journal imports — 2026-10-11
+
+Explicit CSV/XLSX voucher mapping now supports read-only preview, atomic pending journal proposals, exact unit/date conversion, source-row reuse prevention across identical files/extractions, immutable row lineage and provenance in new report receipts. See [import contract](JOURNAL_IMPORTS.md) and [validation](VALIDATION.md). This closes the structured journal-import gap, while account inference and PDF/OCR table mapping remain incomplete. Decimal precision validation also rejects tiny fractional tails independently of arithmetic context.
+
+Remaining work includes a general financial Quick advisor beyond the current inventory request, inventory/knowledge correction, broader semantic document matching, actual local-model/OCR evaluation, official standards verification, closing controls, gross bank-flow classification, large batch reporting, operational backup/restore and full application capacity. The user continues to defer interface expansion; the existing prototype is not the completed business portfolio screen.

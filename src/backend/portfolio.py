@@ -5,17 +5,22 @@ from __future__ import annotations
 import hashlib
 from datetime import date
 from decimal import Decimal, localcontext
+from functools import partial
 from typing import Annotated, Literal
 from uuid import UUID, uuid4
 
 from psycopg.types.json import Jsonb
-from pydantic import Field, model_validator
+from pydantic import BeforeValidator, Field, model_validator
 
 from src.backend.inventory import EvidenceRef
 from src.backend.service import Conflict, NotFound, Service, insert
-from src.models import Model, Money
+from src.models import Model, Money, decimal_precision
 
-Amount = Annotated[Money, Field(max_digits=28, decimal_places=6)]
+Amount = Annotated[
+    Money,
+    Field(max_digits=28, decimal_places=6),
+    BeforeValidator(partial(decimal_precision, digits=28, places=6)),
+]
 
 
 class PortfolioFact(Model):
