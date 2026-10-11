@@ -82,7 +82,10 @@ class RecipeLine(Model):
     quantity: PositiveQuantity
     unit: Unit
     basis: Literal["raw", "net"] = "raw"
-    preparation_yield: Annotated[Money, Field(gt=0, le=1, max_digits=9, decimal_places=6)] = Decimal(1)
+    preparation_yield: Annotated[
+        Money, Field(gt=0, le=1, max_digits=9, decimal_places=6),
+        BeforeValidator(partial(decimal_precision, digits=9, places=6)),
+    ] = Decimal(1)
 
     @model_validator(mode="after")
     def consistent_yield(self) -> RecipeLine:

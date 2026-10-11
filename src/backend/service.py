@@ -29,6 +29,16 @@ from src.backend.inventory import (
     VariancePolicy,
     reconcile_inventory,
 )
+from src.backend.inventory_history import (
+    LIVE_RECORD,
+    MAX_CORRECTION_DEPTH,
+    RECORD_STATE,
+    RecordKind,
+    RecordState,
+    ancestors,
+    correction_provenance,
+    current_successor,
+)
 from src.models import Model
 
 
@@ -82,9 +92,12 @@ class Service:
             raise ValueError("منبع یا اندازه صفحه نامعتبر است")
         with self.database.transaction(actor, business) as c:
             fields = "id,actor_id,input_sha256,created_at" if resource == "analysis_runs" else "*"
-            return c.execute(sql.SQL("SELECT " + fields + " FROM herman.{} WHERE business_id=%s "
+            rows = c.execute(sql.SQL("SELECT " + fields + " FROM herman.{} WHERE business_id=%s "
                 "AND (%s::uuid IS NULL OR id>%s) ORDER BY id LIMIT %s").format(sql.Identifier(resource)),
                 (business, after, after, limit)).fetchall()
+            for row in rows:
+                row.pop("created_xid", None)
+            return rows
 
     def record(self, actor: UUID, business: UUID, identity: UUID) -> dict:
         with self.database.transaction(actor, business) as c:
@@ -92,6 +105,7 @@ class Service:
                                (business, identity)).fetchone()
             if source is None:
                 raise NotFound("رکورد موجود نیست")
+            source.pop("created_xid", None)
             table = {"count": "stock_counts", "movement": "stock_movements", "recipe": "recipes",
                      "fulfillment": "fulfillments"}[source["kind"]]
             detail = c.execute(sql.SQL("SELECT * FROM herman.{} WHERE business_id=%s AND id=%s").format(
@@ -105,8 +119,36 @@ class Service:
                 "JOIN herman.import_batches b ON (b.business_id,b.id)=(s.business_id,s.batch_id) "
                 "JOIN herman.extractions e ON (e.business_id,e.id)=(s.business_id,s.extraction_id) "
                 "WHERE s.business_id=%s AND s.id=%s", (business, identity)).fetchone()
-            return dict(source=source, detail=detail, decision=decision, origin=origin,
+            successor = c.execute("SELECT record_id FROM herman.approvals "
+                "WHERE business_id=%s AND supersedes=%s AND approved", (business, identity)).fetchone()
+            state = "pending" if decision is None else "rejected" if not decision["approved"] else (
+                "superseded" if successor else "approved")
+            return dict(source=source, detail=detail, decision=decision, origin=origin, state=state,
+                        superseded_by=successor["record_id"] if successor else None,
+                        correction_scope="whole_record" if source["supersedes"] else None,
+                        correction_lineage=ancestors(c, business, identity) if source["supersedes"] else [],
                         duplicate_candidates=record_matches(c, business, identity))
+
+    def inventory_records(self, actor: UUID, business: UUID, after: UUID | None = None, limit: int = 20,
+                          state: RecordState | None = None, kind: RecordKind | None = None,
+                          supersedes: UUID | None = None) -> dict:
+        if not 1 <= limit <= 50 or state not in (None, "pending", "approved", "rejected", "superseded"):
+            raise ValueError("اندازه صفحه یا وضعیت رکورد نامعتبر است")
+        if kind not in (None, "count", "movement", "recipe", "fulfillment"):
+            raise ValueError("نوع رکورد نامعتبر است")
+        with self.database.transaction(actor, business) as c:
+            rows = c.execute(
+                "SELECT r.id,r.kind,r.document_id,r.locator,r.created_at,r.supersedes,"
+                "successor.record_id AS superseded_by," + RECORD_STATE + " AS state FROM herman.records r "
+                "LEFT JOIN herman.approvals a ON (a.business_id,a.record_id)=(r.business_id,r.id) "
+                "LEFT JOIN herman.approvals successor ON successor.business_id=r.business_id "
+                "AND successor.supersedes=r.id AND successor.approved "
+                "WHERE r.business_id=%s AND (%s::uuid IS NULL OR r.id>%s) "
+                "AND (%s::text IS NULL OR r.kind=%s) AND (%s::uuid IS NULL OR r.supersedes=%s) "
+                "AND (%s::text IS NULL OR " + RECORD_STATE + "=%s) ORDER BY r.id LIMIT %s",
+                (business, after, after, kind, kind, supersedes, supersedes, state, state, limit + 1),
+            ).fetchall()
+            return dict(records=rows[:limit], next_cursor=rows[limit - 1]["id"] if len(rows) > limit else None)
 
     def document_duplicates(self, actor: UUID, business: UUID, identity: UUID) -> dict:
         with self.database.transaction(actor, business) as c:
@@ -238,7 +280,7 @@ class Service:
         return self._write(actor, business, key, kind + ".proposed", value.model_dump(mode="json"),
                            lambda c: self._insert_proposal(c, actor, business, value))
 
-    def _insert_proposal(self, c, actor, business, value) -> UUID:
+    def _insert_proposal(self, c, actor, business, value, supersedes: UUID | None = None) -> UUID:
         if value.business_id != business or value.status != "proposed":
             raise ValueError("پیشنهاد با دامنه بیزینس همخوانی ندارد")
         kind, table = ("movement", "stock_movements") if isinstance(value, Movement) else (
@@ -248,12 +290,50 @@ class Service:
         fields = value.model_dump()
         fields.pop("status")
         evidence = fields.pop("evidence")
-        insert(c, "records", dict(business_id=business, id=value.id, kind=kind, created_by=actor, **evidence))
+        insert(c, "records", dict(business_id=business, id=value.id, kind=kind, created_by=actor,
+                                  supersedes=supersedes, **evidence))
         lines = fields.pop("lines", None)
         insert(c, table, fields)
         for line in lines or ():
             insert(c, "recipe_lines", dict(business_id=business, recipe_id=value.id, **line))
         return value.id
+
+    @staticmethod
+    def _inventory_predecessor(c, business: UUID, identity: UUID, kind: str) -> None:
+        row = c.execute("SELECT r.kind,a.approved," + LIVE_RECORD + "AS is_current FROM herman.records r "
+            "LEFT JOIN herman.approvals a ON (a.business_id,a.record_id)=(r.business_id,r.id) "
+            "WHERE r.business_id=%s AND r.id=%s", (business, identity)).fetchone()
+        if row is None:
+            raise NotFound("رکورد پیشین در این بیزینس موجود نیست")
+        if row["kind"] != kind or not row["approved"] or not row["is_current"]:
+            raise Conflict("اصلاح باید به رکورد تأییدشده و جایگزین‌نشده از همان نوع ارجاع دهد")
+
+    def _inventory_evidence(self, c, business: UUID, document: UUID) -> None:
+        row = c.execute("SELECT sha256 FROM herman.documents WHERE business_id=%s AND id=%s",
+                        (business, document)).fetchone()
+        if row is None:
+            raise NotFound("شاهد اصلاح در این بیزینس موجود نیست")
+        try:
+            content = (self.blob_root / str(business) / row["sha256"]).read_bytes()
+        except OSError as exc:
+            raise Conflict("فایل شاهد اصلاح در دسترس نیست") from exc
+        if hashlib.sha256(content).hexdigest() != row["sha256"]:
+            raise Conflict("فایل شاهد اصلاح تغییر کرده است")
+
+    def correct_inventory(self, actor: UUID, business: UUID, key: str, predecessor: UUID,
+                          value: Count | Movement | Recipe | Fulfillment) -> UUID:
+        kind = "movement" if isinstance(value, Movement) else (
+            "count" if isinstance(value, Count) else "recipe" if isinstance(value, Recipe) else "fulfillment")
+
+        def store(c):
+            self._inventory_predecessor(c, business, predecessor, kind)
+            if len(ancestors(c, business, predecessor)) > MAX_CORRECTION_DEPTH:
+                raise ValueError("زنجیره اصلاح بیش از حد مجاز است")
+            self._inventory_evidence(c, business, value.evidence.document_id)
+            return self._insert_proposal(c, actor, business, value, predecessor)
+
+        return self._write(actor, business, key, "record.correction_proposed",
+            dict(predecessor=str(predecessor), record_kind=kind, replacement=value.model_dump(mode="json")), store)
 
     def approve(self, actor: UUID, business: UUID, key: str, record_id: UUID, approved: bool, reason: str,
                 duplicate_resolution: str | None = None) -> UUID:
@@ -265,6 +345,13 @@ class Service:
             raise ValueError("رکورد تکراری همان رویداد نباید تأیید شود")
 
         def store(c):
+            record = c.execute("SELECT kind,document_id,supersedes FROM herman.records "
+                               "WHERE business_id=%s AND id=%s", (business, record_id)).fetchone()
+            if record is None:
+                raise NotFound("رکورد موجود نیست")
+            if approved and record["supersedes"] is not None:
+                self._inventory_predecessor(c, business, record["supersedes"], record["kind"])
+                self._inventory_evidence(c, business, record["document_id"])
             duplicates = record_matches(c, business, record_id)
             if not duplicates["found"]:
                 raise NotFound("رکورد موجود نیست")
@@ -300,7 +387,8 @@ class Service:
                 rows = c.execute(sql.SQL("SELECT t.*,r.document_id,r.locator,a.approved FROM herman.{} t "
                     "JOIN herman.records r ON (r.business_id,r.id)=(t.business_id,t.id) "
                     "LEFT JOIN herman.approvals a ON (a.business_id,a.record_id)=(t.business_id,t.id) "
-                    "WHERE t.business_id=%s AND (a.approved IS NULL OR a.approved) AND " + where +
+                    "WHERE t.business_id=%s AND (a.approved IS NULL OR a.approved) AND " + LIVE_RECORD +
+                    "AND (r.supersedes IS NULL OR a.approved) AND " + where +
                     " ORDER BY t.id").format(sql.Identifier(table)), (business, *parameters)).fetchall()
                 for row in rows:
                     row["evidence"] = dict(document_id=row.pop("document_id"), locator=row.pop("locator"))
@@ -312,6 +400,14 @@ class Service:
                     return None
                 rows = records("stock_counts", "t.id=%s", (identity,))
                 if not rows:
+                    successor = current_successor(c, business, identity)
+                    if successor:
+                        raise Conflict("شمارش جایگزین شده است؛ نسخه فعلی را صریح انتخاب کنید: " +
+                                       str(successor))
+                    pending = c.execute("SELECT supersedes FROM herman.records WHERE business_id=%s AND id=%s",
+                                        (business, identity)).fetchone()
+                    if pending and pending["supersedes"]:
+                        raise Conflict("اصلاح شمارش برای استفاده در تحلیل تأیید نشده است")
                     raise NotFound("شمارش موجود نیست یا رد شده است")
                 return rows[0]
 
@@ -351,10 +447,12 @@ class Service:
                 "WHERE s.business_id=%s AND s.id=ANY(%s::uuid[]) ORDER BY s.id", (business, record_ids)).fetchall()
             # Convert UUIDs to JSON strings without altering numeric calculator inputs.
             provenance_json = json.loads(json.dumps(provenance, default=str, ensure_ascii=False))
+            corrections = correction_provenance(c, business, record_ids)
             identity = uuid4()
             insert(c, "analysis_runs", dict(business_id=business, id=identity, actor_id=actor,
                 input_sha256=hashlib.sha256(canonical(snapshot).encode()).hexdigest(),
-                input_snapshot=Jsonb(snapshot), result=Jsonb(result), source_provenance=Jsonb(provenance_json)))
+                input_snapshot=Jsonb(snapshot), result=Jsonb(result), source_provenance=Jsonb(provenance_json),
+                correction_provenance=Jsonb(corrections)))
             return identity
 
         # Completeness and materiality assertions are reviewed inputs, not model guesses.

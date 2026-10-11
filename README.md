@@ -6,11 +6,11 @@ The current priority is the multi-business backend. Interface development is pau
 
 ## Development position
 
-**Last verified: C12 — Reviewed knowledge corrections. Next planned: C13 — Reviewed inventory corrections.**
+**Last verified: C13 — Reviewed inventory corrections. Next planned: C14 — Inventory analysis freshness and impact.**
 
-Use the [development map](research/PROGRESS.md) to follow six capability segments, checkpoints C01–C12, outstanding acceptance gates and the next checkpoint's completion criteria. Each checkpoint records the behavior gained and its evidence.
+Use the [development map](research/PROGRESS.md) to follow six capability segments, checkpoints C01–C13, outstanding acceptance gates and the next checkpoint's completion criteria. Each checkpoint records the behavior gained and its evidence.
 
-The latest full PostgreSQL suite passed **250 tests**, with **one real-OCR fixture test skipped**. [C12 run record](runs/knowledge-corrections-2026-10-11/README.md). Real OCR/model quality, complete workload capacity and recovery remain open; the visible portfolio is deferred.
+The latest full PostgreSQL suite passed **277 tests**, with **one real-OCR fixture test skipped**. [C13 run record](runs/inventory-corrections-2026-10-11/README.md). Real OCR/model quality, complete workload capacity and recovery remain open; the visible portfolio is deferred.
 
 ## Backend workflow
 
@@ -105,7 +105,9 @@ Track development in the [milestone and capability map](research/PROGRESS.md): c
 
 [Advisor context and portfolio API](research/ADVISOR_PORTFOLIO.md) provides reviewed knowledge, isolated Quick context, business highlights, five financial indicators and cash-flow waterfall data. Financial values require reviewed, evidenced inputs; the visible portfolio screen remains deferred.
 
-[Reviewed knowledge corrections](research/KNOWLEDGE_CORRECTIONS.md) replace an approved claim through an explicit predecessor link and human review. Fresh context and highlights use the applicable successor; original claims, evidence and saved case receipts remain unchanged. Corrections replace the whole claim, including validity dates. Apply migration 13 before serving the updated API.
+[Reviewed knowledge corrections](research/KNOWLEDGE_CORRECTIONS.md) replace an approved claim through an explicit predecessor link and human review. Fresh context and highlights use the applicable successor; original claims, evidence and saved case receipts remain unchanged. Corrections replace the whole claim, including validity dates.
+
+[Reviewed inventory corrections](research/INVENTORY_CORRECTIONS.md) replace counts, movements, recipes and fulfillments while preserving original records and import lineage. New reconciliation uses current approved records; earlier results remain snapshots. Select corrected opening/closing counts explicitly. Apply migration 14 before serving the updated API.
 
 The backend can optionally generate Persian drafts from reviewed context: start `python -m src.backend.cli serve --advisor-model <installed-model>` with the existing runtime database configuration. See [draft routes and limitations](research/ADVISOR_PORTFOLIO.md#opt-in-local-draft-responses). Drafts are unverified and cannot post or approve records.
 

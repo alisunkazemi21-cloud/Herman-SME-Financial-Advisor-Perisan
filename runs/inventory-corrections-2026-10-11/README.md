@@ -1,0 +1,7 @@
+# Reviewed inventory corrections — 2026-10-11
+
+Milestone **C13** in the [development map](../../research/PROGRESS.md). Counts, movements, recipes and fulfillments now support evidenced whole-record correction through human review. Pending/rejected corrections leave current data active. New reconciliation filters superseded records and stores correction/import ancestry; earlier receipts remain unchanged. Count selectors must explicitly name a current reviewed count.
+
+Focused correction checks passed **26 tests** in 67.79 seconds before one additional import-origin sealing case. The earlier correction/backend/import suite passed 34 tests. The full PostgreSQL suite passed **277 tests**, including all 27 new correction cases, with **one real-OCR skip**; Ruff and whitespace checks passed. The final record-detail no-store and exact-decimal response adjustments passed two focused API/backend tests in 8.87 seconds. All records are synthetic; no real OCR/model or full-capacity claim follows.
+
+Synchronized outputs: [contract](../../research/INVENTORY_CORRECTIONS.md), [chapter](../../research/CHAPTERS/inventory-corrections-2026-10-11.md), [report](../../reports/inventory-corrections-2026-10-11_technical.md), [narrative](../../media/inventory-corrections-2026-10-11.md), [validation](../../research/VALIDATION.md). Migration 14 is required. The Marimo prototype remains unchanged under UI deferral. Inventory analysis freshness/impact is the next intended checkpoint; the whole application goal remains open.

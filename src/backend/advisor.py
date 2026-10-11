@@ -336,7 +336,7 @@ class BusinessAdvisor:
             analysis = None
             if value.analysis_id is not None:
                 row = c.execute(
-                    "SELECT id,input_sha256,result,created_at,source_provenance "
+                    "SELECT id,input_sha256,result,created_at,source_provenance,correction_provenance "
                     "FROM herman.analysis_runs WHERE business_id=%s AND id=%s",
                     (business, value.analysis_id),
                 ).fetchone()

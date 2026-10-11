@@ -1,6 +1,7 @@
 import hashlib
 import json
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 from threading import BoundedSemaphore
 from typing import Annotated, Literal
@@ -9,6 +10,7 @@ from uuid import UUID
 import psycopg
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.concurrency import run_in_threadpool
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import AwareDatetime, Field, ValidationError
@@ -37,6 +39,7 @@ from src.backend.inventory import (
     UnitConversion,
     reconcile_inventory,
 )
+from src.backend.inventory_history import CorrectionInput, RecordKind, RecordState
 from src.backend.jobs import ExtractionInput, ExtractionQueue
 from src.backend.journal_imports import JournalImport, JournalImporter
 from src.backend.journal_reports import JournalReports, MappingInput, ReportInput, ReportReview, ReviewInput
@@ -294,6 +297,19 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
         return {"id": service.approve(user, business, key, identity, value.approved, value.reason_fa,
                                       value.duplicate_resolution)}
 
+    @app.post("/businesses/{business}/records/{identity}/corrections", status_code=201)
+    def correct_inventory(business: UUID, identity: UUID, value: CorrectionInput, user: Actor, key: Key,
+                          response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return {"id": service.correct_inventory(user, business, key, identity, value.replacement)}
+
+    @app.get("/businesses/{business}/records")
+    def inventory_records(business: UUID, user: Actor, response: Response, after: UUID | None = None,
+                          limit: int = 20, state: RecordState | None = None, kind: RecordKind | None = None,
+                          supersedes: UUID | None = None):
+        response.headers["Cache-Control"] = "no-store"
+        return service.inventory_records(user, business, after, limit, state, kind, supersedes)
+
     @app.post("/businesses/{business}/inventory-analyses", status_code=201)
     def analyze(business: UUID, value: AnalysisInput, user: Actor, key: Key):
         identity = service.analyze(user, business, key, value)
@@ -304,8 +320,9 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
         return service.analysis(user, business, identity)
 
     @app.get("/businesses/{business}/records/{identity}")
-    def record(business: UUID, identity: UUID, user: Actor):
-        return service.record(user, business, identity)
+    def record(business: UUID, identity: UUID, user: Actor, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return jsonable_encoder(service.record(user, business, identity), custom_encoder={Decimal: str})
 
     @app.get("/businesses/{business}/resources/{resource}")
     def resources(business: UUID, resource: str, user: Actor, after: UUID | None = None, limit: int = 50):
