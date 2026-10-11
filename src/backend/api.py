@@ -316,8 +316,9 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
         return service.analysis(user, business, identity)
 
     @app.get("/businesses/{business}/inventory-analyses/{identity}")
-    def analysis(business: UUID, identity: UUID, user: Actor):
-        return service.analysis(user, business, identity)
+    def analysis(business: UUID, identity: UUID, user: Actor, response: Response):
+        response.headers["Cache-Control"] = "no-store"
+        return service.analysis_view(user, business, identity)
 
     @app.get("/businesses/{business}/records/{identity}")
     def record(business: UUID, identity: UUID, user: Actor, response: Response):

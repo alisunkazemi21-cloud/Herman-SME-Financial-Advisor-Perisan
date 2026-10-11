@@ -50,7 +50,7 @@ New reconciliation excludes replaced records and unapproved correction candidate
 
 Ancestry is limited to 64 correction links. Receipts refuse more than 10,000 lineage rows or 8 MiB of encoded correction provenance; they never silently truncate it. Current selected evidence is hash-verified. Ancestor document hashes and import data are retained historical references, not a claim that each ancestor file was reread or that its original figures equal the corrected figures. Advisor context includes the saved correction receipt under its existing 64 KiB bound.
 
-Earlier analyses stay snapshots. Approval does not recalculate old analyses, rewrite case context, or attest that earlier coverage assertions remain adequate. Request a new reconciliation with reviewed current counts and coverage. Automatic freshness/impact reporting for old inventory analyses remains a follow-on gap.
+Earlier analyses stay snapshots. Approval does not recalculate old analyses, rewrite case context, or attest that earlier coverage assertions remain adequate. Request a new reconciliation with reviewed current counts and coverage. [C14](INVENTORY_FRESHNESS.md) adds a separate live input comparison and suppresses stale/unknown figures in current advice. Its final full PostgreSQL suite passed **313 tests**, with **one real-OCR skip**; Ruff passed.
 
 ## Database sealing and numerical boundary
 
@@ -62,4 +62,4 @@ Recipe preparation yield now uses the same context-independent precision check a
 
 ## Remaining work
 
-Catalog/unit-definition correction, analysis freshness/impact reporting, semantic invoice matching, broader PDF/image mapping, stock valuation, production/intermediate goods, actual OCR/model quality, accounting review, backup/restore and full application capacity remain open. The visible Persian portfolio remains user-deferred. Synthetic software checks do not prove production readiness or document truth.
+Catalog/unit-definition correction, semantic invoice matching, broader PDF/image mapping, stock valuation, production/intermediate goods, actual OCR/model quality, accounting review, backup/restore and full application capacity remain open. C14's freshness comparison does not close those gates. The visible Persian portfolio remains user-deferred. Synthetic software checks do not prove production readiness or document truth.

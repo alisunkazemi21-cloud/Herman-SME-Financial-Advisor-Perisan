@@ -1,0 +1,7 @@
+# Chapter: separating a saved result from current inputs
+
+C14 adds a live comparison alongside an immutable inventory calculation. A historical shortage remains part of its receipt even after a reviewer corrects an input. A new current-state response identifies the changes rather than silently replacing the old result or calculating a speculative difference.
+
+The same selector feeds creation and comparison. Review decisions, corrections and half-open scope boundaries determine the selected records; typed equality handles decimal/date representations. Items, conversions and overlapping recipes are included conservatively because they are part of the calculator input. Freshness and completeness remain independent. File integrity and the truth of coverage assertions are outside the comparison.
+
+Portfolio and advisor summaries suppress stale/unknown figures and numerical provenance. Prior case turns retain their exact context; later turns receive the current freshness result. Bounded comparisons fail to unknown, while bounded change examples retain exact totals. Recipe-line batching avoids a query per recipe. The final suite passed **313 tests**, with **one real-OCR skip**; the focused suite passed **36**. Ruff and whitespace checks passed. [Validation](../VALIDATION.md) and [the run record](../../runs/inventory-freshness-2026-10-11/README.md) preserve the initial test-setup failure, correction and final malformed-result checks. The prototype interface remains unchanged.

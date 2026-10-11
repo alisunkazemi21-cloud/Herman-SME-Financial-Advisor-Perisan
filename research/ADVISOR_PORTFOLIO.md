@@ -72,7 +72,7 @@ Synthetic verification example: opening 100 + inflows 250 - outflows 180 = closi
 
 ## Remaining work
 
-Reviewed narrative corrections are implemented in [C12](KNOWLEDGE_CORRECTIONS.md); inventory/catalog corrections, evaluated model responses, production logging/privacy configuration, automatic statement mapping and full portfolio capacity tests remain open. Knowledge key semantics are application-defined; no semantic similarity matching is claimed. UI work will use the user's Kalameh and Contour preferences in a later checkpoint.
+Reviewed narrative corrections are implemented in [C12](KNOWLEDGE_CORRECTIONS.md) and inventory corrections in [C13](INVENTORY_CORRECTIONS.md). Catalog corrections, evaluated model responses, production logging/privacy configuration, automatic statement mapping and full portfolio capacity tests remain open. Knowledge key semantics are application-defined; no semantic similarity matching is claimed. UI work will use the user's Kalameh and Contour preferences in a later checkpoint.
 
 ## Validation
 
@@ -89,3 +89,7 @@ Responses contain `status: draft`, `verified: false`, `persisted: false`, the ex
 Inference is limited to one active request per application process, with a transport timeout, 64 KiB input/response-byte limits, a 12,000-character content limit and a 1,024-token generation option. Oversized, partial, malformed and tool-call outputs are rejected. Disabled/busy/unavailable inference returns a generic 503 with no-store headers. Busy responses include Retry-After. No new application conversation storage is introduced; Ollama/service-log retention must be evaluated separately before real customer use.
 
 On 2026-10-08 the loopback Ollama API was unavailable and no executable was found on PATH. Automated tests use explicit stubs for model behavior; real model accuracy and prompt-injection resistance remain unverified. The software boundary prevents posting; it cannot certify that draft prose is factually correct.
+
+## Inventory freshness — C14
+
+Selected analyses and recent portfolio previews now include a bounded live comparison with their original recorded inputs. Current complete results remain available; stale or unknown analyses retain ID/scope metadata but withhold result figures and numeric import/correction provenance from current advice. Current incomplete results retain their missing-data explanation. Freshness does not reverify files or coverage assertions. Saved case receipts remain exact; new turns retrieve the current comparison. See [the contract](INVENTORY_FRESHNESS.md); the final full PostgreSQL suite passed **313 tests**, with **one real-OCR skip**, and Ruff passed.

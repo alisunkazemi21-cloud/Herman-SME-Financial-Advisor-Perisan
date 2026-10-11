@@ -39,6 +39,7 @@ from src.backend.inventory_history import (
     correction_provenance,
     current_successor,
 )
+from src.backend.inventory_selection import select_inputs
 from src.models import Model
 
 
@@ -378,28 +379,9 @@ class Service:
             if c.execute("SELECT 1 FROM herman.warehouses WHERE business_id=%s AND id=%s",
                          (business, value.scope.warehouse_id)).fetchone() is None:
                 raise NotFound("انبار موجود نیست")
-            items = c.execute("SELECT * FROM herman.items WHERE business_id=%s", (business,)).fetchall()
-            conversions = c.execute("SELECT * FROM herman.unit_conversions WHERE business_id=%s", (business,)).fetchall()
-            for row in conversions:
-                row["evidence"] = dict(document_id=row.pop("document_id"), locator=row.pop("locator"))
-
-            def records(table, where, parameters):
-                rows = c.execute(sql.SQL("SELECT t.*,r.document_id,r.locator,a.approved FROM herman.{} t "
-                    "JOIN herman.records r ON (r.business_id,r.id)=(t.business_id,t.id) "
-                    "LEFT JOIN herman.approvals a ON (a.business_id,a.record_id)=(t.business_id,t.id) "
-                    "WHERE t.business_id=%s AND (a.approved IS NULL OR a.approved) AND " + LIVE_RECORD +
-                    "AND (r.supersedes IS NULL OR a.approved) AND " + where +
-                    " ORDER BY t.id").format(sql.Identifier(table)), (business, *parameters)).fetchall()
-                for row in rows:
-                    row["evidence"] = dict(document_id=row.pop("document_id"), locator=row.pop("locator"))
-                    row["status"] = "approved" if row.pop("approved") else "proposed"
-                return rows
-
-            def count(identity):
-                if identity is None:
-                    return None
-                rows = records("stock_counts", "t.id=%s", (identity,))
-                if not rows:
+            selected = select_inputs(c, business, value.scope, value.opening_id, value.closing_id)
+            for role, identity in (("opening", value.opening_id), ("closing", value.closing_id)):
+                if identity is not None and selected[role] is None:
                     successor = current_successor(c, business, identity)
                     if successor:
                         raise Conflict("شمارش جایگزین شده است؛ نسخه فعلی را صریح انتخاب کنید: " +
@@ -409,21 +391,8 @@ class Service:
                     if pending and pending["supersedes"]:
                         raise Conflict("اصلاح شمارش برای استفاده در تحلیل تأیید نشده است")
                     raise NotFound("شمارش موجود نیست یا رد شده است")
-                return rows[0]
-
-            period = (value.scope.warehouse_id, value.scope.start, value.scope.end)
-            where = "t.warehouse_id=%s AND t.occurred_at>=%s AND t.occurred_at<%s"
-            movements = records("stock_movements", where, period)
-            fulfillments = records("fulfillments", where, period)
-            recipes = records("recipes", "t.valid_from<%s AND (t.valid_to IS NULL OR t.valid_to>%s)",
-                              (value.scope.end, value.scope.start))
-            for row in recipes:
-                row["lines"] = c.execute("SELECT item_id,quantity,unit,basis,preparation_yield "
-                    "FROM herman.recipe_lines WHERE business_id=%s AND recipe_id=%s ORDER BY item_id",
-                    (business, row["id"])).fetchall()
             request = InventoryRequest(scope=value.scope, target_item_id=value.target_item_id, basis=value.basis,
-                items=items, conversions=conversions, opening=count(value.opening_id), closing=count(value.closing_id),
-                movements=movements, fulfillments=fulfillments, recipes=recipes, coverage=value.coverage, policy=value.policy)
+                **selected, coverage=value.coverage, policy=value.policy)
             snapshot = request.model_dump(mode="json")
             refs = [request.coverage.evidence, request.policy.evidence]
             refs.extend(row.evidence for row in (*request.movements, *request.recipes,
@@ -465,3 +434,14 @@ class Service:
             if row is None:
                 raise NotFound("تحلیل موجود نیست")
             return row
+
+    def analysis_view(self, actor: UUID, business: UUID, identity: UUID) -> dict:
+        """Historical receipt plus a separate live comparison in the same tenant snapshot."""
+        from src.backend.inventory_freshness import freshness
+
+        with self.database.transaction(actor, business) as c:
+            row = c.execute("SELECT * FROM herman.analysis_runs WHERE business_id=%s AND id=%s",
+                            (business, identity)).fetchone()
+            if row is None:
+                raise NotFound("تحلیل موجود نیست")
+            return dict(**row, freshness=freshness(c, business, row))
