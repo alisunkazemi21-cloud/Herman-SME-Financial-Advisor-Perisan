@@ -128,6 +128,8 @@ The user requested visual and contextual milestones to trace development. Mainta
 
 Progress presentation refinement: place the last verified and next planned checkpoint at the top of the root README, link the exact validation run, and define state labels and next-checkpoint completion criteria in the map. Keep C12 explicitly planned until implementation starts. This documentation update does not create a new functional checkpoint or imply fresh regression execution.
 
+Current-work refinement after C14: distinguish the last verified capability from the work being investigated now. C15 parser inspection has started, but its contract, implementation and acceptance remain unfinished. Show a stage tracker (design, implementation, validation, publication), the immediate decision to resolve, and the exact successful C14 commit/check link. Retain all six capability segments and earlier milestone boundaries. Do not relabel design work as delivered functionality or assign speculative dates or percentages. The conversation view is a dated snapshot; the repository map is the maintained reference.
+
 ## General request-only Quick Advisor — 2026-10-11
 
 Make inventory optional in the existing Quick context/draft routes. Accept a question alone, bounded Persian notes, up to eight explicitly supplied text excerpts and optional dated financial figures. Quick must not read business records, files, URLs or past chats and must not save its request, excerpts or reply. Authentication still checks the current credential. No source ID is a database selector; excerpt hashes identify exactly the supplied text, not verified original files.

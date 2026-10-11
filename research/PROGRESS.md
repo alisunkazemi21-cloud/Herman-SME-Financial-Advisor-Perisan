@@ -2,7 +2,7 @@
 
 Updated: **2026-10-11** · Active phase: **Backend workflows** · Latest checkpoint: **C14 — Inventory analysis freshness and impact**
 
-**Now:** saved inventory analyses expose current/stale/unknown input comparisons and change references. Portfolio/advisor summaries withhold stale or unknown figures while preserving historical receipts. The full PostgreSQL suite passes **313 tests**, with **one real-OCR fixture test skipped**. The product is still in development. **Next intended checkpoint:** C15 stateless document intake for Quick Advisor.
+**Last delivered:** saved inventory analyses expose current/stale/unknown input comparisons and change references. Portfolio/advisor summaries withhold stale or unknown figures while preserving historical receipts. The full PostgreSQL suite passes **313 tests**, with **one real-OCR fixture test skipped**. **Working now:** C15 stateless document intake for Quick Advisor, at design review. No C15 implementation or validation is claimed.
 
 This map separates capabilities from acceptance gates. A verified checkpoint means its documented scope passed checks; it does not mean every feature in that segment is finished. There is no overall percentage because engine quality, operational readiness and deferred UI are different kinds of work.
 
@@ -10,12 +10,13 @@ This map separates capabilities from acceptance gates. A verified checkpoint mea
 
 | Position | Milestone | State / evidence |
 |---|---|---|
-| Last verified | **C14 · Inventory analysis freshness and impact** | [Run record](../runs/inventory-freshness-2026-10-11/README.md): 313 passed, one OCR skip; 36 new freshness checks. [GitHub checks](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/workflows/tests.yml). |
-| Next planned | **C15 · Stateless Quick document intake** | Planning only; no implementation or validation claimed. Detailed scope below. |
-| Current segment | **S3 · Financial and inventory core** | Corrections, current-input comparison and preserved receipts are verified; catalog and accounting depth remain open. |
+| Last verified | **C14 · Inventory analysis freshness and impact** | [Run record](../runs/inventory-freshness-2026-10-11/README.md): 313 passed, one OCR skip; 36 new freshness checks. [Commit e843048](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/commit/e84304831588f199a05f45bca2731104e7dff980) passed [GitHub run 38168599926](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38168599926). |
+| Current work | **C15 · Stateless Quick document intake** | Design review: existing parsers and Quick limits inspected; contract and implementation still pending. Detailed stages below. |
+| Current segments | **S2 · Evidence and review + S4 · Advisor and knowledge** | Connect temporary document extraction to request-only Quick sources; preserve explicit typed calculations. |
+| Most recently advanced | **S3 · Financial and inventory core** | Corrections, current-input comparison and preserved receipts verified at C13–C14; catalog and accounting depth remain open. |
 | Later UI | **S5 · Owner experience** | Deferred by the user; portfolio data already exists in the backend. |
 
-Status vocabulary: **verified** means the stated scope has passing evidence; **in progress** means implementation has started but acceptance is unfinished; **planned** means no implementation claim; **gate open** means required evidence is missing; **deferred** means deliberately postponed. A segment can have verified capabilities and open gates at the same time.
+Status vocabulary: **verified** means the stated scope has passing evidence; **design review** means requirements or source inspection is underway before implementation; **in progress** means implementation has started but acceptance is unfinished; **planned** means no implementation claim; **gate open** means required evidence is missing; **deferred** means deliberately postponed. A segment can have verified capabilities and open gates at the same time.
 
 ## Workflow map
 
@@ -30,6 +31,7 @@ flowchart TD
     G --> H[Portfolio and business knowledge]
     H --> I[Business advisor and case history]
     J[Question / excerpts / typed figures] --> K[Stateless Quick Advisor]
+    O[Quick document upload: C15 design review] -. temporary local extraction .-> J
     K --> L[General draft context / financial calculations]
     L -. real model evaluation pending .-> N[Validated local advice]
     H -. user deferred .-> M[Visible portfolio screen]
@@ -72,7 +74,7 @@ Tests listed below are historical full-suite results, not completion percentages
 
 Documentation-language, typography and Graphify checkpoints are supporting changes recorded in [validation](VALIDATION.md). They did not independently close a product capability gate.
 
-## Current checkpoint: C14
+## Last verified checkpoint: C14
 
 Delivered: shared selection for creation and read-time freshness; additions/removals/value or decision changes; explicit replacement-count requirements; bounded unknown status; suppression of stale/unknown current-advice figures; and unchanged historical analysis/case receipts. The final suite passed **313 tests**, including **36** new freshness cases, with one real-OCR skip. Ruff and whitespace checks passed. Freshness does not certify source integrity or business completeness.
 
@@ -82,9 +84,18 @@ Evidence: [contract](INVENTORY_FRESHNESS.md), [run record](../runs/inventory-fre
 
 These are intended work groups, not calendar promises. Each is complete only when its listed outcome has direct evidence.
 
-### C15 · Stateless Quick document intake — planned
+### C15 · Stateless Quick document intake — design review
 
 Business outcome: an owner can submit a document for a small Quick question without first creating a business profile or retaining a conversation history.
+
+| Stage | Current state | Observable exit |
+|---|---|---|
+| 1 · Design | **Working now** | Record the supported formats, resource limits, source-location contract and failure cleanup before code. |
+| 2 · Implementation | Planned | A separate stateless extraction path supplies unverified sources to existing Quick routes. |
+| 3 · Validation | Pending implementation | Supported-format, limits, failure/cleanup, privacy and regression checks pass. |
+| 4 · Publication | Pending validation | Contract and checkpoint artifacts agree; a commit is pushed and its exact GitHub check result is recorded. |
+
+Inspection completed: existing CSV/XLSX, PDF and image extractors, the persistent worker's subprocess handling, and Quick's eight-source / 6,000-character-per-source / 64 KiB context bounds. **Immediate decision:** how to preserve page/row references and enforce complete temporary cleanup and resource limits without silently omitting content. This inspection is preparation, not an accepted C15 contract.
 
 | Step | Expected behavior | Completion evidence |
 |---|---|---|
@@ -94,7 +105,7 @@ Business outcome: an owner can submit a document for a small Quick question with
 | Keep numbers typed | Extracted text does not become confirmed financial figures or model arithmetic. | Provenance and input-validation checks; existing typed calculations remain the numerical boundary. |
 | Close checkpoint | Synchronize implementation, evidence, progress map and Git history. | Focused checks, full regression result, commit and CI outcome. |
 
-C15 is planned; supported formats and exact parser limits will be recorded after inspecting the current extraction pipeline. Broader semantic mapping, catalog correction, real OCR/model quality and operational acceptance remain separate gates. UI work remains deferred.
+C15 implementation is planned; supported formats and exact parser limits are not yet finalized. Broader semantic mapping, catalog correction, real OCR/model quality and operational acceptance remain separate gates. UI work remains deferred.
 
 | Next group | Expected outcome | Evidence needed to close it |
 |---|---|---|
@@ -106,4 +117,4 @@ C15 is planned; supported formats and exact parser limits will be recorded after
 
 ## Update rule
 
-At each checkpoint, update the current/next marker in this map and the root README, capability segments, historical result and evidence links. Keep unresolved gates visible. Report updates as **checkpoint ID → capability gained → validation → remaining gate → next step**. Record failure/recovery evidence in `VALIDATION.md`, preserve earlier receipts, and use the same milestone IDs in the run README, research chapter and technical report. The conversation visualization is a dated snapshot; this repository map is the maintained reference.
+At each checkpoint, update the last-verified/current-work markers in this map and the root README, capability segments, historical result and exact commit/check links. Between checkpoints, identify the current stage and next observable exit without changing the last verified milestone. Keep unresolved gates visible. Report updates as **checkpoint ID → capability gained → validation → remaining gate → next step**. Record failure/recovery evidence in `VALIDATION.md`, preserve earlier receipts, and use the same milestone IDs in the run README, research chapter and technical report. The conversation visualization is a dated snapshot; this repository map is the maintained reference.

@@ -6,11 +6,11 @@ The current priority is the multi-business backend. Interface development is pau
 
 ## Development position
 
-**Last verified: C14 — Inventory analysis freshness and impact. Next planned: C15 — Stateless Quick document intake.**
+**Last verified: C14 — Inventory analysis freshness and impact. Working now: C15 — Stateless Quick document intake, at design review.**
 
-Use the [development map](research/PROGRESS.md) to follow six capability segments, checkpoints C01–C14, outstanding acceptance gates and the next checkpoint's completion criteria. Each checkpoint records the behavior gained and its evidence.
+Use the [development map](research/PROGRESS.md) to follow six capability segments, checkpoints C01–C14, outstanding acceptance gates and C15's design → implementation → validation → publication stages. Each checkpoint records the behavior gained and its evidence; C15 implementation has not started.
 
-The latest full PostgreSQL suite passed **313 tests**, with **one real-OCR fixture test skipped**. [C14 run record](runs/inventory-freshness-2026-10-11/README.md). Real OCR/model quality, complete workload capacity and recovery remain open; the visible portfolio is deferred.
+The latest full PostgreSQL suite passed **313 tests**, with **one real-OCR fixture test skipped**. [C14 run record](runs/inventory-freshness-2026-10-11/README.md); [successful GitHub checks for e843048](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38168599926). Real OCR/model quality, complete workload capacity and recovery remain open; the visible portfolio is deferred.
 
 ## Backend workflow
 
