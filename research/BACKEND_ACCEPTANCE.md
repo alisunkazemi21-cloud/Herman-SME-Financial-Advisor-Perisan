@@ -108,3 +108,7 @@ This is the first backend milestone, not completion of the approved whole applic
 - Full 1,000-business **application** load test with ingestion, concurrent changes, reconciliation, OCR and realistic document sizes. A database read benchmark alone cannot certify this.
 
 The existing local Ollama and OCR adapters remain separate; their real-engine accuracy has not been established. No claim of Iranian accounting-standard compliance is added here.
+
+## Reviewed knowledge corrections — C12, 2026-10-11
+
+Migration 13 adds reviewed whole-claim replacement with same-business/key predecessor guards and one approved successor under concurrent review. Fresh context/highlights select current applicable revisions; previous claims, evidence and case receipts are retained. A bounded review/history list exposes lifecycle states and lineage. See [the correction contract](KNOWLEDGE_CORRECTIONS.md) for validity-date semantics and the [development map](PROGRESS.md) for the intervening backend checkpoints. Focused checks passed; the full PostgreSQL suite passed **250 tests**, with **one real-OCR skip**; Ruff and whitespace checks passed. Inventory corrections and the wider operational/engine gates remain open.

@@ -16,6 +16,7 @@ All routes require the existing bearer credential. Proposal and decision routes 
 |---|---|
 | `POST /businesses/{business}/knowledge` | Propose a knowledge key, Persian statement, evidence and validity interval. |
 | `GET /businesses/{business}/knowledge/{id}` | Read a proposal and its decision. |
+| `GET /businesses/{business}/knowledge` | C12: paginated claims, lifecycle states and predecessor/key filters. |
 | `POST /businesses/{business}/knowledge/{id}/decision` | Record approved/rejected plus a Persian reason; one immutable decision per claim. |
 | `POST /businesses/{business}/advisor/context` | Read selected confirmed knowledge and optionally one saved inventory analysis. |
 | `POST /quick/advisor/context` | Question, optional excerpts and typed financial/inventory inputs; no business-history retrieval. See [Quick contract](QUICK_ADVISOR.md). |
@@ -30,6 +31,8 @@ All routes require the existing bearer credential. Proposal and decision routes 
 ## Knowledge and read-only tools
 
 A knowledge proposal has `key` (lowercase ASCII identifier, up to 80 characters), `statement_fa` (up to 2,000 characters), `evidence` with `document_id` and `locator`, and `valid_from`/optional `valid_to`. The server assigns identity and author. Documents must belong to the same business; their original bytes are hash-verified during proposal, approval and context retrieval.
+
+C12 adds optional `supersedes` for reviewed whole-claim corrections, including validity dates. Pending/rejected candidates leave the predecessor current; an approved successor excludes it from fresh context and highlights permanently. Independent conflicts remain visible. Detail reads expose predecessor/successor links and lifecycle state. See the [correction contract](KNOWLEDGE_CORRECTIONS.md) before proposing a replacement.
 
 Business context accepts `question_fa`, `effective_at`, up to ten unique `knowledge_keys`, optional `analysis_id`, and `include_financial` (default false). The latter retrieves the latest eligible reviewed financial snapshot and its five indicators in the same scoped transaction. Only approved, currently applicable claims enter context. Groups are `missing`, `confirmed` or `conflict`. Different overlapping approved statements remain visible as a conflict; matching text retains all evidence. Pending/rejected/expired claims do not become context knowledge.
 
@@ -67,7 +70,7 @@ Synthetic verification example: opening 100 + inflows 250 - outflows 180 = closi
 
 ## Remaining work
 
-Confirmed-record correction/supersession, conversational orchestration, evaluated model responses, production logging/privacy configuration, automatic statement mapping and full portfolio capacity tests remain open. Knowledge key semantics are application-defined; no semantic similarity matching is claimed. UI work will use the user's Kalameh and Contour preferences in a later checkpoint.
+Reviewed narrative corrections are implemented in [C12](KNOWLEDGE_CORRECTIONS.md); inventory/catalog corrections, evaluated model responses, production logging/privacy configuration, automatic statement mapping and full portfolio capacity tests remain open. Knowledge key semantics are application-defined; no semantic similarity matching is claimed. UI work will use the user's Kalameh and Contour preferences in a later checkpoint.
 
 ## Validation
 

@@ -67,3 +67,9 @@ Remaining work includes a general financial Quick advisor beyond the current inv
 Quick now accepts questions without inventory, optional request-local text excerpts and partial financial figures. The shared ten-ratio definitions and two cash calculations provide values with per-input source references, or explicit missing/undefined status. A separate Quick prompt supports general explanations without giving the model calculation/posting tools. Authentication remains required; business/history retrieval and conversation persistence are excluded. See [contract](QUICK_ADVISOR.md) and [validation](VALIDATION.md).
 
 This closes the mandatory-inventory restriction and the general request/typed-finance context gap. Real-model answer quality, stateless binary document ingestion, inferred financial extraction, reviewed knowledge/inventory corrections, semantic matching, official standards, operational restore/capacity and the deferred product UI remain incomplete.
+
+## Reviewed knowledge corrections — C12, 2026-10-11
+
+Explicit same-key whole-claim replacements preserve original claims and decisions, require human approval, arbitrate concurrent reviewers, update fresh advisor context/portfolio highlights, and retain exact saved case receipts. Paginated lifecycle/history reads expose pending and superseded claims. See [correction semantics](KNOWLEDGE_CORRECTIONS.md). Focused checks passed; the full PostgreSQL suite passed **250 tests**, with **one real-OCR skip**; Ruff and whitespace checks passed.
+
+Inventory/catalog corrections, semantic matching, stateless binary Quick intake, real model/OCR evaluation, official standards, closing controls, gross bank flows, large reporting batches, restore/capacity and the deferred visible portfolio remain incomplete. No application-completion or production-readiness claim is made.

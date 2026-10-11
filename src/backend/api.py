@@ -18,7 +18,9 @@ from src.backend.advisor import (
     BusinessAdvisor,
     BusinessContextInput,
     KnowledgeDecision,
+    KnowledgeKey,
     KnowledgeProposal,
+    KnowledgeState,
     QuickContextInput,
     quick_context,
 )
@@ -341,6 +343,15 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
     def knowledge(business: UUID, identity: UUID, user: Actor, response: Response):
         response.headers["Cache-Control"] = "no-store"
         return advisor.claim(user, business, identity)
+
+    @app.get("/businesses/{business}/knowledge")
+    def knowledge_list(
+        business: UUID, user: Actor, response: Response, after: UUID | None = None, limit: int = 20,
+        state: KnowledgeState | None = None, knowledge_key: KnowledgeKey | None = None,
+        supersedes: UUID | None = None,
+    ):
+        response.headers["Cache-Control"] = "no-store"
+        return advisor.knowledge_page(user, business, after, limit, state, knowledge_key, supersedes)
 
     @app.post("/businesses/{business}/knowledge/{identity}/decision", status_code=201)
     def review_knowledge(business: UUID, identity: UUID, value: KnowledgeDecision, user: Actor, key: Key):

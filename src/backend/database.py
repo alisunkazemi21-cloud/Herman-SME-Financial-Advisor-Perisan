@@ -62,7 +62,7 @@ def migrate(admin_dsn: str, runtime_role: str = "herman_app") -> None:
         if existing is None:
             connection.execute(Path(__file__).with_name("schema.sql").read_text(encoding="utf-8"))
         versions = {row[0] for row in connection.execute("SELECT version FROM herman.schema_migrations")}
-        if not versions <= {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12} or 1 not in versions:
+        if not versions <= {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13} or 1 not in versions:
             raise ValueError("unsupported database schema version")
         if 2 not in versions:
             connection.execute(Path(__file__).with_name("migration_002.sql").read_text(encoding="utf-8"))
@@ -86,6 +86,8 @@ def migrate(admin_dsn: str, runtime_role: str = "herman_app") -> None:
             connection.execute(Path(__file__).with_name("migration_011.sql").read_text(encoding="utf-8-sig"))
         if 12 not in versions:
             connection.execute(Path(__file__).with_name("migration_012.sql").read_text(encoding="utf-8-sig"))
+        if 13 not in versions:
+            connection.execute(Path(__file__).with_name("migration_013.sql").read_text(encoding="utf-8"))
         if connection.execute("SELECT 1 FROM pg_roles WHERE rolname=%s", (runtime_role,)).fetchone() is None:
             connection.execute(sql.SQL("CREATE ROLE {} NOLOGIN NOSUPERUSER NOBYPASSRLS").format(
                 sql.Identifier(runtime_role)))

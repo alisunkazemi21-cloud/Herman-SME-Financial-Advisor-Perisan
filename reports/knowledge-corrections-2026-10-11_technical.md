@@ -1,0 +1,11 @@
+# C12 technical report: reviewed knowledge corrections
+
+Migration 13 adds immutable predecessor references, a same-business foreign key, a lookup index and a unique approved-successor index. Claim insertion requires an approved same-key predecessor; decision insertion derives the link from the claim. Existing RLS, role checks and append-only triggers remain in force. No saved case/report payload is rewritten.
+
+`KnowledgeProposal.supersedes` is omitted from serialization when null, preserving existing ordinary-proposal idempotency hashes. The service checks predecessor eligibility on proposal and approval, plus replacement evidence bytes. Corrected validity dates replace the complete original interval with no fallback. Competing pending candidates are allowed, but only one approval can commit. A stale candidate may still be rejected.
+
+Context and overview use the same indexed exclusion before applicability, grouping and limits. Context retains the 20-current-claim and 64 KiB bounds. Detail reads expose immediate predecessor, current flag, approved successor and lifecycle state. The new list filters by state/key/predecessor with ascending UUID cursors, default limit 20 and maximum 50. Previews have explicit 300-character truncation; full claims remain in detail reads. The common 64 KiB response bound remains in force.
+
+The correction suite passed **24 tests** in 38.29 seconds, with 32 non-failing warnings. The prior mixed correction/advisor/case suite passed 45 before two additional checks. Coverage includes review transitions, interval narrowing/expansion, chains longer than the context cap, independent conflicts, evidence verification, unchanged financial figures, concurrent approvals, SQL forgery/branch prevention, isolation, pagination, API behavior, idempotency and immutable receipts. The full PostgreSQL suite passed **250 tests**, with **one real-OCR skip**; Ruff and whitespace checks passed.
+
+This is narrative correction, not semantic matching or financial adjustment. Historical approval-state reconstruction, inventory corrections, real OCR/model quality, official accounting validation, recovery/capacity and the deferred product UI remain open. See the [progress map](../research/PROGRESS.md) and [contract](../research/KNOWLEDGE_CORRECTIONS.md).

@@ -1,8 +1,8 @@
 # Herman development map
 
-Updated: **2026-10-11** · Active phase: **Backend workflows** · Latest checkpoint: **C11 — General Quick Advisor**
+Updated: **2026-10-11** · Active phase: **Backend workflows** · Latest checkpoint: **C12 — Reviewed knowledge corrections**
 
-**Now:** the structured business-document path and general request-only Quick context work on synthetic data. Quick accepts questions, excerpts and partial financial figures without requiring inventory or history. The full PostgreSQL suite passes **226 tests**, with **one real-OCR fixture test skipped**. The product is still in development. **Next intended checkpoint:** reviewed corrections to business knowledge, preserving history and resolving superseded claims explicitly.
+**Now:** reviewed knowledge corrections update fresh advisor context and portfolio highlights while preserving original claims and saved case receipts. The full PostgreSQL suite passes **250 tests**, with **one real-OCR fixture test skipped**. The product is still in development. **Next intended checkpoint:** reviewed inventory corrections, preserving record provenance and previous analysis receipts.
 
 This map separates capabilities from acceptance gates. A verified checkpoint means its documented scope passed checks; it does not mean every feature in that segment is finished. There is no overall percentage because engine quality, operational readiness and deferred UI are different kinds of work.
 
@@ -10,9 +10,9 @@ This map separates capabilities from acceptance gates. A verified checkpoint mea
 
 | Position | Milestone | State / evidence |
 |---|---|---|
-| Last verified | **C11 · General Quick Advisor** | Committed as `4f918ac`; [GitHub run 38103570884](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38103570884) passed. |
-| Next planned | **C12 · Reviewed knowledge corrections** | Planning only; no C12 implementation or validation is claimed. Detailed scope below. |
-| Current segment | **S4 · Advisor and knowledge** | General Quick inputs are verified; correction history and actual model quality remain open. |
+| Last verified | **C12 · Reviewed knowledge corrections** | [Run record](../runs/knowledge-corrections-2026-10-11/README.md): 250 passed, one OCR skip; 24 focused correction checks. [GitHub checks](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/workflows/tests.yml). |
+| Next planned | **C13 · Reviewed inventory corrections** | Planning only; no implementation or validation claimed. Detailed scope below. |
+| Current segment | **S4 · Advisor and knowledge** | General Quick inputs and explicit correction history are verified; actual model quality remains open. |
 | Later UI | **S5 · Owner experience** | Deferred by the user; portfolio data already exists in the backend. |
 
 Status vocabulary: **verified** means the stated scope has passing evidence; **in progress** means implementation has started but acceptance is unfinished; **planned** means no implementation claim; **gate open** means required evidence is missing; **deferred** means deliberately postponed. A segment can have verified capabilities and open gates at the same time.
@@ -45,7 +45,7 @@ Solid paths exist in the backend within their documented bounds. Dashed paths sh
 | S1 · Business foundation | Profiles, membership, tenant isolation, restricted database role, idempotent writes and audit events | Backup/restore and full application capacity. Existing 1,000-business benchmark covers synthetic reads only. |
 | S2 · Evidence and review | Immutable uploads, queue recovery, CSV/XLSX extraction/mapping, row provenance, exact duplicate checks, human decisions | Three labeled real OCR invoices; semantic invoice matching; broader PDF/image table mapping. |
 | S3 · Financial and inventory core | Recipes/consumption reconciliation; balanced journals, reversals, exact amounts, reviewed report mappings and cash-flow/KPI payloads | Inventory correction, closing controls, gross bank-flow classification, larger report batches and official accounting-standard verification. |
-| S4 · Advisor and knowledge | Reviewed knowledge, bounded context, opt-in local drafts, immutable business cases and general stateless Quick inputs with twelve typed calculations | Reviewed knowledge correction, stateless binary document ingestion and actual local-model quality evaluation. |
+| S4 · Advisor and knowledge | Reviewed knowledge/correction history, bounded context, opt-in local drafts, immutable business cases and general stateless Quick inputs with twelve typed calculations | Stateless binary document ingestion and actual local-model quality evaluation. |
 | S5 · Owner experience | Earlier Persian RTL prototype; backend portfolio and five indicators | Visible business portfolio remains user-deferred. Licensed Kalameh assets are unavailable; Contour is planned for a later UI checkpoint. |
 | S6 · Production validation | PostgreSQL regression tests, GitHub checks, evidence-preserving artifacts and local Graphify navigation | Restore drill, complete workload/capacity testing, real-engine acceptance and deployment hardening. |
 
@@ -65,38 +65,39 @@ Tests listed below are historical full-suite results, not completion percentages
 | C08 · Oct 10 | Tenant journals and trial balance | [163 passed; 1 skipped](JOURNALS.md) |
 | C09 · Oct 10 | Reviewed reports feeding portfolio/advisor | [174 passed; 1 skipped](JOURNAL_REPORTS.md) |
 | C10 · Oct 11 | Document rows → atomic journal proposals → report lineage | [195 passed; 1 skipped](JOURNAL_IMPORTS.md) |
-| **C11 · Oct 11** | **General Quick questions, excerpts and partial financial figures** | **[226 passed; 1 skipped](QUICK_ADVISOR.md)** |
+| C11 · Oct 11 | General Quick questions, excerpts and partial financial figures | [226 passed; 1 skipped](QUICK_ADVISOR.md) |
+| **C12 · Oct 11** | **Reviewed claim replacements, current-context selection and retained history** | **[250 passed; 1 skipped](KNOWLEDGE_CORRECTIONS.md)** |
 
 Documentation-language, typography and Graphify checkpoints are supporting changes recorded in [validation](VALIDATION.md). They did not independently close a product capability gate.
 
-## Current checkpoint: C11
+## Current checkpoint: C12
 
-Delivered: question-only Quick requests, optional bounded excerpts, explicit partial figures, ten shared ratios and two cash metrics, source references, fixed Decimal arithmetic and a qualitative Quick draft prompt. Missing figures remain missing; unverified sources remain unverified. The focused suite passed **71** tests, including **31** new cases; the full suite passed **226**, with one real-OCR skip. Ruff and whitespace checks passed. Existing inventory requests still work; no business/history retrieval or application conversation persistence was added.
+Delivered: explicit same-key whole-claim replacement, human review, one approved successor under concurrent review, filtered fresh context/highlights and paginated lifecycle/history reads. Approval replaces the validity interval too; the predecessor never reappears outside the successor's dates. Independent conflicts remain visible. The **24** new correction checks and full **250-test** PostgreSQL suite passed, with one real-OCR skip. Ruff and whitespace checks passed. Original claims, decisions and saved case receipts remain immutable; narrative text cannot change typed financial values.
 
-Evidence: [contract](QUICK_ADVISOR.md), [run record](../runs/quick-advisor-2026-10-11/README.md), [tests](../tests/test_quick_financial.py), [example](../samples/quick_advisor.example.json), [technical report](../reports/quick-advisor-2026-10-11_technical.md). Repository automation is visible in [GitHub checks](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/workflows/tests.yml).
+Evidence: [contract](KNOWLEDGE_CORRECTIONS.md), [run record](../runs/knowledge-corrections-2026-10-11/README.md), [tests](../tests/test_knowledge_corrections.py), [migration](../src/backend/migration_013.sql), [technical report](../reports/knowledge-corrections-2026-10-11_technical.md). Repository automation is visible in [GitHub checks](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/workflows/tests.yml).
 
 ## Forward checkpoints and acceptance gates
 
 These are intended work groups, not calendar promises. Each is complete only when its listed outcome has direct evidence.
 
-### C12 · Reviewed knowledge corrections — planned
+### C13 · Reviewed inventory corrections — planned
 
-Business outcome: a reviewed correction can replace an outdated business claim while preserving its evidence and the earlier history.
+Business outcome: corrected counts, movements, recipes or fulfillments can feed new reconciliation without rewriting original evidence or earlier analysis receipts. The record-specific contract must be defined before implementation.
 
 | Step | Expected behavior | Completion evidence |
 |---|---|---|
-| Define replacement rules | Specify which claim and validity period a correction replaces, including overlaps and competing replacements. | Recorded contract and decision before implementation. |
-| Propose and review | Link the new claim to its predecessor; pending or rejected corrections must not displace approved knowledge. | Tenant, role, duplicate and concurrent-review checks. |
-| Use corrected knowledge | Fresh advisor context and portfolio highlights select the applicable approved claim and expose unresolved conflicts. | Expected results for accepted, rejected, overlapping and chained corrections. |
-| Preserve history | Original claims, evidence and saved conversation/report receipts remain unchanged. | Append-only database checks and before/after receipt comparisons. |
+| Define replacement rules | Specify correction semantics per inventory record kind, source-row lineage and duplicate handling. | Recorded contract and decision before implementation. |
+| Propose and review | Link corrected records to predecessors; pending/rejected candidates cannot affect balances or consumption. | Tenant, role, duplicate and concurrent-review checks. |
+| Reconcile current records | New analyses select applicable corrected data, with recipe/date boundaries and missing coverage explicit. | Independent expected consumption, stock balance and variance results. |
+| Preserve history | Original records, evidence and earlier analysis/case receipts remain unchanged. | Append-only database checks and before/after receipt comparisons. |
 | Close checkpoint | Synchronize implementation, evidence, progress map and Git history. | Focused checks, full regression result, commit and CI outcome. |
 
-Inventory corrections and broader document matching remain separate follow-on scope. C12 is not marked in progress until implementation begins; its final contract may refine these planned steps.
+Broader document matching remains separate follow-on scope. C13 is planned; its final contract may refine these steps after inspecting inventory and import invariants.
 
 | Next group | Expected outcome | Evidence needed to close it |
 |---|---|---|
 | N1 · General Quick Advisor | Request/context scope verified at C11; real answer quality remains under N3 | [C11 contract and evidence](QUICK_ADVISOR.md); binary document intake remains open |
-| N2 · Corrections and document understanding | Reviewed corrections to inventory/knowledge and broader duplicate/document handling | Append-only correction history, deterministic conflict resolution and realistic duplicate/non-duplicate fixtures |
+| N2 · Corrections and document understanding | Knowledge correction verified at C12; inventory correction and broader duplicate/document handling remain open | Record-specific correction history, deterministic conflict resolution and realistic duplicate/non-duplicate fixtures |
 | N3 · Operational and engine acceptance | Demonstrate the system's real operating limits and advice quality | Three labeled OCR invoices, actual local model evaluation, recoverable backup/restore and representative multi-business workloads |
 | N4 · Owner-facing portfolio | Business overview, cash-flow diagram, indicators and knowledge highlights | Resume UI work with user direction; browser/accessibility checks, Persian typography and tested Contour integration |
 | N5 · Accounting depth | Close/report controls and verified accounting rules | Authoritative standard versions, accountant-reviewed fixtures and independent expected results |
