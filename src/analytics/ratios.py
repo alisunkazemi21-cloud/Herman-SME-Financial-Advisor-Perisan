@@ -6,6 +6,7 @@ from typing import Literal
 
 from pydantic import model_validator
 
+from src.analytics.ratio_definitions import RATIO_DEFINITIONS
 from src.models import Fact, Model, Money, exact_decimal
 
 
@@ -62,33 +63,11 @@ def current_ratio_fa(current_assets: Money, current_liabilities: Money) -> Decim
 
 
 def compute_ratios(statement: FinancialStatement) -> list[Ratio]:
-    s = statement
-    avg_assets = (s.opening_assets.value + s.total_assets.value) / 2
-    avg_equity = (s.opening_equity.value + s.equity.value) / 2
-    specs = [
-        ("current", "نسبت جاری", s.current_assets.value, s.current_liabilities.value,
-         "دارایی جاری / بدهی جاری", ["current_assets", "current_liabilities"]),
-        ("quick", "نسبت آنی", s.current_assets.value - s.inventory.value - s.prepayments.value,
-         s.current_liabilities.value, "(دارایی جاری − موجودی − پیش‌پرداخت) / بدهی جاری",
-         ["current_assets", "inventory", "prepayments", "current_liabilities"]),
-        ("equity", "نسبت مالکانه", s.equity.value, s.total_assets.value,
-         "حقوق مالکانه / دارایی", ["equity", "total_assets"]),
-        ("debt", "نسبت بدهی", s.total_liabilities.value, s.total_assets.value,
-         "بدهی / دارایی", ["total_liabilities", "total_assets"]),
-        ("gross_margin", "حاشیه سود ناخالص", s.revenue.value - s.cost_of_goods.value, s.revenue.value,
-         "(فروش − بهای تمام‌شده) / فروش", ["revenue", "cost_of_goods"]),
-        ("net_margin", "حاشیه سود خالص", s.net_income.value, s.revenue.value,
-         "سود خالص / فروش", ["net_income", "revenue"]),
-        ("roa", "بازده دارایی‌ها", s.net_income.value, avg_assets,
-         "سود خالص / متوسط دارایی", ["net_income", "opening_assets", "total_assets"]),
-        ("roe", "بازده حقوق صاحبان سهام", s.net_income.value, avg_equity,
-         "سود خالص / متوسط حقوق مالکانه", ["net_income", "opening_equity", "equity"]),
-        ("turnover", "گردش دارایی‌ها", s.revenue.value, avg_assets,
-         "فروش / متوسط دارایی", ["revenue", "opening_assets", "total_assets"]),
-        ("interest_coverage", "پوشش بهره", s.ebit.value, s.interest_expense.value,
-         "سود قبل از بهره و مالیات / بهره", ["ebit", "interest_expense"]),
-    ]
-    return [Ratio(key=key, name_fa=name, value=num / den if den > 0 else None, formula_fa=formula,
-                  inputs={field: getattr(s, field) for field in fields},
-                  warning_fa=None if den > 0 else "مخرج صفر یا منفی است؛ نسبت قابل تفسیر نیست")
-            for key, name, num, den, formula, fields in specs]
+    result = []
+    for definition in RATIO_DEFINITIONS:
+        inputs = {field: getattr(statement, field) for field in definition.fields}
+        value = definition.calculate({field: fact.value for field, fact in inputs.items()})
+        result.append(Ratio(key=definition.key, name_fa=definition.name_fa, value=value,
+                            formula_fa=definition.formula_fa, inputs=inputs,
+                            warning_fa=None if value is not None else "مخرج صفر یا منفی است؛ نسبت قابل تفسیر نیست"))
+    return result

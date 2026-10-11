@@ -101,6 +101,8 @@ The backend can optionally generate Persian drafts from reviewed context: start 
 
 [Persistent business cases](research/BUSINESS_CASES.md) save ordered questions, context receipts and optional local drafts. Continuations use bounded, explicitly unverified history and fresh reviewed context. Expected turn numbers prevent silent conversation branches; completed retries reuse their saved receipt. Quick retains no conversation history.
 
+[General Quick Advisor](research/QUICK_ADVISOR.md) accepts questions alone, optional text excerpts and partial financial figures without business history. Typed figures support ten ratios and two cash calculations with source references and explicit missing-data results. Inventory remains optional; model prose requires the opt-in local model and remains an unverified draft. A [Persian request example](samples/quick_advisor.example.json) is included.
+
 [Tenant financial journals](research/JOURNALS.md) add custom accounts, evidenced multi-line entries, human approvals, duplicate review, exact reversals and dated trial balances. Only approved entries affect balances. Financial amounts remain exact decimal strings.
 
 [Reviewed journal reports](research/JOURNAL_REPORTS.md) now connect journals to the portfolio and business advisor through explicit account mappings, saved input receipts and scope review. Reports flag new backdated postings, support reviewed replacements, and expose journal-based cash-flow data and five indicators without silently choosing between conflicting sources.

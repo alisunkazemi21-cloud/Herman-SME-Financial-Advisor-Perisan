@@ -1,0 +1,7 @@
+# General Quick Advisor — 2026-10-11
+
+Milestone **C11** in the [development map](../../research/PROGRESS.md). Quick now accepts a question without inventory, optional text excerpts and partial financial figures. Shared typed formulas calculate ten ratios and two cash values, preserving source references and explicit missing/undefined states. A Quick-specific local model prompt permits general explanations while retaining unverified-draft status and no action tools. Quick retrieves no business history and saves no conversations.
+
+Validation: **226 passed, one real-OCR fixture skip** in the full PostgreSQL suite; **71 focused tests passed**, including 31 new cases. Ruff and whitespace checks passed. The example request returns current ratio 2 and missing-input states for the other requested metrics. All financial data and model replies are synthetic; no real OCR or local-model quality claim follows.
+
+Synchronized artifacts: [contract](../../research/QUICK_ADVISOR.md), [chapter](../../research/CHAPTERS/quick-advisor-2026-10-11.md), [technical report](../../reports/quick-advisor-2026-10-11_technical.md), [narrative](../../media/quick-advisor-2026-10-11.md), [validation](../../research/VALIDATION.md). The existing Marimo prototype remains unchanged under the user's UI deferral. Graphify was refreshed locally with 990 nodes and 3,089 relationships; generated graphs remain outside Git.

@@ -1,0 +1,21 @@
+{
+  "question_fa": "با این اطلاعات وضعیت نقدینگی را توضیح بده و بگو چه ارقامی هنوز لازم است.",
+  "notes_fa": "این ارقام نمونه و تأییدنشده هستند و همگی به یک دوره مربوط‌اند.",
+  "sources": [
+    {
+      "source_id": "statement",
+      "title_fa": "یادداشت مالی نمونه",
+      "text_fa": "دارایی جاری: ۱۰۰۰۰۰۰۰۰۰ تومان\nبدهی جاری: ۵۰۰۰۰۰۰۰۰ تومان"
+    }
+  ],
+  "financial": {
+    "period_start": "2026-09-01",
+    "period_end": "2026-09-30",
+    "amount_unit": "IRT",
+    "requested_metrics": ["current", "quick", "net_cash_flow"],
+    "facts": [
+      {"field": "current_assets", "value": "1000000000", "source_id": "statement", "locator": "سطر ۱"},
+      {"field": "current_liabilities", "value": "500000000", "source_id": "statement", "locator": "سطر ۲"}
+    ]
+  }
+}

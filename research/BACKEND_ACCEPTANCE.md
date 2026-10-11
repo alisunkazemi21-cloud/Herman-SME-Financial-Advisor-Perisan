@@ -15,6 +15,8 @@ The approved architecture now has a working PostgreSQL/FastAPI vertical slice:
 
 Quick inventory uses the same deterministic calculator with only the current request. It authenticates the user but does not retrieve business history, save a conversation or write an analysis. This is the initial Quick calculation tool, **not a finished conversational Quick Advisor**.
 
+The subsequent [general Quick checkpoint](QUICK_ADVISOR.md) adds question-only input, text excerpts, partial financial figures and optional local drafts. Real model quality remains unverified.
+
 No interface changes were made for this milestone.
 
 ## Runtime and setup

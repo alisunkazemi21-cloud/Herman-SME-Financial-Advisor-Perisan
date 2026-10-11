@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 from pydantic import Field, field_validator
 
-from src.ai_agent.prompts_fa import SYSTEM_FA
+from src.ai_agent.prompts_fa import QUICK_SYSTEM_FA, SYSTEM_FA
 from src.models import Model
 
 
@@ -43,7 +43,7 @@ class FinancialAgent:
         if len(context_text.encode("utf-8")) > 65536:
             raise ValueError("حجم زمینه مدل بیش از حد است")
         payload = {"model": self.config.model, "stream": False,
-                   "messages": [{"role": "system", "content": SYSTEM_FA},
+                   "messages": [{"role": "system", "content": QUICK_SYSTEM_FA if computed_context.get("mode") == "quick" else SYSTEM_FA},
                                 {"role": "user", "content": context_text}],
                    "options": {"temperature": 0, "num_predict": 1024}}
         request = urllib.request.Request(self.config.base_url + "/api/chat",

@@ -18,7 +18,7 @@ All routes require the existing bearer credential. Proposal and decision routes 
 | `GET /businesses/{business}/knowledge/{id}` | Read a proposal and its decision. |
 | `POST /businesses/{business}/knowledge/{id}/decision` | Record approved/rejected plus a Persian reason; one immutable decision per claim. |
 | `POST /businesses/{business}/advisor/context` | Read selected confirmed knowledge and optionally one saved inventory analysis. |
-| `POST /quick/advisor/context` | Calculate from request-local inventory inputs; no business-history retrieval. |
+| `POST /quick/advisor/context` | Question, optional excerpts and typed financial/inventory inputs; no business-history retrieval. See [Quick contract](QUICK_ADVISOR.md). |
 | `POST /businesses/{business}/financial-snapshots` | Propose the seven evidenced financial inputs described below. |
 | `GET /businesses/{business}/financial-snapshots/{id}` | Read submitted inputs and review status. |
 | `POST /businesses/{business}/financial-snapshots/{id}/decision` | Approve/reject with a reason. |
@@ -35,7 +35,7 @@ Business context accepts `question_fa`, `effective_at`, up to ten unique `knowle
 
 Selected analyses preserve exact result strings, metric version, input hash, source provenance and stored explanation. They are snapshots: later documents may require a new analysis. Narrative knowledge is never fed into the numeric reconciliation engine. Questions and claims remain untrusted data, not instructions to call tools. The context builder exposes no model-controlled tool dispatcher and makes no model calls.
 
-Quick accepts only `question_fa` and the existing typed `inventory` request. Its pure context function has no database/service parameter. Authentication is still required at the API boundary. It does not retrieve, validate against, or persist business history; submitted evidence IDs are request-local references. Neither mode stores questions or conversation history in application tables. Infrastructure/access-log configuration remains a separate operational concern.
+The [general Quick checkpoint](QUICK_ADVISOR.md) makes inventory optional and adds question-only requests, bounded notes/excerpts and partial typed financial figures. Its pure context function has no database/service parameter. Authentication is still required at the API boundary. It does not retrieve, validate against, or persist business history; submitted evidence IDs are request-local references. Context and draft routes do not store conversations; [business cases](BUSINESS_CASES.md) are the separate explicit persistence path. Infrastructure/access-log configuration remains a separate operational concern.
 
 Business contexts refuse more than 20 matching claims or more than 64 KiB of encoded response. They do not silently truncate evidence. The portfolio is a preview: up to three knowledge keys, ordered by conflicts then most recent review, and three recent inventory analyses. Preview text is capped at 300 characters with an explicit truncation flag. Conflicts show no single accepted statement. Claim/document IDs and locators support drill-down. The overview does not hash-check knowledge files; full context retrieval does.
 

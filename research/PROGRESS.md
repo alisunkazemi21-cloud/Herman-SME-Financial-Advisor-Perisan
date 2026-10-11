@@ -1,8 +1,8 @@
 # Herman development map
 
-Updated: **2026-10-11** · Active phase: **Backend workflows** · Latest checkpoint: **C10 — Journal imports**
+Updated: **2026-10-11** · Active phase: **Backend workflows** · Latest checkpoint: **C11 — General Quick Advisor**
 
-**Now:** the structured document → reviewed journal → report → portfolio/advisor path works on synthetic data. The full PostgreSQL suite passes **195 tests**, with **one real-OCR fixture test skipped**. The product is still in development. **Next intended checkpoint:** make Quick Advisor useful for general financial questions without requiring inventory input or business history.
+**Now:** the structured business-document path and general request-only Quick context work on synthetic data. Quick accepts questions, excerpts and partial financial figures without requiring inventory or history. The full PostgreSQL suite passes **226 tests**, with **one real-OCR fixture test skipped**. The product is still in development. **Next intended checkpoint:** reviewed corrections to business knowledge, preserving history and resolving superseded claims explicitly.
 
 This map separates capabilities from acceptance gates. A verified checkpoint means its documented scope passed checks; it does not mean every feature in that segment is finished. There is no overall percentage because engine quality, operational readiness and deferred UI are different kinds of work.
 
@@ -18,8 +18,9 @@ flowchart TD
     F --> G[Reconciliation / financial reports]
     G --> H[Portfolio and business knowledge]
     H --> I[Business advisor and case history]
-    J[Current request only] --> K[Stateless Quick Advisor]
-    K -. next: general financial inputs .-> L[Broader Quick conversations]
+    J[Question / excerpts / typed figures] --> K[Stateless Quick Advisor]
+    K --> L[General draft context / financial calculations]
+    L -. real model evaluation pending .-> N[Validated local advice]
     H -. user deferred .-> M[Visible portfolio screen]
     I -. real model evaluation pending .-> N[Validated local advice]
 ```
@@ -33,7 +34,7 @@ Solid paths exist in the backend within their documented bounds. Dashed paths sh
 | S1 · Business foundation | Profiles, membership, tenant isolation, restricted database role, idempotent writes and audit events | Backup/restore and full application capacity. Existing 1,000-business benchmark covers synthetic reads only. |
 | S2 · Evidence and review | Immutable uploads, queue recovery, CSV/XLSX extraction/mapping, row provenance, exact duplicate checks, human decisions | Three labeled real OCR invoices; semantic invoice matching; broader PDF/image table mapping. |
 | S3 · Financial and inventory core | Recipes/consumption reconciliation; balanced journals, reversals, exact amounts, reviewed report mappings and cash-flow/KPI payloads | Inventory correction, closing controls, gross bank-flow classification, larger report batches and official accounting-standard verification. |
-| S4 · Advisor and knowledge | Reviewed knowledge, bounded context, opt-in local drafts and immutable business-case history; isolated Quick inventory calculations | General financial Quick inputs, reviewed knowledge correction, actual local-model quality evaluation. |
+| S4 · Advisor and knowledge | Reviewed knowledge, bounded context, opt-in local drafts, immutable business cases and general stateless Quick inputs with twelve typed calculations | Reviewed knowledge correction, stateless binary document ingestion and actual local-model quality evaluation. |
 | S5 · Owner experience | Earlier Persian RTL prototype; backend portfolio and five indicators | Visible business portfolio remains user-deferred. Licensed Kalameh assets are unavailable; Contour is planned for a later UI checkpoint. |
 | S6 · Production validation | PostgreSQL regression tests, GitHub checks, evidence-preserving artifacts and local Graphify navigation | Restore drill, complete workload/capacity testing, real-engine acceptance and deployment hardening. |
 
@@ -52,15 +53,16 @@ Tests listed below are historical full-suite results, not completion percentages
 | C07 · Oct 09 | Persistent business cases | [145 passed; 1 skipped](BUSINESS_CASES.md) |
 | C08 · Oct 10 | Tenant journals and trial balance | [163 passed; 1 skipped](JOURNALS.md) |
 | C09 · Oct 10 | Reviewed reports feeding portfolio/advisor | [174 passed; 1 skipped](JOURNAL_REPORTS.md) |
-| **C10 · Oct 11** | **Document rows → atomic journal proposals → report lineage** | **[195 passed; 1 skipped](JOURNAL_IMPORTS.md)** |
+| C10 · Oct 11 | Document rows → atomic journal proposals → report lineage | [195 passed; 1 skipped](JOURNAL_IMPORTS.md) |
+| **C11 · Oct 11** | **General Quick questions, excerpts and partial financial figures** | **[226 passed; 1 skipped](QUICK_ADVISOR.md)** |
 
 Documentation-language, typography and Graphify checkpoints are supporting changes recorded in [validation](VALIDATION.md). They did not independently close a product capability gate.
 
-## Current checkpoint: C10
+## Current checkpoint: C11
 
-Delivered: mapping preview, whole-voucher selection, explicit IRR/IRT and Gregorian/Jalali conversion, atomic multi-voucher import, duplicate row protection across identical file bytes, immutable line origins and provenance in report receipts. Imported entries remain pending until human review. The focused suite passed all **21** tests; the full suite passed **195**, with one real-OCR skip. Ruff and whitespace checks passed.
+Delivered: question-only Quick requests, optional bounded excerpts, explicit partial figures, ten shared ratios and two cash metrics, source references, fixed Decimal arithmetic and a qualitative Quick draft prompt. Missing figures remain missing; unverified sources remain unverified. The focused suite passed **71** tests, including **31** new cases; the full suite passed **226**, with one real-OCR skip. Ruff and whitespace checks passed. Existing inventory requests still work; no business/history retrieval or application conversation persistence was added.
 
-Evidence: [contract](JOURNAL_IMPORTS.md), [run record](../runs/journal-imports-2026-10-11/README.md), [tests](../tests/test_journal_imports.py), [migration](../src/backend/migration_012.sql), [technical report](../reports/journal-imports-2026-10-11_technical.md). Repository automation is visible in [GitHub checks](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/workflows/tests.yml).
+Evidence: [contract](QUICK_ADVISOR.md), [run record](../runs/quick-advisor-2026-10-11/README.md), [tests](../tests/test_quick_financial.py), [example](../samples/quick_advisor.example.json), [technical report](../reports/quick-advisor-2026-10-11_technical.md). Repository automation is visible in [GitHub checks](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/workflows/tests.yml).
 
 ## Forward checkpoints and acceptance gates
 
@@ -68,7 +70,7 @@ These are intended work groups, not calendar promises. Each is complete only whe
 
 | Next group | Expected outcome | Evidence needed to close it |
 |---|---|---|
-| N1 · General Quick Advisor | Financial questions and explicit request-only context without mandatory inventory data | No business/history retrieval or persistence; exact typed calculations where inputs suffice; missing/uncertain facts explicit; transport and isolation tests |
+| N1 · General Quick Advisor | Request/context scope verified at C11; real answer quality remains under N3 | [C11 contract and evidence](QUICK_ADVISOR.md); binary document intake remains open |
 | N2 · Corrections and document understanding | Reviewed corrections to inventory/knowledge and broader duplicate/document handling | Append-only correction history, deterministic conflict resolution and realistic duplicate/non-duplicate fixtures |
 | N3 · Operational and engine acceptance | Demonstrate the system's real operating limits and advice quality | Three labeled OCR invoices, actual local model evaluation, recoverable backup/restore and representative multi-business workloads |
 | N4 · Owner-facing portfolio | Business overview, cash-flow diagram, indicators and knowledge highlights | Resume UI work with user direction; browser/accessibility checks, Persian typography and tested Contour integration |
