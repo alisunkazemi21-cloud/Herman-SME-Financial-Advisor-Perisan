@@ -4,16 +4,24 @@ A local-first financial advisor for Iranian small businesses. Agents propose, ty
 
 The current priority is the multi-business backend. Interface development is paused. Documentation and generated Markdown use English; app text, Persian business data, RTL presentation and evidence retain their original language.
 
+## Development position
+
+**Last verified: C11 — General Quick Advisor. Next planned: C12 — Reviewed knowledge corrections.**
+
+Use the [development map](research/PROGRESS.md) to follow six capability segments, checkpoints C01–C11, outstanding acceptance gates and the next checkpoint's completion criteria. Each checkpoint records the behavior gained and its evidence.
+
+The latest full PostgreSQL suite passed **226 tests**, with **one real-OCR fixture test skipped**. [C11 run record](runs/quick-advisor-2026-10-11/README.md). Real OCR/model quality, complete workload capacity and recovery remain open; the visible portfolio is deferred.
+
 ## Backend workflow
 
-Business profile → evidence upload → extraction job → explicit CSV/XLSX mapping → proposed records → human review → inventory reconciliation with traceable inputs.
+Business profile → evidence upload → extraction job → explicit CSV/XLSX mapping → inventory or journal proposals → human review → reconciliation / reviewed reports → portfolio and advisor context.
+
+Quick path: question → optional excerpts / typed figures → deterministic context and calculations → optional unverified local draft, without saved business history.
 
 - [Backend setup, API and acceptance evidence](research/BACKEND_ACCEPTANCE.md)
 - [Document queue and worker operations](research/DOCUMENT_QUEUE.md)
 - [Tabular imports, provenance and duplicate review](research/TABULAR_IMPORTS.md)
 - [Architecture](research/BACKEND_WORKFLOW.md), [metric contracts](research/METRICS_CATALOG.md), [requirements audit](research/REQUIREMENTS_AUDIT.md)
-
-The latest functional checkpoint passed 108 tests; the real OCR fixture test remains skipped. This is an implemented backend foundation, not a completed conversational advisor or a production-capacity certification.
 
 ## Installation
 

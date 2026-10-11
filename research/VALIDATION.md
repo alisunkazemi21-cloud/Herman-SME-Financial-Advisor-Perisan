@@ -96,3 +96,9 @@ Coverage includes question-only input, untrusted source text/hash preservation, 
 Graphify code-only extraction and report generation completed with 990 nodes, 3,089 relationships and 58 communities. The prompt-text module yielded no AST symbols; graph coverage is partial, no semantic model was used and token savings remain unmeasured. English contract, run README, chapter, technical report, narrative and milestone map are synchronized. The visible product interface remains deferred. Test financial data and model replies are synthetic; live-model quality, actual OCR, statutory interpretation and full operational capacity/restore are not established by this checkpoint.
 
 The dated C11 progress view retains C01–C10 and adds the new milestone. Browser inspection confirmed the updated current/next markers and that selecting C11 displays the new Quick capability and remaining input/model boundaries. This progress view is separate from the deferred product UI.
+
+## Progress presentation refinement — 2026-10-11
+
+Documentation-only update: the root README now shows the last verified C11 checkpoint, the planned C12 checkpoint and the current 226-pass / one-skip result instead of the stale 108-test summary. The maintained progress map adds status definitions and explicit C12 completion criteria. The conversation view adds a next-checkpoint tab, evidence links and the same planned/verified distinction.
+
+Verified the exact C11 commit `4f918ac0d2e652ddf8ed5201479a09fec5f4875f` against [GitHub run 38103570884](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38103570884): completed successfully. Local documentation links, fragment structure and Git whitespace checks passed. Browser inspection verified the next-checkpoint tab and C11 milestone selection. No application code changed and no new application test run or functional checkpoint is claimed.

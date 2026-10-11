@@ -126,6 +126,8 @@ The excessive-fraction test exposed context-sensitive Decimal constraint validat
 
 The user requested visual and contextual milestones to trace development. Maintain a repository progress map with stable checkpoint IDs, capability segments, verified evidence, remaining gates and the next intended checkpoint. Show scope-qualified states rather than an invented overall completion percentage. Historical test totals measure regression coverage, not product completion or engine quality. Provide an interactive conversation view of the same snapshot. This is project progress reporting; the user's deferral of the business application interface still applies. Update the progress map with later checkpoints.
 
+Progress presentation refinement: place the last verified and next planned checkpoint at the top of the root README, link the exact validation run, and define state labels and next-checkpoint completion criteria in the map. Keep C12 explicitly planned until implementation starts. This documentation update does not create a new functional checkpoint or imply fresh regression execution.
+
 ## General request-only Quick Advisor — 2026-10-11
 
 Make inventory optional in the existing Quick context/draft routes. Accept a question alone, bounded Persian notes, up to eight explicitly supplied text excerpts and optional dated financial figures. Quick must not read business records, files, URLs or past chats and must not save its request, excerpts or reply. Authentication still checks the current credential. No source ID is a database selector; excerpt hashes identify exactly the supplied text, not verified original files.

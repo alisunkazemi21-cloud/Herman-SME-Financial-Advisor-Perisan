@@ -6,6 +6,17 @@ Updated: **2026-10-11** · Active phase: **Backend workflows** · Latest checkpo
 
 This map separates capabilities from acceptance gates. A verified checkpoint means its documented scope passed checks; it does not mean every feature in that segment is finished. There is no overall percentage because engine quality, operational readiness and deferred UI are different kinds of work.
 
+## You are here
+
+| Position | Milestone | State / evidence |
+|---|---|---|
+| Last verified | **C11 · General Quick Advisor** | Committed as `4f918ac`; [GitHub run 38103570884](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38103570884) passed. |
+| Next planned | **C12 · Reviewed knowledge corrections** | Planning only; no C12 implementation or validation is claimed. Detailed scope below. |
+| Current segment | **S4 · Advisor and knowledge** | General Quick inputs are verified; correction history and actual model quality remain open. |
+| Later UI | **S5 · Owner experience** | Deferred by the user; portfolio data already exists in the backend. |
+
+Status vocabulary: **verified** means the stated scope has passing evidence; **in progress** means implementation has started but acceptance is unfinished; **planned** means no implementation claim; **gate open** means required evidence is missing; **deferred** means deliberately postponed. A segment can have verified capabilities and open gates at the same time.
+
 ## Workflow map
 
 ```mermaid
@@ -68,6 +79,20 @@ Evidence: [contract](QUICK_ADVISOR.md), [run record](../runs/quick-advisor-2026-
 
 These are intended work groups, not calendar promises. Each is complete only when its listed outcome has direct evidence.
 
+### C12 · Reviewed knowledge corrections — planned
+
+Business outcome: a reviewed correction can replace an outdated business claim while preserving its evidence and the earlier history.
+
+| Step | Expected behavior | Completion evidence |
+|---|---|---|
+| Define replacement rules | Specify which claim and validity period a correction replaces, including overlaps and competing replacements. | Recorded contract and decision before implementation. |
+| Propose and review | Link the new claim to its predecessor; pending or rejected corrections must not displace approved knowledge. | Tenant, role, duplicate and concurrent-review checks. |
+| Use corrected knowledge | Fresh advisor context and portfolio highlights select the applicable approved claim and expose unresolved conflicts. | Expected results for accepted, rejected, overlapping and chained corrections. |
+| Preserve history | Original claims, evidence and saved conversation/report receipts remain unchanged. | Append-only database checks and before/after receipt comparisons. |
+| Close checkpoint | Synchronize implementation, evidence, progress map and Git history. | Focused checks, full regression result, commit and CI outcome. |
+
+Inventory corrections and broader document matching remain separate follow-on scope. C12 is not marked in progress until implementation begins; its final contract may refine these planned steps.
+
 | Next group | Expected outcome | Evidence needed to close it |
 |---|---|---|
 | N1 · General Quick Advisor | Request/context scope verified at C11; real answer quality remains under N3 | [C11 contract and evidence](QUICK_ADVISOR.md); binary document intake remains open |
@@ -78,4 +103,4 @@ These are intended work groups, not calendar promises. Each is complete only whe
 
 ## Update rule
 
-At each checkpoint, update the current/next marker, capability segments, historical result and evidence links. Keep unresolved gates visible. Record failure/recovery evidence in `VALIDATION.md`, preserve earlier receipts, and use the same milestone IDs in the run README, research chapter and technical report. The conversation visualization is a dated snapshot; this repository map is the maintained reference.
+At each checkpoint, update the current/next marker in this map and the root README, capability segments, historical result and evidence links. Keep unresolved gates visible. Report updates as **checkpoint ID → capability gained → validation → remaining gate → next step**. Record failure/recovery evidence in `VALIDATION.md`, preserve earlier receipts, and use the same milestone IDs in the run README, research chapter and technical report. The conversation visualization is a dated snapshot; this repository map is the maintained reference.
