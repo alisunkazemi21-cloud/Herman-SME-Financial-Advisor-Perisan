@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import datetime
 from decimal import Decimal, localcontext
 from functools import partial
@@ -213,7 +214,10 @@ def reconcile_inventory(request: InventoryRequest) -> InventoryResult:
         return _reconcile(request)
 
 
-def _reconcile(request: InventoryRequest) -> InventoryResult:
+PackResolver = Callable[[UUID, Decimal, datetime, UUID, UUID | None], Decimal]
+
+
+def _reconcile(request: InventoryRequest, pack_resolver: PackResolver | None = None) -> InventoryResult:
     items = {item.id: item for item in request.items}
     missing: list[str] = []
     if request.target_item_id not in items:
@@ -246,7 +250,8 @@ def _reconcile(request: InventoryRequest) -> InventoryResult:
             status="incomplete", missing_fa=tuple(missing), evidence=tuple(evidence),
             explanation_fa="اطلاعات کافی نیست؛ کسری یا مازاد قابل نتیجه‌گیری نیست")
 
-    def convert(item_id: UUID, quantity: Decimal, unit: str) -> Decimal:
+    def convert(item_id: UUID, quantity: Decimal, unit: str, when: datetime,
+                record_id: UUID, ingredient_id: UUID | None = None) -> Decimal:
         if item_id not in items:
             raise IncompleteData("کالای مورد استفاده در کاتالوگ تعریف نشده است")
         base = items[item_id].base_unit
@@ -254,6 +259,8 @@ def _reconcile(request: InventoryRequest) -> InventoryResult:
             return quantity
         if (unit, base) in (("kg", "g"), ("l", "ml")):
             return quantity * 1000
+        if unit == "pack" and pack_resolver is not None:
+            return pack_resolver(item_id, quantity, when, record_id, ingredient_id)
         matches = [c for c in request.conversions if c.item_id == item_id and c.unit == unit]
         if len(matches) == 1:
             return quantity * matches[0].base_quantity
@@ -288,10 +295,10 @@ def _reconcile(request: InventoryRequest) -> InventoryResult:
         if len(matches) != 1:
             raise IncompleteData("نسخه معتبر رسپی در زمان رویداد موجود یا یکتا نیست")
         recipe = matches[0]
-        output = convert(item_id, recipe.output_quantity, recipe.output_unit)
+        output = convert(item_id, recipe.output_quantity, recipe.output_unit, when, recipe.id)
         total, used = Decimal(0), [recipe.id]
         for line in recipe.lines:
-            base_quantity = convert(line.item_id, line.quantity, line.unit)
+            base_quantity = convert(line.item_id, line.quantity, line.unit, when, recipe.id, line.item_id)
             if line.basis == "net":
                 base_quantity /= line.preparation_yield
             amount, nested = expand(line.item_id, quantity / output * base_quantity, when, (*path, item_id))
@@ -304,17 +311,20 @@ def _reconcile(request: InventoryRequest) -> InventoryResult:
         for row in request.fulfillments:
             if not row.fulfilled:
                 continue
-            quantity = convert(row.product_id, row.quantity, row.unit)
+            quantity = convert(row.product_id, row.quantity, row.unit, row.occurred_at, row.id)
             used, recipe_ids = expand(row.product_id, quantity, row.occurred_at)
             refs = [row.evidence, *(r.evidence for r in request.recipes if r.id in recipe_ids)]
             contributions.append(Contribution(fulfillment_id=row.id, recipe_ids=recipe_ids,
                                                quantity_base=used, evidence=tuple(refs)))
         assert request.opening is not None and request.closing is not None
-        opening = convert(request.target_item_id, request.opening.quantity, request.opening.unit)
-        closing = convert(request.target_item_id, request.closing.quantity, request.closing.unit)
+        opening = convert(request.target_item_id, request.opening.quantity, request.opening.unit,
+                          request.opening.occurred_at, request.opening.id)
+        closing = convert(request.target_item_id, request.closing.quantity, request.closing.unit,
+                          request.closing.occurred_at, request.closing.id)
         movement_total = Decimal(0)
         for movement in request.movements:
-            value = convert(movement.item_id, movement.quantity, movement.unit)
+            value = convert(movement.item_id, movement.quantity, movement.unit,
+                            movement.occurred_at, movement.id)
             if movement.item_id == request.target_item_id:
                 sign = 1 if movement.kind in ("purchase", "transfer_in", "customer_return") else -1
                 movement_total += sign * value
