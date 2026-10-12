@@ -1,8 +1,8 @@
 # Herman development map
 
-Updated: **2026-10-13** · Active phase: **Backend workflows** · Last verified checkpoint: **C15 — Stateless Quick document intake** · Current work: **C16 design**
+Updated: **2026-10-13** · Active phase: **Backend workflows** · Last verified checkpoint: **C15 — Stateless Quick document intake** · Current work: **C16 implementation**
 
-**Last delivered:** temporary document extraction supplies unverified, source-linked text to Quick without business history or persistent records. The local full PostgreSQL run passed **362 tests**, with **one real-OCR skip**; final Quick checks passed **86 tests**, including all **50 intake cases**. A POSIX descendant cleanup race failed the first Linux run; [the repair run](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38315758134) passed **362 tests** with two skips, then Ruff and Marimo checks. **Current work:** C16 reviewed catalog/unit correction design.
+**Last delivered:** temporary document extraction supplies unverified, source-linked text to Quick without business history or persistent records. The local full PostgreSQL run passed **362 tests**, with **one real-OCR skip**; final Quick checks passed **86 tests**, including all **50 intake cases**. A POSIX descendant cleanup race failed the first Linux run; [the repair run](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38315758134) passed **362 tests** with two skips, then Ruff and Marimo checks. **Current work:** C16 event-time calculation implemented ([slice evidence](../runs/dated-inventory-2026-10-13/README.md)): 387 local passes / one skip; 386 Linux passes / two skips. Persistence and review integration remain open.
 
 This map separates capabilities from acceptance gates. A verified checkpoint means its documented scope passed checks; it does not mean every feature in that segment is finished. There is no overall percentage because engine quality, operational readiness and deferred UI are different kinds of work.
 
@@ -11,7 +11,7 @@ This map separates capabilities from acceptance gates. A verified checkpoint mea
 | Position | Milestone | State / evidence |
 |---|---|---|
 | Last verified | **C15 · Stateless Quick document intake** | [Run record](../runs/quick-documents-2026-10-12/README.md): 362 full-suite passes / one OCR skip, followed by 86 final Quick checks. [GitHub checks](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/workflows/tests.yml). |
-| Current design | **C16 · Reviewed catalog/unit correction** | [Compatibility and lifecycle contract](CATALOG_CORRECTIONS.md) defines prospective revisions, immutable history and required acceptance. No implementation claimed. |
+| Current implementation | **C16 · Reviewed catalog/unit correction** | [Compatibility and lifecycle contract](CATALOG_CORRECTIONS.md) defines prospective revisions and immutable history. The internal dated calculator is implemented; complete workflow acceptance remains open. |
 | Most recently advanced | **S2 · Evidence and review + S4 · Advisor and knowledge** | Temporary document extraction, exact source locations, bounded cleanup and reusable unverified Quick sources. |
 | Next segment | **S3 · Financial and inventory core** | Catalog and conversion changes must preserve historical meaning and affect current selection explicitly. |
 | Later UI | **S5 · Owner experience** | Deferred by the user; portfolio data already exists in the backend. |
@@ -85,18 +85,18 @@ Evidence: [contract](QUICK_DOCUMENTS.md), [run record](../runs/quick-documents-2
 
 These are intended work groups, not calendar promises. Each is complete only when its listed outcome has direct evidence.
 
-### C16 · Reviewed catalog/unit correction — design review
+### C16 · Reviewed catalog/unit correction — in progress
 
 Business outcome: an owner can correct catalog or conversion definitions without rewriting the meaning of historical records or saved analyses.
 
 | Stage | Current state | Observable exit |
 |---|---|---|
-| 1 · Design | **In progress** | [Initial contract](CATALOG_CORRECTIONS.md) sets identity, compatible revisions and historical meaning. Migration/schema and calculator binding must be finalized before implementation. |
-| 2 · Implementation | Planned | Reviewed replacements preserve earlier definitions and receipts. |
-| 3 · Validation | Pending implementation | Independent arithmetic, compatibility, tenant/role, concurrent approval and historical-receipt checks pass. |
-| 4 · Publication | Pending validation | Contract and checkpoint artifacts agree; a commit is pushed and its exact GitHub check result is recorded. |
+| 1 · Design | **In progress** | [Initial contract](CATALOG_CORRECTIONS.md) sets identity, compatible revisions and historical meaning. The calculation envelope is fixed; migration and database lifecycle still need design. |
+| 2 · Implementation | **Partial: pure dated calculator** | Reviewed replacements preserve earlier definitions and receipts. |
+| 3 · Validation | **Focused arithmetic passed; full workflow pending** | Independent arithmetic, compatibility, tenant/role, concurrent approval and historical-receipt checks pass. |
+| 4 · Publication | **Calculation slice pushed; full C16 pending** | Contract and checkpoint artifacts agree; a commit is pushed and its exact GitHub check result is recorded. |
 
-The selected C16 direction is reviewed prospective revisions for compatible catalog labels and pack factors; a base-unit dimension change requires a new item identity and explicit stock handover. Exact migration tables, API routes and calculator bindings remain to implement and verify. Broader semantic mapping, real OCR/model quality and operational acceptance remain separate gates. UI work remains deferred.
+The selected C16 direction is reviewed prospective revisions for compatible catalog labels and pack factors; a base-unit dimension change requires a new item identity and explicit stock handover. The internal calculator now captures dated definition uses; migration tables, API routes and persistent bindings remain to implement and verify. Broader semantic mapping, real OCR/model quality and operational acceptance remain separate gates. UI work remains deferred.
 
 | Next group | Expected outcome | Evidence needed to close it |
 |---|---|---|

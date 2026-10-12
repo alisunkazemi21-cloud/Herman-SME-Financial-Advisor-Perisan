@@ -6,9 +6,11 @@ The current priority is the multi-business backend. Interface development is pau
 
 ## Development position
 
-**Last verified: C15 — Stateless Quick document intake. Current work: C16 catalog/unit correction design.**
+**Last verified: C15 — Stateless Quick document intake. Current work: C16 catalog/unit correction implementation.**
 
-Use the [development map](research/PROGRESS.md) to follow six capability segments, checkpoints C01–C15, outstanding acceptance gates and the next design → implementation → validation → publication stages. The [C16 correction contract](research/CATALOG_CORRECTIONS.md) records the design boundary; C16 implementation has not started.
+Use the [development map](research/PROGRESS.md) to follow six capability segments, checkpoints C01–C15, outstanding acceptance gates and the next design → implementation → validation → publication stages. The [C16 correction contract](research/CATALOG_CORRECTIONS.md) records the design boundary; the event-time calculator is implemented as an internal slice; database review, migration and API integration remain open.
+
+The [C16 calculation slice](runs/dated-inventory-2026-10-13/README.md) passed 387 local PostgreSQL tests (one skip) and 386 Linux tests (two skips) at code commit `0740d48`. This is an internal calculator; catalog review and persistence are not yet available.
 
 The local full PostgreSQL run passed **362 tests**, with **one real-OCR skip**. After the final source-location fix, **86 focused Quick checks** passed, including all 50 intake cases. A later POSIX cleanup race caused one failure in GitHub CI; commit `1589a7e` waits for descendants to stop and its [Linux run](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38315758134) passed **362 tests**, with two skips, then Ruff and Marimo checks. [C15 run record](runs/quick-documents-2026-10-12/README.md). Real OCR/model quality, complete workload capacity and recovery remain open; the visible portfolio is deferred.
 

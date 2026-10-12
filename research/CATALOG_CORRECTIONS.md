@@ -1,6 +1,6 @@
 # Catalog and unit-definition corrections — C16 design contract
 
-Status: **design review**, 2026-10-13. This is the next backend checkpoint, not an implemented or accepted capability. The baseline remains C15 plus the POSIX cleanup repair at commit `1589a7e`. See the [progress map](PROGRESS.md) and [validation record](VALIDATION.md).
+Status: **in progress**, 2026-10-13. The pure event-time calculator is implemented; the complete reviewed catalog workflow is not yet accepted. The baseline remains C15 plus the POSIX cleanup repair at commit `1589a7e`. See the [progress map](PROGRESS.md) and [validation record](VALIDATION.md).
 
 ## Problem and current boundary
 
@@ -57,3 +57,11 @@ Acceptance requires independent examples for: a name/SKU typo, 1 pack = 8 units 
 5. Validate the independent arithmetic, concurrency, access and historical cases; synchronize run README, decision log, progress map, report, research chapter and media narrative before publication.
 
 This contract does not assert that catalog corrections, changing unit dimensions, 1,000-business workload capacity or the deferred owner interface are complete.
+
+## Implemented calculation slice
+
+`src/backend/dated_inventory.py` introduces a separate `DatedInventoryRequest` envelope and `DatedInventoryResult`, leaving the legacy request/result serialization unchanged. It invokes the existing reconciliation arithmetic with an internal pack resolver. `PackDefinition` distinguishes migration baseline values from approved, proposed and rejected definitions. Baselines have no invented approval; new approved definitions cannot start before their approval instant. Source authority must come from the future database selector, not client assertions. This module is not exposed through an API.
+
+Counts and movements resolve at their own instants; fulfillment quantities, recipe output packs and ingredient packs resolve at fulfillment time. Only a unique eligible half-open interval can produce a number. Receipts capture record/item/ingredient IDs, time, definition ID, exact factor, input quantity, converted quantity and source. A failed calculation returns no partial pack-use receipt. Pending/rejected candidates cannot displace approved values.
+
+Intervals in this calculation envelope are selected snapshots: the database adapter must derive each end from its approved successor, never update an immutable definition row to close it. This establishes the arithmetic before migration 15. It does not yet store revisions, bind legacy database rows, resolve aliases, authorize approval, update duplicate matching or connect freshness. Old callers continue using the legacy calculator until those gates pass. See [slice evidence](../runs/dated-inventory-2026-10-13/README.md).
