@@ -6,6 +6,7 @@ import ctypes
 import os
 import signal
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -91,6 +92,42 @@ class WindowsJob:
             self.api.CloseHandle(self.handle)
 
 
+def _posix_group_has_live_members(group_id: int) -> bool:
+    """Ignore exited Linux zombies, which may await reaping by another process."""
+    if sys.platform.startswith("linux"):
+        for entry in Path("/proc").iterdir():
+            if not entry.name.isdecimal():
+                continue
+            try:
+                if os.getpgid(int(entry.name)) != group_id:
+                    continue
+                fields = (entry / "stat").read_text().rsplit(") ", 1)[1].split()
+            except (ProcessLookupError, FileNotFoundError):
+                continue
+            if fields[0] not in {"Z", "X", "x"}:
+                return True
+        return False
+    try:
+        os.killpg(group_id, 0)
+    except ProcessLookupError:
+        return False
+    return True
+
+
+def _stop_posix_group(process: subprocess.Popen) -> None:
+    group_id = process.pid
+    try:
+        os.killpg(group_id, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    process.wait(timeout=5)
+    deadline = time.monotonic() + 5
+    while _posix_group_has_live_members(group_id):
+        if time.monotonic() >= deadline:
+            raise OSError("parser cleanup deadline")
+        time.sleep(0.02)
+
+
 def run_contained(command: list[str], folder: Path, timeout: float) -> None:
     """The command must read one G byte from stdin before importing parsers."""
     if not 0 < timeout <= 60:
@@ -118,10 +155,7 @@ def run_contained(command: list[str], folder: Path, timeout: float) -> None:
             if job:
                 job.close()
             elif process:
-                try:
-                    os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
+                _stop_posix_group(process)
         finally:
             if process:
                 if process.poll() is None:
