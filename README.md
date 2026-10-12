@@ -6,11 +6,11 @@ The current priority is the multi-business backend. Interface development is pau
 
 ## Development position
 
-**Last verified: C15 — Stateless Quick document intake. Next planned: C16 — Reviewed catalog/unit correction.**
+**Last verified: C15 — Stateless Quick document intake. Current work: C16 catalog/unit correction design.**
 
-Use the [development map](research/PROGRESS.md) to follow six capability segments, checkpoints C01–C15, outstanding acceptance gates and the next design → implementation → validation → publication stages. Each checkpoint records the behavior gained and its evidence; C16 implementation has not started.
+Use the [development map](research/PROGRESS.md) to follow six capability segments, checkpoints C01–C15, outstanding acceptance gates and the next design → implementation → validation → publication stages. The [C16 correction contract](research/CATALOG_CORRECTIONS.md) records the design boundary; C16 implementation has not started.
 
-The full PostgreSQL run passed **362 tests**, with **one real-OCR skip**. After the final source-location fix, **86 focused Quick checks** passed, including all 50 intake cases. [C15 run record](runs/quick-documents-2026-10-12/README.md); [GitHub checks](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/workflows/tests.yml). Real OCR/model quality, complete workload capacity and recovery remain open; the visible portfolio is deferred.
+The local full PostgreSQL run passed **362 tests**, with **one real-OCR skip**. After the final source-location fix, **86 focused Quick checks** passed, including all 50 intake cases. A later POSIX cleanup race caused one failure in GitHub CI; commit `1589a7e` waits for descendants to stop and its [Linux run](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38315758134) passed **362 tests**, with two skips, then Ruff and Marimo checks. [C15 run record](runs/quick-documents-2026-10-12/README.md). Real OCR/model quality, complete workload capacity and recovery remain open; the visible portfolio is deferred.
 
 ## Backend workflow
 
