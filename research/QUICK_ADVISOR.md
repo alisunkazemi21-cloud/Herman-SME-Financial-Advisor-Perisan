@@ -4,7 +4,7 @@ Milestone **C11**, 2026-10-11. Backend only. Quick now accepts a question withou
 
 ## Routes and response
 
-Both routes require the existing bearer credential and return successful responses with `Cache-Control: no-store`. Neither needs an idempotency key because neither writes application records.
+Both routes require the existing bearer credential. Since C15, handled success and error responses use `Cache-Control: no-store`, and validation errors do not echo request content. Neither needs an idempotency key because neither writes application records.
 
 | Route | Behavior |
 |---|---|
@@ -26,6 +26,8 @@ The context has `mode: quick`, `context_version: quick.context.v2`, the question
 | `inventory` | Optional existing typed inventory request, unchanged calculation semantics |
 
 Each source has a unique `source_id` (1–64 ASCII identifier characters), `title_fa` (1–160 characters) and nonblank `text_fa` (at most 6,000 characters). Text is preserved, including surrounding whitespace, and the response hashes its UTF-8 bytes as `text_sha256`. Source IDs are references within this request, never database selectors. Text hashes identify the supplied excerpt, not an authenticated original file. Source receipts and financial inputs are labeled `user_supplied_unverified`.
+
+C15 adds optional `origin` metadata from [temporary document extraction](QUICK_DOCUMENTS.md): original-byte and source-text hashes, format and bounded page/row/image spans. Resubmitted metadata remains client-supplied and unverified. The server checks text consistency and spans, not the original file's authenticity; it never retrieves a file from this metadata. Sources without origins keep their prior receipt shape.
 
 Quick does not retrieve a URL or file path mentioned in text. Source selectors, business IDs, analysis/report IDs, history, system prompts and tools are not accepted as extra request fields. Numbers in questions, notes or excerpts are not automatically parsed into financial figures. Excerpts can contain untrusted instructions; the system prompt treats those as data, and the model has no action tools.
 
@@ -74,4 +76,4 @@ The response also includes the supplied figures and their normalized rial values
 
 ## Remaining boundaries
 
-This checkpoint adds general request inputs and a qualitative draft prompt. It does not add stateless binary PDF/image upload, automatic financial extraction/classification, model-selected calculations, rates, forecasting from excerpts, legal interpretation, a new screen or evaluated real-model advice. Authentication still queries credentials; Quick does not query business/history tables or store conversations. Ollama and deployment logging/retention require separate operational validation. Reviewable business records and persistent cases remain in the business mode.
+C11 added general request inputs and a qualitative draft prompt; C15 adds separate [stateless binary intake](QUICK_DOCUMENTS.md). Automatic financial extraction/classification, model-selected calculations, rates, forecasting from excerpts, legal interpretation, a new screen and evaluated real-model advice remain incomplete. Authentication still queries credentials; Quick does not query business/history tables or store conversations. Ollama and deployment logging/retention require separate operational validation. Reviewable business records and persistent cases remain in the business mode.

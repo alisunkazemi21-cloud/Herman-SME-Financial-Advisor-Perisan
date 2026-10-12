@@ -8,7 +8,7 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 import psycopg
-from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
@@ -45,6 +45,8 @@ from src.backend.journal_imports import JournalImport, JournalImporter
 from src.backend.journal_reports import JournalReports, MappingInput, ReportInput, ReportReview, ReviewInput
 from src.backend.journals import AccountInput, JournalDates, JournalDecision, JournalInput, Journals
 from src.backend.portfolio import FinancialPortfolio, FinancialSnapshot
+from src.backend.quick_document_api import QuickDocumentRoute, receive_and_extract
+from src.backend.quick_document_models import DocumentFormat, OcrEngine
 from src.backend.service import AnalysisInput, Conflict, NotFound, Service, Warehouse
 from src.models import Model
 
@@ -73,6 +75,7 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
     importer = TabularImporter(service)
     bearer = HTTPBearer(auto_error=False)
     inference_slot = BoundedSemaphore(1)
+    extraction_slot = BoundedSemaphore(1)
 
     def actor(credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)]) -> UUID:
         if credentials is None:
@@ -84,6 +87,23 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
 
     Actor = Annotated[UUID, Depends(actor)]
     Key = Annotated[str, Header(alias="Idempotency-Key", min_length=1, max_length=200)]
+
+    quick_documents = APIRouter(route_class=QuickDocumentRoute)
+
+    @quick_documents.post("/quick/documents/extract", openapi_extra={
+        "requestBody": {"required": True, "content": {
+            "application/octet-stream": {"schema": {"type": "string", "format": "binary"}},
+        }},
+    })
+    async def quick_document(
+        request: Request, format: DocumentFormat, user: Actor,
+        credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
+        engine: OcrEngine = "tesseract",
+    ):
+        result = await receive_and_extract(request, format, engine, extraction_slot)
+        if await run_in_threadpool(actor, credentials) != user:
+            raise HTTPException(401, "اعتبار دسترسی تغییر کرده است")
+        return result
 
     @app.exception_handler(AccessDenied)
     async def denied(request, exc):
@@ -380,7 +400,7 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
         response.headers["Cache-Control"] = "no-store"
         return advisor.context(user, business, value)
 
-    @app.post("/quick/advisor/context")
+    @quick_documents.post("/quick/advisor/context")
     def request_context(value: QuickContextInput, user: Actor, response: Response):
         response.headers["Cache-Control"] = "no-store"
         return quick_context(value)
@@ -439,15 +459,16 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
         response.headers["Cache-Control"] = "no-store"
         return draft(advisor.context(user, business, value))
 
-    @app.post("/quick/advisor/draft")
+    @quick_documents.post("/quick/advisor/draft")
     def quick_draft(value: QuickContextInput, user: Actor, response: Response):
         response.headers["Cache-Control"] = "no-store"
         return draft(quick_context(value))
 
-    @app.post("/quick/inventory")
+    @quick_documents.post("/quick/inventory")
     def quick(value: InventoryRequest, user: Actor, response: Response):
         # Authentication only: all financial inputs come from this request. No business retrieval/writes.
         response.headers["Cache-Control"] = "no-store"
         return reconcile_inventory(value)
 
+    app.include_router(quick_documents)
     return app

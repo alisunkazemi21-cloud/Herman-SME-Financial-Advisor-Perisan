@@ -120,3 +120,9 @@ Migration 14 adds whole-record corrections for counts, movements, recipes and fu
 ## Inventory freshness and impact — C14, 2026-10-11
 
 The HTTP analysis read now adds live freshness beside the immutable receipt, using a shared scoped selector and normalized typed comparison. Portfolio/advisor summaries suppress stale or unknown figures; exact old case receipts are preserved. Comparison limits produce unknown, not a truncated current claim; change samples expose exact totals separately. No migration beyond 14 is needed. See [the contract](INVENTORY_FRESHNESS.md). The final focused suite passed **36 tests** in 129.54 seconds; the final full PostgreSQL suite passed **313 tests**, with **one real-OCR skip**, and Ruff passed. Real source/model quality, catalog correction, accounting and operational acceptance remain open.
+
+## Stateless Quick document intake — C15, 2026-10-12
+
+The separate raw-byte Quick extraction route supports bounded local CSV/XLSX, PDF and image processing without business transactions, persistent jobs, saved files or conversation history. It returns unverified sources with byte/text hashes and bounded location spans for existing Quick context/draft routes. Typed calculations remain explicit. No migration beyond 14 is required. See the [intake contract](QUICK_DOCUMENTS.md) for resource limits, temporary lifecycle and trust boundaries.
+
+The full PostgreSQL regression passed 362 tests with one real-OCR skip. The final source-location change and all 50 intake cases passed in an 86-test focused Quick run afterward. Windows process-tree cleanup is tested locally; POSIX cleanup is exercised by Linux CI. Real engine quality, semantic mapping, accounting, recovery/capacity and the visible portfolio remain separate acceptance gates.

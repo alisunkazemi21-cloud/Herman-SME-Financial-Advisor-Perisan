@@ -60,3 +60,7 @@ Reviewed the PostgreSQL 17 [constraint-trigger contract](https://www.postgresql.
 ## Journal cash summary — 2026-10-10
 
 The IFRS Foundation's [IAS 7 reference text, paragraph 9](https://www.ifrs.org/content/dam/ifrs/publications/pdf-standards/english/2021/issued/part-a/ias-7-statement-of-cash-flows.pdf) excludes transfers within cash/cash equivalents from cash flows. This supports cancelling mapped internal transfers in our journal-based cash summary. It does not justify presenting journal-level net movements as gross bank flows, or asserting current Iranian/IFRS compliance. Our implementation is an explicitly scoped management summary; classification and accounting completeness still require human review.
+
+## Temporary parser lifecycle — 2026-10-11
+
+Reviewed Microsoft's [Job Object documentation](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects): ordinary child processes inherit job membership, and kill-on-close or explicit job termination can terminate the group. Reviewed Python's [subprocess contract](https://docs.python.org/3/library/subprocess.html): supplied environments replace inheritance, and timeout handling must account for child termination and waiting. For Quick intake, use a startup handshake so containment is established before parsing or OCR can create descendants. On POSIX, use a new session/process group. These are process-lifecycle controls, not evidence of protection from a compromised parser or host administrator. Local and CI checks must exercise actual cleanup rather than infer it from API names.

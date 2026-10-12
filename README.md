@@ -6,17 +6,17 @@ The current priority is the multi-business backend. Interface development is pau
 
 ## Development position
 
-**Last verified: C14 — Inventory analysis freshness and impact. Working now: C15 — Stateless Quick document intake, at design review.**
+**Last verified: C15 — Stateless Quick document intake. Next planned: C16 — Reviewed catalog/unit correction.**
 
-Use the [development map](research/PROGRESS.md) to follow six capability segments, checkpoints C01–C14, outstanding acceptance gates and C15's design → implementation → validation → publication stages. Each checkpoint records the behavior gained and its evidence; C15 implementation has not started.
+Use the [development map](research/PROGRESS.md) to follow six capability segments, checkpoints C01–C15, outstanding acceptance gates and the next design → implementation → validation → publication stages. Each checkpoint records the behavior gained and its evidence; C16 implementation has not started.
 
-The latest full PostgreSQL suite passed **313 tests**, with **one real-OCR fixture test skipped**. [C14 run record](runs/inventory-freshness-2026-10-11/README.md); [successful GitHub checks for e843048](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38168599926). Real OCR/model quality, complete workload capacity and recovery remain open; the visible portfolio is deferred.
+The full PostgreSQL run passed **362 tests**, with **one real-OCR skip**. After the final source-location fix, **86 focused Quick checks** passed, including all 50 intake cases. [C15 run record](runs/quick-documents-2026-10-12/README.md); [GitHub checks](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/workflows/tests.yml). Real OCR/model quality, complete workload capacity and recovery remain open; the visible portfolio is deferred.
 
 ## Backend workflow
 
 Business profile → evidence upload → extraction job → explicit CSV/XLSX mapping → inventory or journal proposals → human review → reconciliation / reviewed reports → portfolio and advisor context.
 
-Quick path: question → optional excerpts / typed figures → deterministic context and calculations → optional unverified local draft, without saved business history.
+Quick path: optional [temporary document extraction](research/QUICK_DOCUMENTS.md) → question with unverified sources / explicit typed figures → deterministic context and calculations → optional unverified local draft, without saved business history.
 
 - [Backend setup, API and acceptance evidence](research/BACKEND_ACCEPTANCE.md)
 - [Document queue and worker operations](research/DOCUMENT_QUEUE.md)

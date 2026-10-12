@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from datetime import date
 from decimal import Context, Decimal, localcontext
 from functools import partial
@@ -10,6 +11,7 @@ from typing import Annotated, Literal, get_args
 from pydantic import BeforeValidator, Field, StringConstraints, field_validator, model_validator
 
 from src.analytics.ratio_definitions import RATIO_DEFINITIONS
+from src.backend.quick_document_models import QuickOrigin
 from src.models import Model, Money, decimal_precision
 
 SourceId = Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")]
@@ -64,6 +66,7 @@ class QuickSource(Model):
     source_id: SourceId
     title_fa: str = Field(min_length=1, max_length=160)
     text_fa: Annotated[str, StringConstraints(strip_whitespace=False, min_length=1, max_length=6000)]
+    origin: QuickOrigin | None = None
 
     @field_validator("text_fa")
     @classmethod
@@ -71,6 +74,18 @@ class QuickSource(Model):
         if not value.strip():
             raise ValueError("متن منبع نباید خالی باشد")
         return value
+
+    @model_validator(mode="after")
+    def origin_matches_text(self) -> "QuickSource":
+        if self.origin:
+            if self.origin.text_sha256 != hashlib.sha256(self.text_fa.encode("utf-8")).hexdigest():
+                raise ValueError("متن منبع با شناسه محتوای استخراج‌شده سازگار نیست")
+            previous = 0
+            for location in self.origin.locations:
+                if location.start < previous or location.end > len(self.text_fa):
+                    raise ValueError("محدوده مرجع استخراج نامعتبر است")
+                previous = location.end
+        return self
 
 
 class QuickFact(Model):

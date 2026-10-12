@@ -1,8 +1,8 @@
 # Herman development map
 
-Updated: **2026-10-11** · Active phase: **Backend workflows** · Latest checkpoint: **C14 — Inventory analysis freshness and impact**
+Updated: **2026-10-12** · Active phase: **Backend workflows** · Latest checkpoint: **C15 — Stateless Quick document intake**
 
-**Last delivered:** saved inventory analyses expose current/stale/unknown input comparisons and change references. Portfolio/advisor summaries withhold stale or unknown figures while preserving historical receipts. The full PostgreSQL suite passes **313 tests**, with **one real-OCR fixture test skipped**. **Working now:** C15 stateless document intake for Quick Advisor, at design review. No C15 implementation or validation is claimed.
+**Last delivered:** temporary document extraction supplies unverified, source-linked text to Quick without business history or persistent records. The full PostgreSQL run passed **362 tests**, with **one real-OCR skip**; final Quick checks passed **86 tests**, including all **50 intake cases**, after the final source-location fix. **Next intended checkpoint:** C16 reviewed catalog/unit correction, starting with its compatibility contract.
 
 This map separates capabilities from acceptance gates. A verified checkpoint means its documented scope passed checks; it does not mean every feature in that segment is finished. There is no overall percentage because engine quality, operational readiness and deferred UI are different kinds of work.
 
@@ -10,10 +10,10 @@ This map separates capabilities from acceptance gates. A verified checkpoint mea
 
 | Position | Milestone | State / evidence |
 |---|---|---|
-| Last verified | **C14 · Inventory analysis freshness and impact** | [Run record](../runs/inventory-freshness-2026-10-11/README.md): 313 passed, one OCR skip; 36 new freshness checks. [Commit e843048](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/commit/e84304831588f199a05f45bca2731104e7dff980) passed [GitHub run 38168599926](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38168599926). |
-| Current work | **C15 · Stateless Quick document intake** | Design review: existing parsers and Quick limits inspected; contract and implementation still pending. Detailed stages below. |
-| Current segments | **S2 · Evidence and review + S4 · Advisor and knowledge** | Connect temporary document extraction to request-only Quick sources; preserve explicit typed calculations. |
-| Most recently advanced | **S3 · Financial and inventory core** | Corrections, current-input comparison and preserved receipts verified at C13–C14; catalog and accounting depth remain open. |
+| Last verified | **C15 · Stateless Quick document intake** | [Run record](../runs/quick-documents-2026-10-12/README.md): 362 full-suite passes / one OCR skip, followed by 86 final Quick checks. [GitHub checks](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/workflows/tests.yml). |
+| Next planned | **C16 · Reviewed catalog/unit correction** | Define stable identity, unit compatibility and receipt preservation before implementing replacements. No implementation claimed. |
+| Most recently advanced | **S2 · Evidence and review + S4 · Advisor and knowledge** | Temporary document extraction, exact source locations, bounded cleanup and reusable unverified Quick sources. |
+| Next segment | **S3 · Financial and inventory core** | Catalog and conversion changes must preserve historical meaning and affect current selection explicitly. |
 | Later UI | **S5 · Owner experience** | Deferred by the user; portfolio data already exists in the backend. |
 
 Status vocabulary: **verified** means the stated scope has passing evidence; **design review** means requirements or source inspection is underway before implementation; **in progress** means implementation has started but acceptance is unfinished; **planned** means no implementation claim; **gate open** means required evidence is missing; **deferred** means deliberately postponed. A segment can have verified capabilities and open gates at the same time.
@@ -31,7 +31,7 @@ flowchart TD
     G --> H[Portfolio and business knowledge]
     H --> I[Business advisor and case history]
     J[Question / excerpts / typed figures] --> K[Stateless Quick Advisor]
-    O[Quick document upload: C15 design review] -. temporary local extraction .-> J
+    O[Quick document upload] -->|temporary local extraction| J
     K --> L[General draft context / financial calculations]
     L -. real model evaluation pending .-> N[Validated local advice]
     H -. user deferred .-> M[Visible portfolio screen]
@@ -45,9 +45,9 @@ Solid paths exist in the backend within their documented bounds. Dashed paths sh
 | Segment | Working and verified scope | Remaining work / exit gate |
 |---|---|---|
 | S1 · Business foundation | Profiles, membership, tenant isolation, restricted database role, idempotent writes and audit events | Backup/restore and full application capacity. Existing 1,000-business benchmark covers synthetic reads only. |
-| S2 · Evidence and review | Immutable uploads, queue recovery, CSV/XLSX extraction/mapping, row provenance, exact duplicate checks, human decisions | Three labeled real OCR invoices; semantic invoice matching; broader PDF/image table mapping. |
+| S2 · Evidence and review | Immutable uploads, queue recovery, CSV/XLSX mapping, duplicate decisions; separate bounded temporary Quick extraction with source locations | Three labeled real OCR invoices; semantic invoice matching; broader PDF/image financial-table mapping. |
 | S3 · Financial and inventory core | Recipes/consumption reconciliation, reviewed corrections and input freshness/impact; sealed recipe structure; balanced journals, reversals, reviewed report mappings and cash-flow/KPI payloads | Catalog correction, closing controls, gross bank-flow classification, larger reports and official accounting-standard verification. |
-| S4 · Advisor and knowledge | Reviewed knowledge/correction history, bounded context, opt-in local drafts, immutable business cases and general stateless Quick inputs with twelve typed calculations | Stateless binary document ingestion and actual local-model quality evaluation. |
+| S4 · Advisor and knowledge | Reviewed knowledge/corrections, bounded context, local draft routes, immutable cases, stateless Quick questions/documents and twelve typed calculations | Actual local-model quality and reliable financial interpretation of varied documents. |
 | S5 · Owner experience | Earlier Persian RTL prototype; backend portfolio and five indicators | Visible business portfolio remains user-deferred. Licensed Kalameh assets are unavailable; Contour is planned for a later UI checkpoint. |
 | S6 · Production validation | PostgreSQL regression tests, GitHub checks, evidence-preserving artifacts and local Graphify navigation | Restore drill, complete workload/capacity testing, real-engine acceptance and deployment hardening. |
 
@@ -70,46 +70,37 @@ Tests listed below are historical full-suite results, not completion percentages
 | C11 · Oct 11 | General Quick questions, excerpts and partial financial figures | [226 passed; 1 skipped](QUICK_ADVISOR.md) |
 | C12 · Oct 11 | Reviewed claim replacements, current-context selection and retained history | [250 passed; 1 skipped](KNOWLEDGE_CORRECTIONS.md) |
 | C13 · Oct 11 | Reviewed inventory replacements, sealed recipes and retained import ancestry | [277 passed; 1 skipped](INVENTORY_CORRECTIONS.md) |
-| **C14 · Oct 11** | **Input freshness/change impact; stale figures withheld from current advice; exact receipts retained** | **[313 passed; 1 skipped](INVENTORY_FRESHNESS.md)** |
+| C14 · Oct 11 | Input freshness/change impact; stale figures withheld from current advice; exact receipts retained | [313 passed; 1 skipped](INVENTORY_FRESHNESS.md); [exact-commit CI](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38168599926) |
+| **C15 · Oct 12** | **Temporary Quick documents with source references, cleanup and no business history** | **[362 passed; 1 skipped](QUICK_DOCUMENTS.md)**; final 86 Quick checks after locator fix |
 
 Documentation-language, typography and Graphify checkpoints are supporting changes recorded in [validation](VALIDATION.md). They did not independently close a product capability gate.
 
-## Last verified checkpoint: C14
+## Last verified checkpoint: C15
 
-Delivered: shared selection for creation and read-time freshness; additions/removals/value or decision changes; explicit replacement-count requirements; bounded unknown status; suppression of stale/unknown current-advice figures; and unchanged historical analysis/case receipts. The final suite passed **313 tests**, including **36** new freshness cases, with one real-OCR skip. Ruff and whitespace checks passed. Freshness does not certify source integrity or business completeness.
+Delivered: raw-byte local extraction, bounded source packing, exact page/row/image references, temporary process/file cleanup, no business-state access, explicit engine failures, credential recheck and sanitized no-store Quick responses. The full suite passed **362 tests** with one real-OCR skip. After preserving whitespace in sheet-name locators, all **86** focused Quick checks passed, including **50** intake cases. Ruff and whitespace checks passed. Extracted text and resubmitted metadata remain unverified; financial amounts require typed input.
 
-Evidence: [contract](INVENTORY_FRESHNESS.md), [run record](../runs/inventory-freshness-2026-10-11/README.md), [tests](../tests/test_inventory_freshness.py), [technical report](../reports/inventory-freshness-2026-10-11_technical.md). No migration beyond 14 is needed. Repository automation is visible in [GitHub checks](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/workflows/tests.yml).
+Evidence: [contract](QUICK_DOCUMENTS.md), [run record](../runs/quick-documents-2026-10-12/README.md), [tests](../tests/test_quick_documents.py), [technical report](../reports/quick-documents-2026-10-12_technical.md). No migration beyond 14 is needed. Repository automation is visible in [GitHub checks](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/workflows/tests.yml).
 
 ## Forward checkpoints and acceptance gates
 
 These are intended work groups, not calendar promises. Each is complete only when its listed outcome has direct evidence.
 
-### C15 · Stateless Quick document intake — design review
+### C16 · Reviewed catalog/unit correction — planned
 
-Business outcome: an owner can submit a document for a small Quick question without first creating a business profile or retaining a conversation history.
+Business outcome: an owner can correct catalog or conversion definitions without rewriting the meaning of historical records or saved analyses.
 
 | Stage | Current state | Observable exit |
 |---|---|---|
-| 1 · Design | **Working now** | Record the supported formats, resource limits, source-location contract and failure cleanup before code. |
-| 2 · Implementation | Planned | A separate stateless extraction path supplies unverified sources to existing Quick routes. |
-| 3 · Validation | Pending implementation | Supported-format, limits, failure/cleanup, privacy and regression checks pass. |
+| 1 · Design | **Next** | Specify stable item identity, permissible unit changes, existing references and current-selection behavior before code. |
+| 2 · Implementation | Planned | Reviewed replacements preserve earlier definitions and receipts. |
+| 3 · Validation | Pending implementation | Independent arithmetic, compatibility, tenant/role, concurrent approval and historical-receipt checks pass. |
 | 4 · Publication | Pending validation | Contract and checkpoint artifacts agree; a commit is pushed and its exact GitHub check result is recorded. |
 
-Inspection completed: existing CSV/XLSX, PDF and image extractors, the persistent worker's subprocess handling, and Quick's eight-source / 6,000-character-per-source / 64 KiB context bounds. **Immediate decision:** how to preserve page/row references and enforce complete temporary cleanup and resource limits without silently omitting content. This inspection is preparation, not an accepted C15 contract.
-
-| Step | Expected behavior | Completion evidence |
-|---|---|---|
-| Define intake | Specify file types, size/page/row limits and parser isolation before implementation. | Recorded contract aligned with existing local parsers and Quick bounds. |
-| Extract locally | Return unverified text/structure with source hash and locator references. | Synthetic supported-format fixtures, failure cases and explicit unsupported-engine behavior. |
-| Stay stateless | Use temporary processing without business records or history. | No tenant/history access, no saved evidence rows, no request carryover and verified cleanup. |
-| Keep numbers typed | Extracted text does not become confirmed financial figures or model arithmetic. | Provenance and input-validation checks; existing typed calculations remain the numerical boundary. |
-| Close checkpoint | Synchronize implementation, evidence, progress map and Git history. | Focused checks, full regression result, commit and CI outcome. |
-
-C15 implementation is planned; supported formats and exact parser limits are not yet finalized. Broader semantic mapping, catalog correction, real OCR/model quality and operational acceptance remain separate gates. UI work remains deferred.
+The exact C16 schema and correction scope remain undecided. Changing a base unit must not silently reinterpret previously stored quantities. Broader semantic mapping, real OCR/model quality and operational acceptance remain separate gates. UI work remains deferred.
 
 | Next group | Expected outcome | Evidence needed to close it |
 |---|---|---|
-| N1 · General Quick Advisor | Request/context scope verified at C11; binary intake is planned at C15; real answer quality remains under N3 | [C11 contract and evidence](QUICK_ADVISOR.md); stateless file intake and real-engine checks |
+| N1 · General Quick Advisor | Request/context scope verified at C11 and temporary document intake at C15; real answer quality remains under N3 | [Quick inputs](QUICK_ADVISOR.md), [document intake](QUICK_DOCUMENTS.md) and real-engine evaluation |
 | N2 · Corrections and document understanding | Knowledge correction verified at C12, inventory correction at C13 and freshness at C14; catalog and broader document handling remain open | Catalog correction contracts, deterministic conflict resolution and realistic duplicate/non-duplicate fixtures |
 | N3 · Operational and engine acceptance | Demonstrate the system's real operating limits and advice quality | Three labeled OCR invoices, actual local model evaluation, recoverable backup/restore and representative multi-business workloads |
 | N4 · Owner-facing portfolio | Business overview, cash-flow diagram, indicators and knowledge highlights | Resume UI work with user direction; browser/accessibility checks, Persian typography and tested Contour integration |
