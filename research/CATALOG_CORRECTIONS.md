@@ -1,6 +1,6 @@
 # Catalog and unit-definition corrections — C16 design contract
 
-Status: **in progress**, 2026-10-13. The pure event-time calculator is implemented; the complete reviewed catalog workflow is not yet accepted. The baseline remains C15 plus the POSIX cleanup repair at commit `1589a7e`. See the [progress map](PROGRESS.md) and [validation record](VALIDATION.md).
+Status: **in progress**, 2026-10-13. The event-time calculator and internal pack persistence/review are implemented; the complete reviewed catalog workflow is not yet accepted. The baseline remains C15 plus the POSIX cleanup repair at commit `1589a7e`. See the [progress map](PROGRESS.md) and [validation record](VALIDATION.md).
 
 ## Problem and current boundary
 
@@ -60,8 +60,16 @@ This contract does not assert that catalog corrections, changing unit dimensions
 
 ## Implemented calculation slice
 
-`src/backend/dated_inventory.py` introduces a separate `DatedInventoryRequest` envelope and `DatedInventoryResult`, leaving the legacy request/result serialization unchanged. It invokes the existing reconciliation arithmetic with an internal pack resolver. `PackDefinition` distinguishes migration baseline values from approved, proposed and rejected definitions. Baselines have no invented approval; new approved definitions cannot start before their approval instant. Source authority must come from the future database selector, not client assertions. This module is not exposed through an API.
+`src/backend/dated_inventory.py` introduces a separate `DatedInventoryRequest` envelope and `DatedInventoryResult`, leaving the legacy request/result serialization unchanged. It invokes the existing reconciliation arithmetic with an internal pack resolver. `PackDefinition` distinguishes migration baseline values from approved, proposed and rejected definitions. Baselines have no invented approval; new approved definitions cannot start before their approval instant. The internal database timeline now supplies approved definitions; public analysis integration still remains. Client assertions are not approval authority. This module is not exposed through an API.
 
 Counts and movements resolve at their own instants; fulfillment quantities, recipe output packs and ingredient packs resolve at fulfillment time. Only a unique eligible half-open interval can produce a number. Receipts capture record/item/ingredient IDs, time, definition ID, exact factor, input quantity, converted quantity and source. A failed calculation returns no partial pack-use receipt. Pending/rejected candidates cannot displace approved values.
 
-Intervals in this calculation envelope are selected snapshots: the database adapter must derive each end from its approved successor, never update an immutable definition row to close it. This establishes the arithmetic before migration 15. It does not yet store revisions, bind legacy database rows, resolve aliases, authorize approval, update duplicate matching or connect freshness. Old callers continue using the legacy calculator until those gates pass. See [slice evidence](../runs/dated-inventory-2026-10-13/README.md).
+Intervals in this calculation envelope are selected snapshots: the database adapter must derive each end from its approved successor, never update an immutable definition row to close it. This establishes the arithmetic before migration 15. The following persistence slice now stores and reviews pack revisions. Historical inventory-row bindings, aliases, duplicate matching and freshness integration remain open. Old callers continue using the legacy calculator until those gates pass. See [slice evidence](../runs/dated-inventory-2026-10-13/README.md).
+
+## Implemented pack persistence slice
+
+Migration 15 adds `pack_definitions` and `pack_decisions`. Existing conversions are copied exactly into baseline rows with the same IDs and no invented reviewer or approval. Future conversion inserts capture baselines atomically. Typed proposals store factor and source together; decisions derive predecessor identity, use server decision time and enforce prospective, strictly ordered activation. Unique approved-successor slots arbitrate concurrent reviews; rejection leaves the slot available. Forced RLS, author/reviewer policies and append-only triggers protect storage.
+
+`Catalog` is an internal service using the existing idempotency and audit transaction. Proposal and approval verify source file hashes; rejection remains possible when the source is unavailable. History is paginated and the timeline derives end instants from approved successor decisions. No public route is added: existing analysis still uses legacy conversions until the next integration gate. Migration 15 establishes definition baselines only; historical per-record bindings require a later migration, preserving existing receipts.
+
+The initial persistence suite passed nine PostgreSQL tests, including an isolated database upgraded from migrations 1–14 and migrated twice without changing its legacy conversion. Full regression and publication evidence are recorded in [the persistence run](../runs/pack-catalog-2026-10-13/README.md). C16 remains in progress.
