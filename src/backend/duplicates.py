@@ -7,6 +7,7 @@ from uuid import UUID
 from psycopg import sql
 
 from src.backend.inventory_history import LIVE_RECORD, ancestors
+from src.backend.pack_selection import pack_timeline
 
 
 def document_matches(c, business: UUID, document_id: UUID, excluded: tuple[UUID, ...] = ()) -> list[dict]:
@@ -50,9 +51,14 @@ def record_matches(c, business: UUID, identity: UUID) -> dict:
                 " AND NOT (r.id=ANY(%s::uuid[])) "
                 "AND (r.supersedes IS NULL OR NOT (r.supersedes=ANY(%s::uuid[]))) ORDER BY t.id").format(
                     sql.Identifier(table)), [*params, predecessor_ids, predecessor_ids]).fetchall()
-            conversion = c.execute("SELECT x.base_quantity,i.base_unit FROM herman.unit_conversions x "
-                "JOIN herman.items i ON (i.business_id,i.id)=(x.business_id,x.item_id) "
-                "WHERE x.business_id=%s AND x.item_id=%s AND x.unit='pack'", (business, row[item_column])).fetchone()
+            definitions = pack_timeline(c, business, row[item_column])
+            applicable = [d for d in definitions
+                          if (d.valid_from is None or d.valid_from <= row["occurred_at"])
+                          and (d.valid_to is None or row["occurred_at"] < d.valid_to)]
+            item = c.execute("SELECT base_unit FROM herman.items WHERE business_id=%s AND id=%s",
+                             (business, row[item_column])).fetchone()
+            conversion = (dict(base_quantity=applicable[0].base_quantity, base_unit=item["base_unit"])
+                          if len(applicable) == 1 and item else None)
 
             def normalized(record):
                 quantity, unit = record["quantity"], record["unit"]

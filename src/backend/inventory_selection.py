@@ -6,6 +6,7 @@ from uuid import UUID
 
 from psycopg import Connection, sql
 
+from src.backend.dated_inventory import PackDefinition
 from src.backend.inventory import Scope
 from src.backend.inventory_history import LIVE_RECORD
 
@@ -34,6 +35,19 @@ def select_inputs(c: Connection, business: UUID, scope: Scope, opening: UUID | N
     conversions = read("SELECT * FROM herman.unit_conversions WHERE business_id=%s ORDER BY id", (business,))
     for row in conversions:
         row["evidence"] = dict(document_id=row.pop("document_id"), locator=row.pop("locator"))
+
+    definitions = read(
+        "SELECT p.*,d.decided_at,d.effective_at,s.effective_at AS valid_to "
+        "FROM herman.pack_definitions p LEFT JOIN herman.pack_decisions d "
+        "ON (d.business_id,d.definition_id)=(p.business_id,p.id) "
+        "LEFT JOIN herman.pack_decisions s ON s.business_id=p.business_id "
+        "AND s.predecessor_id=p.id AND s.approved "
+        "WHERE p.business_id=%s AND (p.baseline OR d.approved) ORDER BY p.id", (business,))
+    definitions = [PackDefinition(
+        id=row["id"], business_id=business, item_id=row["item_id"], base_quantity=row["base_quantity"],
+        evidence=dict(document_id=row["document_id"], locator=row["locator"]),
+        decision="baseline" if row["baseline"] else "approved", approved_at=row["decided_at"],
+        valid_from=row["effective_at"], valid_to=row["valid_to"]).model_dump() for row in definitions]
 
     def records(table: str, where: str, parameters: tuple) -> list[dict]:
         rows = read(sql.SQL(
@@ -69,4 +83,4 @@ def select_inputs(c: Connection, business: UUID, scope: Scope, opening: UUID | N
         for line in lines:
             by_recipe[line.pop("recipe_id")]["lines"].append(line)
     return dict(items=items, conversions=conversions, movements=movements, fulfillments=fulfillments,
-                recipes=recipes, opening=count(opening), closing=count(closing))
+                recipes=recipes, opening=count(opening), closing=count(closing), pack_definitions=definitions)

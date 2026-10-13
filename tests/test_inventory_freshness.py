@@ -261,7 +261,7 @@ def test_read_does_not_recompute_rewrite_or_reverify_files_and_respects_access(b
     value = seed_inventory(b, inventory_payload)
     before = analyze(b, value, "before")
     from src.backend import service
-    monkeypatch.setattr(service, "reconcile_inventory", lambda *_: pytest.fail("read must not recalculate"))
+    monkeypatch.setattr(service, "reconcile_dated_inventory", lambda *_: pytest.fail("read must not recalculate"))
     with b["db"].transaction(b["viewer"], b["business"]) as c:
         source = c.execute("SELECT sha256 FROM herman.documents WHERE id=%s", (value.coverage.evidence.document_id,)).fetchone()
         audit_count = c.execute("SELECT count(*) AS n FROM herman.audit_events").fetchone()["n"]

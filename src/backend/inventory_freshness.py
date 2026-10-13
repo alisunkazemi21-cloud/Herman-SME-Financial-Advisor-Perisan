@@ -10,6 +10,7 @@ from uuid import UUID
 from psycopg import Connection
 from pydantic import ValidationError
 
+from src.backend.dated_inventory import DatedInventoryRequest, PackDefinition
 from src.backend.inventory import (
     Count,
     Fulfillment,
@@ -51,6 +52,12 @@ def _index(inputs: dict) -> dict[tuple[str, str], dict]:
             if name == "recipes":
                 typed["lines"] = sorted(typed["lines"], key=lambda line: str(line["item_id"]))
             result[(name, str(typed["id"]))] = typed
+    definitions = inputs.get("pack_definitions")
+    if definitions is None:
+        definitions = [dict(row, decision="baseline") for row in inputs["conversions"]]
+    for row in definitions:
+        typed = PackDefinition.model_validate(row).model_dump()
+        result[("pack_definitions", str(typed["id"]))] = typed
     return result
 
 
@@ -72,13 +79,18 @@ def freshness(c: Connection, business: UUID, row: dict) -> dict:
             return unknown("input_hash_mismatch")
         if row["result"]["metric_version"] != "inventory.unexplained_variance.v1":
             return unknown("unsupported_metric_version")
-        request = InventoryRequest.model_validate(raw)
+        inventory_raw = dict(raw)
+        definitions = inventory_raw.pop("pack_definitions", None)
+        request = InventoryRequest.model_validate(inventory_raw)
+        if definitions is not None:
+            DatedInventoryRequest(inventory=request.model_copy(update={"conversions": ()}),
+                                  definitions=definitions)
         if request.scope.business_id != business:
             return unknown("invalid_scope")
         result = InventoryResult.model_validate(row["result"])
         if result.scope != request.scope or result.target_item_id != request.target_item_id:
             return unknown("result_scope_mismatch")
-        saved = _index(request.model_dump())
+        saved = _index(raw)
         saved_rows = len(saved) + sum(len(r["lines"]) for r in request.model_dump()["recipes"])
         if saved_rows > MAX_INPUT_ROWS:
             return unknown("input_row_limit")
@@ -100,7 +112,7 @@ def freshness(c: Connection, business: UUID, row: dict) -> dict:
                 if change == "changed":
                     entry.update(before_status=saved[key].get("status"), after_status=current[key].get("status"))
                     entry["fields"] = sorted(field for field in saved[key] if saved[key][field] != current[key][field])
-                if change == "removed" and collection not in ("items", "conversions"):
+                if change == "removed" and collection not in ("items", "conversions", "pack_definitions"):
                     successor = current_successor(c, business, UUID(identity))
                     entry["superseded_by"] = str(successor) if successor else None
                 examples.append(entry)
@@ -133,4 +145,5 @@ def advice_summary(c: Connection, business: UUID, row: dict) -> dict:
                 available_for_current_advice=current and saved_status == "complete",
                 result=row["result"] if current else None,
                 source_provenance=row.get("source_provenance", []) if current else [],
-                correction_provenance=row.get("correction_provenance", []) if current else [])
+                correction_provenance=row.get("correction_provenance", []) if current else [],
+                pack_uses=row.get("pack_uses", []) if current else [])

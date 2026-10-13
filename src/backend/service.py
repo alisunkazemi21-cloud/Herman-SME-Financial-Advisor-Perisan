@@ -15,6 +15,7 @@ from psycopg.types.json import Jsonb
 from pydantic import Field
 
 from src.backend.database import Database
+from src.backend.dated_inventory import DatedInventoryRequest, PackDefinition, reconcile_dated_inventory
 from src.backend.duplicates import document_matches, record_matches
 from src.backend.inventory import (
     Count,
@@ -27,7 +28,6 @@ from src.backend.inventory import (
     Scope,
     UnitConversion,
     VariancePolicy,
-    reconcile_inventory,
 )
 from src.backend.inventory_history import (
     LIVE_RECORD,
@@ -391,10 +391,12 @@ class Service:
                     if pending and pending["supersedes"]:
                         raise Conflict("اصلاح شمارش برای استفاده در تحلیل تأیید نشده است")
                     raise NotFound("شمارش موجود نیست یا رد شده است")
+            definitions = tuple(PackDefinition.model_validate(row) for row in selected.pop("pack_definitions"))
             request = InventoryRequest(scope=value.scope, target_item_id=value.target_item_id, basis=value.basis,
                 **selected, coverage=value.coverage, policy=value.policy)
             snapshot = request.model_dump(mode="json")
-            refs = [request.coverage.evidence, request.policy.evidence]
+            snapshot["pack_definitions"] = [row.model_dump(mode="json") for row in definitions]
+            refs = [request.coverage.evidence, request.policy.evidence, *(row.evidence for row in definitions)]
             refs.extend(row.evidence for row in (*request.movements, *request.recipes,
                 *request.fulfillments, *request.conversions))
             refs.extend(row.evidence for row in (request.opening, request.closing) if row is not None)
@@ -407,7 +409,9 @@ class Service:
                     raise Conflict("فایل شاهد موجود نیست؛ تحلیل ثبت نشد") from exc
                 if hashlib.sha256(content).hexdigest() != source["sha256"]:
                     raise Conflict("فایل شاهد تغییر کرده است؛ تحلیل ثبت نشد")
-            result = reconcile_inventory(request).model_dump(mode="json")
+            calculated = reconcile_dated_inventory(DatedInventoryRequest(
+                inventory=request.model_copy(update={"conversions": ()}), definitions=definitions))
+            result = calculated.result.model_dump(mode="json")
             record_ids = [row.id for row in (*request.movements, *request.recipes, *request.fulfillments)]
             record_ids.extend(row.id for row in (request.opening, request.closing) if row is not None)
             provenance = c.execute("SELECT s.*,b.mapping,e.source_sha256,e.parser_version FROM herman.record_sources s "
@@ -421,7 +425,8 @@ class Service:
             insert(c, "analysis_runs", dict(business_id=business, id=identity, actor_id=actor,
                 input_sha256=hashlib.sha256(canonical(snapshot).encode()).hexdigest(),
                 input_snapshot=Jsonb(snapshot), result=Jsonb(result), source_provenance=Jsonb(provenance_json),
-                correction_provenance=Jsonb(corrections)))
+                correction_provenance=Jsonb(corrections),
+                pack_uses=Jsonb([row.model_dump(mode="json") for row in calculated.pack_uses])))
             return identity
 
         # Completeness and materiality assertions are reviewed inputs, not model guesses.
