@@ -2,7 +2,7 @@
 
 Updated: **2026-10-13** · Active phase: **Backend workflows** · Last verified checkpoint: **C15 — Stateless Quick document intake** · Current work: **C16 implementation**
 
-**Last delivered:** temporary document extraction supplies unverified, source-linked text to Quick without business history or persistent records. The local full PostgreSQL run passed **362 tests**, with **one real-OCR skip**; final Quick checks passed **86 tests**, including all **50 intake cases**. A POSIX descendant cleanup race failed the first Linux run; [the repair run](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38315758134) passed **362 tests** with two skips, then Ruff and Marimo checks. **Current work:** C16 event-time calculation implemented ([slice evidence](../runs/dated-inventory-2026-10-13/README.md)): 387 local passes / one skip; 386 Linux passes / two skips. Pack revision storage and internal human review passed 396 Windows tests / one skip and 395 Linux tests / two skips ([persistence evidence](../runs/pack-catalog-2026-10-13/README.md)); analysis/freshness integration and item aliases remain open.
+**Last delivered:** temporary document extraction supplies unverified, source-linked text to Quick without business history or persistent records. The local full PostgreSQL run passed **362 tests**, with **one real-OCR skip**; final Quick checks passed **86 tests**, including all **50 intake cases**. A POSIX descendant cleanup race failed the first Linux run; [the repair run](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38315758134) passed **362 tests** with two skips, then Ruff and Marimo checks. **Current work:** C16 event-time calculation implemented ([slice evidence](../runs/dated-inventory-2026-10-13/README.md)): 387 local passes / one skip; 386 Linux passes / two skips. Pack revision storage and internal human review passed 396 Windows tests / one skip and 395 Linux tests / two skips ([persistence evidence](../runs/pack-catalog-2026-10-13/README.md)); pack analysis/freshness/duplicate integration passed 398 Windows tests / one skip and 397 Linux tests / two skips ([evidence](../runs/pack-integration-2026-10-13/README.md)); historical bindings, item aliases and public routes remain open.
 
 This map separates capabilities from acceptance gates. A verified checkpoint means its documented scope passed checks; it does not mean every feature in that segment is finished. There is no overall percentage because engine quality, operational readiness and deferred UI are different kinds of work.
 
@@ -92,11 +92,11 @@ Business outcome: an owner can correct catalog or conversion definitions without
 | Stage | Current state | Observable exit |
 |---|---|---|
 | 1 · Design | **In progress** | [Initial contract](CATALOG_CORRECTIONS.md) sets identity, compatible revisions and historical meaning. The calculation envelope is fixed; migration and database lifecycle still need design. |
-| 2 · Implementation | **Partial: dated calculator + pack persistence** | Reviewed replacements preserve earlier definitions and receipts. |
+| 2 · Implementation | **Partial: dated calculation, persistence and analysis integration** | Reviewed replacements preserve earlier definitions and receipts. |
 | 3 · Validation | **Focused arithmetic passed; full workflow pending** | Independent arithmetic, compatibility, tenant/role, concurrent approval and historical-receipt checks pass. |
 | 4 · Publication | **Calculation slice pushed; full C16 pending** | Contract and checkpoint artifacts agree; a commit is pushed and its exact GitHub check result is recorded. |
 
-The selected C16 direction is reviewed prospective revisions for compatible catalog labels and pack factors; a base-unit dimension change requires a new item identity and explicit stock handover. The internal calculator now captures dated definition uses; migration 15 stores pack definitions and decisions. Public routes, historical record bindings, item/SKU revisions and analysis/freshness integration remain to implement and verify. Broader semantic mapping, real OCR/model quality and operational acceptance remain separate gates. UI work remains deferred.
+The selected C16 direction is reviewed prospective revisions for compatible catalog labels and pack factors; a base-unit dimension change requires a new item identity and explicit stock handover. The internal calculator now captures dated definition uses; migration 15 stores pack definitions and decisions. Public routes, historical record bindings and item/SKU revisions remain to implement and verify. Broader semantic mapping, real OCR/model quality and operational acceptance remain separate gates. UI work remains deferred.
 
 | Next group | Expected outcome | Evidence needed to close it |
 |---|---|---|
@@ -105,6 +105,10 @@ The selected C16 direction is reviewed prospective revisions for compatible cata
 | N3 · Operational and engine acceptance | Demonstrate the system's real operating limits and advice quality | Three labeled OCR invoices, actual local model evaluation, recoverable backup/restore and representative multi-business workloads |
 | N4 · Owner-facing portfolio | Business overview, cash-flow diagram, indicators and knowledge highlights | Resume UI work with user direction; browser/accessibility checks, Persian typography and tested Contour integration |
 | N5 · Accounting depth | Close/report controls and verified accounting rules | Authoritative standard versions, accountant-reviewed fixtures and independent expected results |
+
+## Pilot delivery gate
+
+The [pilot delivery contract](PILOT_DELIVERY.md) incorporates the user's eight operational risks. The proposed initial service is weekly reconciliation of a few expensive ingredients for data-ready restaurants/cafes. Track consistent usable records, reviewed action/outcome, actual renewal/payment and declining recurring support effort. Coverage flags are assertions, not proof that all waste/returns/staff consumption were recorded. No pilot or unit-economics results are claimed; the broad product objective remains unchanged.
 
 ## Update rule
 
