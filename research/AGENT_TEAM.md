@@ -26,7 +26,7 @@ Some installed definitions are not selectable named roles in this session. In th
 
 ## Concrete audit findings and next implementation
 
-The existing `/health` route is process liveness only. Add separate bounded readiness for database access/schema compatibility and usable evidence storage, with sanitized failures and tests for post-startup outages. This is the next independent reliability slice; it does not open C16 catalog routes early.
+The existing `/health` route is process liveness only. Add separate bounded readiness for database access/schema compatibility and usable evidence storage, with sanitized failures and tests for post-startup outages. Delivered October 25: the readiness slice passed 407 Windows tests / one skip and 406 Linux tests / two skips, with independent cancellation review. See [the evidence](../runs/readiness-2026-10-25/README.md). It does not open C16 catalog routes early. The next primary engineering task returns to C16 historical bindings and item/SKU lifecycle.
 
 Other open release gates: operator credential renewal (provisioned credentials expire after 30 days), deployment supervision/TLS, database-plus-blob coordinated backup and isolated restore, real OCR/model evaluation, and representative concurrent workload testing. Existing backend CLI supports migration, provisioning, serving and workers; `tests/test_cli.py` tests the separate analysis CLI, not operator bootstrap. See `src/backend/cli.py`, `database.py`, `api.py`, `service.py`, `jobs.py`, `worker.py` and `tests/test_backend.py`, `tests/test_document_jobs.py`.
 

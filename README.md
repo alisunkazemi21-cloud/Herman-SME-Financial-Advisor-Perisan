@@ -16,6 +16,8 @@ The [C16 calculation slice](runs/dated-inventory-2026-10-13/README.md) passed 38
 
 The local full PostgreSQL run passed **362 tests**, with **one real-OCR skip**. After the final source-location fix, **86 focused Quick checks** passed, including all 50 intake cases. A later POSIX cleanup race caused one failure in GitHub CI; commit `1589a7e` waits for descendants to stop and its [Linux run](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38315758134) passed **362 tests**, with two skips, then Ruff and Marimo checks. [C15 run record](runs/quick-documents-2026-10-12/README.md). Real OCR/model quality, complete workload capacity and recovery remain open; the visible portfolio is deferred.
 
+Dependency monitoring: `/health` reports process liveness; `/ready` probes restricted database features and temporary evidence-root I/O with generic no-store responses. See [readiness scope and validation](runs/readiness-2026-10-25/README.md).
+
 ## Backend workflow
 
 Business profile → evidence upload → extraction job → explicit CSV/XLSX mapping → inventory or journal proposals → human review → reconciliation / reviewed reports → portfolio and advisor context.

@@ -60,3 +60,7 @@ New requests enter the backlog unless they remove a release blocker. After three
 The broad financial-advisor objective remains: varied financial documents and businesses, deeper accounting/report controls, more integrations, reliable model interpretation and richer decision support. The first release does not promise universal document understanding, autonomous financial posting, accounting-standard compliance or proven economics. Broad POS connectors, extra sectors and additional forecasting/benchmark features remain backlog work. Existing features stay subject to their documented input requirements.
 
 Keep documentation in English and app/data in Persian. At the later UI checkpoint inspect the project and Contour package before using the requested `npx vibefarsi add contour`. Prefer Kalameh only when legitimately available; retain the existing fallback while licensed webfont files are unavailable. Backend validation remains the first priority.
+
+## Implementation update — October 25
+
+The independent dependency-readiness slice in M40-1 is verified within [its documented scope](../runs/readiness-2026-10-25/README.md): 407 Windows passes / one skip and 406 Linux passes / two skips. M40-1 remains in progress because C16 historical bindings, item/SKU lifecycle and public workflow acceptance remain open. Customer access remains unconfirmed.

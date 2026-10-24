@@ -1,6 +1,6 @@
 # Herman development map
 
-Updated: **2026-10-24** · Active phase: **Backend workflows** · Last verified checkpoint: **C15 — Stateless Quick document intake** · Current work: **C16 implementation**
+Updated: **2026-10-25** · Active phase: **Backend workflows** · Last verified checkpoint: **C15 — Stateless Quick document intake** · Current work: **C16 implementation**
 
 **Last delivered:** temporary document extraction supplies unverified, source-linked text to Quick without business history or persistent records. The local full PostgreSQL run passed **362 tests**, with **one real-OCR skip**; final Quick checks passed **86 tests**, including all **50 intake cases**. A POSIX descendant cleanup race failed the first Linux run; [the repair run](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38315758134) passed **362 tests** with two skips, then Ruff and Marimo checks. **Current work:** C16 event-time calculation implemented ([slice evidence](../runs/dated-inventory-2026-10-13/README.md)): 387 local passes / one skip; 386 Linux passes / two skips. Pack revision storage and internal human review passed 396 Windows tests / one skip and 395 Linux tests / two skips ([persistence evidence](../runs/pack-catalog-2026-10-13/README.md)); pack analysis/freshness/duplicate integration passed 398 Windows tests / one skip and 397 Linux tests / two skips ([evidence](../runs/pack-integration-2026-10-13/README.md)); historical bindings, item aliases and public routes remain open.
 
@@ -9,6 +9,10 @@ This map separates capabilities from acceptance gates. A verified checkpoint mea
 ## Forty-day delivery target
 
 **Day 1: October 24 · Day 40: December 2, 2026.** The founder is available full-time and will approach a pilot business in week one; access remains unconfirmed. Follow the [dated milestones](MVP_40_DAY_PLAN.md) and [specialist responsibilities](AGENT_TEAM.md). This planning update closes no implementation gate. Backend acceptance comes first, followed by a minimal Persian owner workflow. Earlier UI-deferral labels below describe the prior checkpoint state.
+
+## Independent reliability slice: dependency readiness
+
+Implemented under M40-1: separate `/ready` database feature and evidence-root I/O probes, generic no-store responses, database timeout settings and per-process single-flight admission retained through HTTP cancellation. The scoped PostgreSQL readiness/backend suite passed **15 tests**; independent review found and verified a cancellation repair. Full Windows regression passed **407 tests / one skip**; Linux code-commit CI passed **406 tests / two skips**, plus Ruff and Marimo. This reliability slice is **verified** within [its documented scope](../runs/readiness-2026-10-25/README.md). C16, restore, engine-quality and full workload-capacity gates remain open.
 
 ## You are here
 
