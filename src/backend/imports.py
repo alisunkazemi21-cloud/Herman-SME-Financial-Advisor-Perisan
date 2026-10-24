@@ -5,10 +5,11 @@ from typing import Annotated, Literal
 from uuid import UUID, uuid4
 
 from psycopg.types.json import Jsonb
-from pydantic import AwareDatetime, Field, model_validator
+from pydantic import AwareDatetime, Field, TypeAdapter, model_validator
 
 from src.backend.duplicates import record_matches
 from src.backend.inventory import Count, Fulfillment, Movement, Unit
+from src.backend.item_selection import resolve_sku
 from src.backend.service import Conflict, NotFound, Service, insert
 from src.models import Model
 
@@ -83,28 +84,28 @@ class TabularImporter:
                         raise ValueError("ستون انتخاب‌شده وجود ندارد یا مقدار آن خالی است")
                     return columns[name].strip()
 
-                item = c.execute("SELECT id FROM herman.items WHERE business_id=%s AND sku=%s",
-                                 (business, column(value.sku_column))).fetchone()
-                if item is None:
-                    raise ValueError("SKU ردیف در کاتالوگ این بیزینس تعریف نشده است")
+                occurred_at = TypeAdapter(AwareDatetime).validate_python(
+                    value.occurred_at if value.time_column is None else column(value.time_column))
+                item = resolve_sku(c, business, column(value.sku_column), occurred_at)
                 if c.execute("SELECT 1 FROM herman.record_sources WHERE business_id=%s AND document_id=%s "
                     "AND sheet=%s AND source_row=%s AND record_kind=%s",
                     (business, extraction["document_id"], value.sheet, row["row"], value.record_kind)).fetchone():
                     raise Conflict("این ردیف سند قبلاً به همین نوع رکورد تبدیل شده است")
                 fields = dict(id=uuid4(), business_id=business, warehouse_id=value.warehouse_id,
-                    occurred_at=value.occurred_at if value.time_column is None else column(value.time_column),
+                    occurred_at=occurred_at,
                     quantity=column(value.quantity_column), unit=value.unit if value.unit_column is None else column(value.unit_column),
                     evidence=dict(document_id=extraction["document_id"], locator=f"{value.sheet}:row:{row['row']}"))
                 if value.record_kind == "fulfillment":
-                    record = Fulfillment(**fields, product_id=item["id"], kind=value.fulfillment_kind)
+                    record = Fulfillment(**fields, product_id=item["item_id"], kind=value.fulfillment_kind)
                 elif value.record_kind == "movement":
-                    record = Movement(**fields, item_id=item["id"], kind=value.movement_kind)
+                    record = Movement(**fields, item_id=item["item_id"], kind=value.movement_kind)
                 else:
-                    record = Count(**fields, item_id=item["id"])
+                    record = Count(**fields, item_id=item["item_id"])
                 self.service._insert_proposal(c, actor, business, record)
                 insert(c, "record_sources", dict(business_id=business, id=record.id, batch_id=batch,
                     extraction_id=value.extraction_id, document_id=extraction["document_id"], sheet=value.sheet,
-                    source_row=row["row"], record_kind=value.record_kind, source_values=Jsonb(columns), created_by=actor))
+                    source_row=row["row"], record_kind=value.record_kind, source_values=Jsonb(columns),
+                    item_definition_id=item["definition_id"], created_by=actor))
                 self.service._audit(c, actor, business, value.record_kind + ".proposed", record.id)
             return batch
 

@@ -41,7 +41,17 @@ def seed(admin: str) -> list[dict]:
         c.execute("INSERT INTO herman.memberships(business_id,user_id,role) "
                   "SELECT business_id,actor,'owner' FROM seed_tenants")
         c.execute("INSERT INTO herman.warehouses SELECT business_id,warehouse,'synthetic' FROM seed_tenants")
-        c.execute("INSERT INTO herman.items SELECT business_id,item,'SKU','synthetic','each','direct' FROM seed_tenants")
+        # Catalog baseline publication requires the tenant's own context, including in fixture setup.
+        c.execute("""DO $$ DECLARE tenant record; BEGIN
+            FOR tenant IN SELECT * FROM pg_temp.seed_tenants LOOP
+                PERFORM set_config('herman.user_id',tenant.actor::text,true);
+                PERFORM set_config('herman.business_id',tenant.business_id::text,true);
+                INSERT INTO herman.items(business_id,id,sku,name_fa,base_unit,consumption_mode)
+                    VALUES(tenant.business_id,tenant.item,'SKU','synthetic','each','direct');
+            END LOOP;
+            PERFORM set_config('herman.user_id','',true);
+            PERFORM set_config('herman.business_id','',true);
+        END $$""")
         c.execute("INSERT INTO herman.documents(business_id,id,sha256,original_name,media_type,byte_size,created_by) "
                   "SELECT business_id,document,repeat('0',64),'SYNTHETIC-NO-BLOB','text/plain',0,actor FROM seed_tenants")
         c.execute("""CREATE TEMP TABLE seed_events ON COMMIT DROP AS

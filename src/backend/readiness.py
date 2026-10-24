@@ -19,6 +19,10 @@ def dependencies_ready(database: Database, blob_root: Path) -> bool:
             connection.execute("SELECT pack_uses FROM herman.analysis_runs WHERE false")
             connection.execute("SELECT id FROM herman.pack_definitions WHERE false")
             connection.execute("SELECT definition_id FROM herman.pack_decisions WHERE false")
+            connection.execute("SELECT d.id,a.validity FROM herman.item_definitions d "
+                               "JOIN herman.item_alias_periods a "
+                               "ON (a.business_id,a.definition_id)=(d.business_id,d.id) WHERE false")
+            connection.execute("SELECT item_definition_id FROM herman.record_sources WHERE false")
         expected = secrets.token_bytes(32)
         with NamedTemporaryFile(mode="w+b", prefix=".herman-ready-", dir=blob_root) as probe:
             probe.write(expected)

@@ -30,9 +30,72 @@ class PackDecision(Model):
         return self
 
 
+class ItemProposal(Model):
+    id: UUID
+    item_id: UUID
+    predecessor_id: UUID
+    sku: str = Field(min_length=1, max_length=100)
+    name_fa: str = Field(min_length=1, max_length=200)
+    evidence: EvidenceRef
+
+    @model_validator(mode="after")
+    def meaningful_labels(self) -> "ItemProposal":
+        if not self.sku.strip() or not self.name_fa.strip():
+            raise ValueError("نام و شناسه کالا نباید خالی باشند")
+        return self
+
+
+class ItemDecision(PackDecision):
+    pass
+
+
 class Catalog:
     def __init__(self, service: Service):
         self.service = service
+
+    def propose_item(self, actor: UUID, business: UUID, key: str, value: ItemProposal) -> UUID:
+        def store(c):
+            self.service._inventory_evidence(c, business, value.evidence.document_id)
+            fields = value.model_dump()
+            fields.update(fields.pop("evidence"))
+            insert(c, "item_definitions", dict(business_id=business, created_by=actor, **fields))
+            return value.id
+
+        return self.service._write(actor, business, key, "item.proposed",
+                                   value.model_dump(mode="json"), store)
+
+    def decide_item(self, actor: UUID, business: UUID, key: str,
+                    identity: UUID, value: ItemDecision) -> UUID:
+        def store(c):
+            row = c.execute("SELECT document_id FROM herman.item_definitions "
+                            "WHERE business_id=%s AND id=%s", (business, identity)).fetchone()
+            if row is None:
+                raise NotFound("نسخهٔ کالا موجود نیست")
+            if value.approved:
+                if row["document_id"] is None:
+                    raise ValueError("تعریف اولیه نیاز به تصمیم جدید ندارد")
+                self.service._inventory_evidence(c, business, row["document_id"])
+            insert(c, "item_decisions", dict(business_id=business, definition_id=identity,
+                                             actor_id=actor, **value.model_dump()))
+            return identity
+
+        return self.service._write(actor, business, key, "item.reviewed",
+            dict(id=str(identity), **value.model_dump(mode="json")), store, reviewer=True)
+
+    def item_history(self, actor: UUID, business: UUID, item: UUID,
+                     after: UUID | None = None, limit: int = 50) -> list[dict]:
+        if not 1 <= limit <= 100:
+            raise ValueError("اندازهٔ صفحه نامعتبر است")
+        with self.service.database.transaction(actor, business) as c:
+            return c.execute(
+                "SELECT p.*,d.approved,d.actor_id AS reviewed_by,d.reason_fa,d.decided_at,d.effective_at,"
+                "lower(a.validity) AS valid_from,upper(a.validity) AS valid_to,"
+                "(a.definition_id IS NOT NULL) AS published FROM herman.item_definitions p LEFT JOIN herman.item_decisions d "
+                "ON (d.business_id,d.definition_id)=(p.business_id,p.id) "
+                "LEFT JOIN herman.item_alias_periods a "
+                "ON (a.business_id,a.definition_id)=(p.business_id,p.id) "
+                "WHERE p.business_id=%s AND p.item_id=%s AND (%s::uuid IS NULL OR p.id>%s) "
+                "ORDER BY p.id LIMIT %s", (business, item, after, after, limit)).fetchall()
 
     def propose_pack(self, actor: UUID, business: UUID, key: str, value: PackProposal) -> UUID:
         def store(c):
