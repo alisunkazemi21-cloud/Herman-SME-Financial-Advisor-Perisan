@@ -26,13 +26,14 @@ skills:
   - dollar-gold-benchmarking
 ---
 
-## Current project instructions (updated 2026-10-06)
+## Current project instructions (updated 2026-10-24)
 
 - Write all repository documentation, research, decisions, checkpoint notes, technical reports, media narratives, code comments and developer-facing text in clear English.
 - Keep app-facing text, RTL presentation, Persian input/output data, fixtures, source documents and evidence in Persian where applicable. Persian literals in the code examples below are app/data examples, not a documentation-language requirement.
 - At every checkpoint, update the English documentation along with the implementation and validation evidence. Generated Markdown reports must also use English prose while preserving business names and source data verbatim.
 - Maintain `research/PROGRESS.md` at every checkpoint with stable milestone IDs, capability segments, current/next work, validation evidence and unresolved gates. Do not invent an overall completion percentage; distinguish verified scoped behavior from pending engine, capacity, accounting and UI acceptance.
-- Backend development is the current priority. Interface work is deferred at the user's request.
+- Backend development remains first. The user now targets a pilot-ready MVP within 40 days (October 24–December 2 inclusive). Plan a minimal Persian owner workflow after backend gates; do not expand into broad UI work. Track the dated delivery contract in `research/MVP_40_DAY_PLAN.md`.
+- The user explicitly authorizes specialist collaboration using the installed Agency Agents. Follow `research/AGENT_TEAM.md`: narrow assignments, disjoint write ownership, evidence-based integration and no invented capabilities.
 - These later user preferences supersede the original prompt's broader Persian-language requirement. The original technical brief follows for reference.
 
 # @token-reduction: ON
@@ -436,7 +437,7 @@ Safety: Agents propose. Typed Python computes. Humans approve.
 
 ## User UI preferences (2026-10-06)
 
-Use Kalameh for Persian typography. Font files are not yet available; prefer an installed Kalameh font and retain a fallback until webfont assets are supplied. For later UI checkpoints, use `npx vibefarsi add contour` after inspecting the package and the target project. UI expansion remains deferred while backend work continues.
+Use Kalameh for Persian typography. Font files are not yet available; prefer an installed Kalameh font and retain a fallback until webfont assets are supplied. For later UI checkpoints, use `npx vibefarsi add contour` after inspecting the package and the target project. Broad UI expansion remains deferred; the October 24 MVP plan allows a minimal owner workflow after backend gates.
 
 ## graphify
 

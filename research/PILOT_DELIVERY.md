@@ -46,4 +46,4 @@ The user's references to Toast, Hami, Menuvex and the World Bank are research le
 
 ## Implementation sequencing
 
-Finish C16 historical meaning and catalog review first. Then specify category-level completeness and a minimal reviewed investigation/action record. Add pilot delivery measurements alongside that workflow before broad rollout. Public UI remains deferred; this contract adds no interface, monitoring automation, customer outreach or billing action. The maintained progress map must keep these acceptance gates visible.
+Finish C16 historical meaning and catalog review first. Then specify category-level completeness and a minimal reviewed investigation/action record. Add pilot delivery measurements alongside that workflow before broad rollout. The October 24 forty-day plan schedules a minimal owner interface after backend gates; this contract itself adds no interface, monitoring automation, customer outreach or billing action. The maintained progress map must keep these acceptance gates visible.

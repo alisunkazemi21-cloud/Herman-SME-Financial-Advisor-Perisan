@@ -2,7 +2,9 @@
 
 A local-first financial advisor for Iranian small businesses. Agents propose, typed Python calculates, and people approve.
 
-The current priority is the multi-business backend. Interface development is paused. Documentation and generated Markdown use English; app text, Persian business data, RTL presentation and evidence retain their original language.
+The current priority is a backend-first, pilot-ready MVP targeted for December 2, 2026 (40 days including October 24). Minimal owner-interface work follows backend gates. Documentation and generated Markdown use English; app text, Persian business data, RTL presentation and evidence retain their original language.
+
+See the [40-day delivery plan](research/MVP_40_DAY_PLAN.md) and [specialist team responsibilities](research/AGENT_TEAM.md). Pilot access is not yet confirmed; the founder is available full-time and will approach a business in week one.
 
 ## Development position
 
