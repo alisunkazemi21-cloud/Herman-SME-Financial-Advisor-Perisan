@@ -55,10 +55,14 @@ def revise(b, factor, activation):
 
 def test_analysis_receipt_freshness_legacy_and_source_lineage(backend, dated_payload):
     b = backend
-    _, value, factor, activation = setup(b, dated_payload)
+    p, value, factor, activation = setup(b, dated_payload)
     old = analyze(b, value, "before")
     assert Decimal(old["result"]["unexplained_shortage"]) == 64
     assert len(old["pack_uses"]) == 6
+    assert all(use["context_version"] == "pack.use.v2" for use in old["pack_uses"])
+    assert {use["fulfillment_id"] for use in old["pack_uses"] if use["fulfillment_id"]} == {
+        row["id"] for row in p["fulfillments"]}
+    assert all(use["recipe_path"] == [] for use in old["pack_uses"])
     legacy = deepcopy(old)
     legacy["input_snapshot"].pop("pack_definitions")
     legacy["input_sha256"] = hashlib.sha256(canonical(legacy["input_snapshot"]).encode()).hexdigest()
@@ -76,6 +80,7 @@ def test_analysis_receipt_freshness_legacy_and_source_lineage(backend, dated_pay
     first = cases.append(b["owner"], b["business"], case, "turn-1", turn, no_model)
     saved_turn = cases.read(b["viewer"], b["business"], case, first)
     assert len(saved_turn["receipt"]["context"]["analysis"]["pack_uses"]) == 6
+    assert saved_turn["receipt"]["context"]["analysis"]["pack_uses"] == old["pack_uses"]
     identity = revise(b, factor, activation)
     with b["db"].transaction(b["owner"], b["business"]) as c:
         assert freshness(c, b["business"], old)["status"] == "stale"

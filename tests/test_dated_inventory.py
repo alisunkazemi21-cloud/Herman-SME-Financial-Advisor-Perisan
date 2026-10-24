@@ -6,7 +6,12 @@ import pytest
 from pydantic import ValidationError
 from test_inventory import inventory_payload as inventory_fixture
 
-from src.backend.dated_inventory import DatedInventoryRequest, reconcile_dated_inventory
+from src.backend.dated_inventory import (
+    DatedInventoryRequest,
+    DatedInventoryResult,
+    PackUse,
+    reconcile_dated_inventory,
+)
 from src.backend.inventory import InventoryRequest, reconcile_inventory
 
 inventory_payload = inventory_fixture
@@ -50,6 +55,7 @@ def test_crossing_activation_exact_arithmetic_and_receipts(dated_payload):
     assert result.counted_closing == 50
     assert result.unexplained_shortage == 58
     assert len(output.pack_uses) == 6
+    assert output.contract_version == "inventory.dated_pack.v2"
     lookup = {str(row.record_id): row for row in output.pack_uses}
     p = dated_payload["inventory"]
     assert lookup[p["opening"]["id"]].base_quantity == 8
@@ -58,6 +64,14 @@ def test_crossing_activation_exact_arithmetic_and_receipts(dated_payload):
         assert use.converted_quantity == use.quantity_pack * use.base_quantity
         assert use.evidence in result.evidence
     assert dated_payload == original
+    fulfillment_ids = {row["id"] for row in p["fulfillments"]}
+    for use in output.pack_uses:
+        assert use.context_version == "pack.use.v2"
+        assert use.recipe_path == ()
+        if str(use.record_id) in fulfillment_ids:
+            assert use.fulfillment_id == use.record_id
+        else:
+            assert use.fulfillment_id is None
 
 
 @pytest.mark.parametrize("kind", ["gap", "overlap", "missing", "pending", "rejected"])
@@ -113,6 +127,8 @@ def test_recipe_ingredient_uses_fulfillment_instant(dated_payload):
     uses = [row for row in output.pack_uses if str(row.record_id) == recipe["id"]]
     assert [row.base_quantity for row in uses] == [8, 10]
     assert all(str(row.ingredient_id) == p["target_item_id"] for row in uses)
+    assert [str(row.fulfillment_id) for row in uses] == [row["id"] for row in p["fulfillments"]]
+    assert all(tuple(map(str, row.recipe_path)) == (recipe["id"],) for row in uses)
     assert [row.quantity_base for row in output.result.contributions] == [8, 10]
 
 
@@ -130,6 +146,10 @@ def test_recipe_output_pack_uses_event_instant(dated_payload):
     output = calculate(dated_payload)
     assert output.result.expected_usage == 18  # 80/8 + 80/10.
     assert [row.quantity_base for row in output.result.contributions] == [10, 8]
+    recipe_id = p["recipes"][0]["id"]
+    uses = [row for row in output.pack_uses if str(row.record_id) == recipe_id]
+    assert [str(row.fulfillment_id) for row in uses] == [row["id"] for row in p["fulfillments"]]
+    assert all(row.ingredient_id is None and tuple(map(str, row.recipe_path)) == (recipe_id,) for row in uses)
 
 
 @pytest.mark.parametrize("change", ["tenant", "item", "duplicate", "backdate", "naive",
@@ -188,3 +208,70 @@ def test_wrong_dimension_is_not_a_pack_conversion(dated_payload):
     output = calculate(dated_payload)
     assert output.result.status == "incomplete"
     assert output.pack_uses == ()
+
+
+def test_shared_recipe_branches_and_identical_event_times_have_distinct_use_keys(dated_payload):
+    p = dated_payload["inventory"]
+    product = p["items"][1]["id"]
+    x, y, shared = [str(uuid4()) for _ in range(3)]
+    for index, identity in enumerate((x, y, shared)):
+        p["items"].append(dict(p["items"][1], id=identity, sku=f"SUB{index}"))
+
+    def recipe(identity, lines):
+        return dict(id=str(uuid4()), business_id=p["scope"]["business_id"], product_id=identity,
+                    evidence=p["policy"]["evidence"], status="approved", valid_from=p["scope"]["start"],
+                    output_quantity="1", output_unit="each", lines=lines)
+
+    def line(identity, unit="each"):
+        return dict(item_id=identity, quantity="1", unit=unit)
+
+    root = recipe(product, [line(x), line(y)])
+    left, right = recipe(x, [line(shared)]), recipe(y, [line(shared)])
+    leaf = recipe(shared, [line(p["target_item_id"], "pack")])
+    p["recipes"] = [root, left, right, leaf]
+    for row in p["fulfillments"]:
+        row.update(product_id=product, quantity="1", unit="each", occurred_at=p["scope"]["start"])
+    output = calculate(dated_payload)
+    assert output.result.status == "complete"
+    assert output.result.expected_usage == 32  # Two orders, each using two branches of one eight-unit pack.
+    uses = [row for row in output.pack_uses if str(row.record_id) == leaf["id"]]
+    assert len(uses) == 4
+    assert len({(row.fulfillment_id, row.recipe_path, row.record_id, row.ingredient_id) for row in uses}) == 4
+    assert {tuple(map(str, row.recipe_path)) for row in uses} == {
+        (root["id"], left["id"], leaf["id"]), (root["id"], right["id"], leaf["id"])}
+    assert {str(row.fulfillment_id) for row in uses} == {row["id"] for row in p["fulfillments"]}
+
+
+def test_legacy_pack_receipt_context_remains_explicitly_unknown(dated_payload):
+    payload = calculate(dated_payload).model_dump(mode="json")
+    payload["contract_version"] = "inventory.dated_pack.v1"
+    for use in payload["pack_uses"]:
+        for field in ("context_version", "fulfillment_id", "recipe_path"):
+            use.pop(field)
+    original = deepcopy(payload)
+    parsed = DatedInventoryResult.model_validate(payload)
+    assert all(use.context_version == "pack.use.v1" and use.fulfillment_id is None
+               and use.recipe_path == () for use in parsed.pack_uses)
+    assert payload == original
+    assert DatedInventoryResult.model_validate({key: value for key, value in payload.items()
+                                               if key != "contract_version"}).contract_version == "inventory.dated_pack.v1"
+    payload["contract_version"] = "inventory.dated_pack.v2"
+    with pytest.raises(ValidationError):
+        DatedInventoryResult.model_validate(payload)
+
+
+@pytest.mark.parametrize("change", ["missing_fulfillment", "wrong_leaf", "cycle", "legacy_context"])
+def test_inconsistent_recipe_use_identity_is_rejected(dated_payload, change):
+    value = calculate(dated_payload).pack_uses[0].model_dump()
+    record, fulfillment = uuid4(), uuid4()
+    value.update(record_id=record, fulfillment_id=fulfillment, recipe_path=(record,))
+    if change == "missing_fulfillment":
+        value["fulfillment_id"] = None
+    elif change == "wrong_leaf":
+        value["recipe_path"] = (uuid4(),)
+    elif change == "cycle":
+        value["recipe_path"] = (record, record)
+    else:
+        value["context_version"] = "pack.use.v1"
+    with pytest.raises(ValidationError):
+        PackUse.model_validate(value)

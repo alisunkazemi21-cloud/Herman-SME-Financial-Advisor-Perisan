@@ -214,7 +214,7 @@ def reconcile_inventory(request: InventoryRequest) -> InventoryResult:
         return _reconcile(request)
 
 
-PackResolver = Callable[[UUID, Decimal, datetime, UUID, UUID | None], Decimal]
+PackResolver = Callable[[UUID, Decimal, datetime, UUID, UUID | None, UUID | None, tuple[UUID, ...]], Decimal]
 
 
 def _reconcile(request: InventoryRequest, pack_resolver: PackResolver | None = None) -> InventoryResult:
@@ -251,7 +251,8 @@ def _reconcile(request: InventoryRequest, pack_resolver: PackResolver | None = N
             explanation_fa="اطلاعات کافی نیست؛ کسری یا مازاد قابل نتیجه‌گیری نیست")
 
     def convert(item_id: UUID, quantity: Decimal, unit: str, when: datetime,
-                record_id: UUID, ingredient_id: UUID | None = None) -> Decimal:
+                record_id: UUID, ingredient_id: UUID | None = None, *,
+                fulfillment_id: UUID | None = None, recipe_path: tuple[UUID, ...] = ()) -> Decimal:
         if item_id not in items:
             raise IncompleteData("کالای مورد استفاده در کاتالوگ تعریف نشده است")
         base = items[item_id].base_unit
@@ -260,7 +261,7 @@ def _reconcile(request: InventoryRequest, pack_resolver: PackResolver | None = N
         if (unit, base) in (("kg", "g"), ("l", "ml")):
             return quantity * 1000
         if unit == "pack" and pack_resolver is not None:
-            return pack_resolver(item_id, quantity, when, record_id, ingredient_id)
+            return pack_resolver(item_id, quantity, when, record_id, ingredient_id, fulfillment_id, recipe_path)
         matches = [c for c in request.conversions if c.item_id == item_id and c.unit == unit]
         if len(matches) == 1:
             return quantity * matches[0].base_quantity
@@ -277,8 +278,8 @@ def _reconcile(request: InventoryRequest, pack_resolver: PackResolver | None = N
 
     expansion_steps = 0
 
-    def expand(item_id: UUID, quantity: Decimal, when: datetime,
-               path: tuple[UUID, ...] = ()) -> tuple[Decimal, tuple[UUID, ...]]:
+    def expand(item_id: UUID, quantity: Decimal, when: datetime, fulfillment_id: UUID,
+               path: tuple[UUID, ...] = (), recipe_path: tuple[UUID, ...] = ()) -> tuple[Decimal, tuple[UUID, ...]]:
         nonlocal expansion_steps
         expansion_steps += 1
         if len(path) > 32 or expansion_steps > 10000:
@@ -295,13 +296,17 @@ def _reconcile(request: InventoryRequest, pack_resolver: PackResolver | None = N
         if len(matches) != 1:
             raise IncompleteData("نسخه معتبر رسپی در زمان رویداد موجود یا یکتا نیست")
         recipe = matches[0]
-        output = convert(item_id, recipe.output_quantity, recipe.output_unit, when, recipe.id)
+        current_path = (*recipe_path, recipe.id)
+        output = convert(item_id, recipe.output_quantity, recipe.output_unit, when, recipe.id,
+                         fulfillment_id=fulfillment_id, recipe_path=current_path)
         total, used = Decimal(0), [recipe.id]
         for line in recipe.lines:
-            base_quantity = convert(line.item_id, line.quantity, line.unit, when, recipe.id, line.item_id)
+            base_quantity = convert(line.item_id, line.quantity, line.unit, when, recipe.id, line.item_id,
+                                    fulfillment_id=fulfillment_id, recipe_path=current_path)
             if line.basis == "net":
                 base_quantity /= line.preparation_yield
-            amount, nested = expand(line.item_id, quantity / output * base_quantity, when, (*path, item_id))
+            amount, nested = expand(line.item_id, quantity / output * base_quantity, when, fulfillment_id,
+                                    (*path, item_id), current_path)
             total += amount
             used.extend(nested)
         return total, tuple(dict.fromkeys(used))
@@ -311,8 +316,9 @@ def _reconcile(request: InventoryRequest, pack_resolver: PackResolver | None = N
         for row in request.fulfillments:
             if not row.fulfilled:
                 continue
-            quantity = convert(row.product_id, row.quantity, row.unit, row.occurred_at, row.id)
-            used, recipe_ids = expand(row.product_id, quantity, row.occurred_at)
+            quantity = convert(row.product_id, row.quantity, row.unit, row.occurred_at, row.id,
+                               fulfillment_id=row.id)
+            used, recipe_ids = expand(row.product_id, quantity, row.occurred_at, row.id)
             refs = [row.evidence, *(r.evidence for r in request.recipes if r.id in recipe_ids)]
             contributions.append(Contribution(fulfillment_id=row.id, recipe_ids=recipe_ids,
                                                quantity_base=used, evidence=tuple(refs)))
