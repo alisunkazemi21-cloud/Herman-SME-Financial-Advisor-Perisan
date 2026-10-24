@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import json
 from datetime import date
@@ -47,6 +48,7 @@ from src.backend.journals import AccountInput, JournalDates, JournalDecision, Jo
 from src.backend.portfolio import FinancialPortfolio, FinancialSnapshot
 from src.backend.quick_document_api import QuickDocumentRoute, receive_and_extract
 from src.backend.quick_document_models import DocumentFormat, OcrEngine
+from src.backend.readiness import dependencies_ready
 from src.backend.service import AnalysisInput, Conflict, NotFound, Service, Warehouse
 from src.models import Model
 
@@ -76,6 +78,16 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
     bearer = HTTPBearer(auto_error=False)
     inference_slot = BoundedSemaphore(1)
     extraction_slot = BoundedSemaphore(1)
+    readiness_slot = BoundedSemaphore(1)
+    readiness_tasks: set[asyncio.Task] = set()
+
+    def probe_dependencies():
+        try:
+            return dependencies_ready(database, service.blob_root)
+        except Exception:
+            return False
+        finally:
+            readiness_slot.release()
 
     def actor(credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)]) -> UUID:
         if credentials is None:
@@ -130,6 +142,21 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
     @app.get("/health")
     def health():
         return {"status": "ok"}
+
+    @app.get("/ready")
+    async def ready():
+        available = False
+        if readiness_slot.acquire(blocking=False):
+            task = asyncio.create_task(run_in_threadpool(probe_dependencies))
+            readiness_tasks.add(task)
+            task.add_done_callback(readiness_tasks.discard)
+            # A cancelled HTTP request must not admit another probe while its thread still runs.
+            available = await asyncio.shield(task)
+        return JSONResponse(
+            status_code=200 if available else 503,
+            content={"status": "ready" if available else "unavailable"},
+            headers={"Cache-Control": "no-store"},
+        )
 
     @app.post("/businesses/{business}/journal/imports/preview")
     def preview_journal_import(business: UUID, value: JournalImport, user: Actor, response: Response):

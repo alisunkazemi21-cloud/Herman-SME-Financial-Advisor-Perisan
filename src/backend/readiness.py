@@ -1,0 +1,33 @@
+"""Point-in-time dependency probes, without tenant data or diagnostic disclosure."""
+
+import os
+import secrets
+from pathlib import Path
+from tempfile import NamedTemporaryFile
+
+import psycopg
+
+from src.backend.database import Database
+
+
+def dependencies_ready(database: Database, blob_root: Path) -> bool:
+    try:
+        with psycopg.connect(
+            database.dsn, connect_timeout=2, autocommit=True,
+            options="-c statement_timeout=2000 -c lock_timeout=500 -c default_transaction_read_only=on",
+        ) as connection:
+            connection.execute("SELECT pack_uses FROM herman.analysis_runs WHERE false")
+            connection.execute("SELECT id FROM herman.pack_definitions WHERE false")
+            connection.execute("SELECT definition_id FROM herman.pack_decisions WHERE false")
+        expected = secrets.token_bytes(32)
+        with NamedTemporaryFile(mode="w+b", prefix=".herman-ready-", dir=blob_root) as probe:
+            probe.write(expected)
+            probe.flush()
+            os.fsync(probe.fileno())
+            probe.seek(0)
+            if probe.read() != expected:
+                return False
+        return True
+    except Exception:
+        # Dependency messages can contain credentials, connection details or private paths.
+        return False
