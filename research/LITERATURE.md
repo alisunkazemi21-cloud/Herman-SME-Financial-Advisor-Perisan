@@ -64,3 +64,7 @@ The IFRS Foundation's [IAS 7 reference text, paragraph 9](https://www.ifrs.org/c
 ## Temporary parser lifecycle — 2026-10-11
 
 Reviewed Microsoft's [Job Object documentation](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects): ordinary child processes inherit job membership, and kill-on-close or explicit job termination can terminate the group. Reviewed Python's [subprocess contract](https://docs.python.org/3/library/subprocess.html): supplied environments replace inheritance, and timeout handling must account for child termination and waiting. For Quick intake, use a startup handshake so containment is established before parsing or OCR can create descendants. On POSIX, use a new session/process group. These are process-lifecycle controls, not evidence of protection from a compromised parser or host administrator. Local and CI checks must exercise actual cleanup rather than infer it from API names.
+
+## Dated alias exclusion — 2026-10-25
+
+Reviewed PostgreSQL 17 [btree_gist](https://www.postgresql.org/docs/17/btree-gist.html) and [range constraints](https://www.postgresql.org/docs/17/rangetypes.html#RANGETYPES-CONSTRAINT). The extension supports UUID/text equality in a GiST index, and range exclusion can reject overlapping periods for the same identity key. Use this for business/SKU interval exclusion; it does not itself prove source approval, RLS or immutable-history correctness, which require separate guards and tests.

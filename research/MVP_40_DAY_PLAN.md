@@ -64,3 +64,5 @@ Keep documentation in English and app/data in Persian. At the later UI checkpoin
 ## Implementation update — October 25
 
 The independent dependency-readiness slice in M40-1 is verified within [its documented scope](../runs/readiness-2026-10-25/README.md): 407 Windows passes / one skip and 406 Linux passes / two skips. M40-1 remains in progress because C16 historical bindings, item/SKU lifecycle and public workflow acceptance remain open. Customer access remains unconfirmed.
+
+The dated item-alias/import-receipt slice also passed [Windows/Linux verification](../runs/item-aliases-2026-10-25/README.md): 418/417 passes respectively, with one/two skips. C16 remains open for historical pack-use binding, current label integration and public revision workflow acceptance.
