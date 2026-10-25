@@ -186,7 +186,7 @@ class Service:
             raise ValueError("idempotency key must contain 1–200 characters")
         digest = hashlib.sha256(canonical(dict(action=action, payload=payload)).encode()).hexdigest()
         # A concurrent duplicate may see an older repeatable-read snapshot. Retry only the
-        # idempotency-key conflict/serialization, never an unrelated domain uniqueness error.
+        # aborted serialization/deadlock transactions, never an unrelated domain uniqueness error.
         for attempt in range(3):
             try:
                 with self.database.transaction(actor, business, write=True, reviewer=reviewer) as c:
@@ -210,9 +210,9 @@ class Service:
                         raise Conflict("این کلید قبلاً برای درخواست متفاوت استفاده شده است") from exc
                     return previous["result_id"]
                 raise
-            except psycopg.errors.SerializationFailure:
+            except (psycopg.errors.SerializationFailure, psycopg.errors.DeadlockDetected):
                 if attempt == 2:
-                    raise
+                    raise Conflict("تعارض هم‌زمان رخ داد؛ درخواست را دوباره تلاش کنید") from None
         raise RuntimeError("unreachable")
 
     def document(self, actor: UUID, business: UUID, key: str, name: str, media_type: str, content: bytes) -> UUID:

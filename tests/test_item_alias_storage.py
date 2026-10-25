@@ -14,9 +14,10 @@ from test_backend import backend as backend_fixture
 from test_backend import database as database_fixture
 from test_tabular_imports import setup_import
 
+from src.backend.catalog import Catalog, ItemDecision
 from src.backend.database import migrate
 from src.backend.inventory import Item, Movement
-from src.backend.service import insert
+from src.backend.service import Conflict, Warehouse, insert
 
 backend = backend_fixture
 database = database_fixture
@@ -131,7 +132,7 @@ def test_concurrent_items_cannot_claim_overlapping_alias(labels):
         try:
             review(b, identity, when=when)
             return "approved"
-        except psycopg.errors.ExclusionViolation:
+        except (psycopg.errors.ExclusionViolation, psycopg.errors.DeadlockDetected):
             return "conflict"
 
     with ThreadPoolExecutor(max_workers=2) as pool:
@@ -139,6 +140,62 @@ def test_concurrent_items_cannot_claim_overlapping_alias(labels):
     assert len(at(b, "SHARED", when)) == 1
     with b["db"].transaction(b["owner"], b["business"]) as c:
         assert c.execute("SELECT count(*) AS n FROM herman.item_decisions WHERE approved").fetchone()["n"] == 1
+
+
+def test_service_concurrent_alias_reviews_commit_one_decision(labels):
+    b, item, document = labels
+    other = Item(id=uuid4(), business_id=b["business"], sku="OTHER", name_fa="دیگر", base_unit="each")
+    b["service"].catalog(b["owner"], b["business"], "other", other)
+    proposals = [propose(b, target, document, sku="SHARED") for target in (item, other)]
+    value = ItemDecision(approved=True, reason_fa="بررسی شد",
+                         effective_at=datetime.now(timezone.utc)+timedelta(days=1))
+    catalog = Catalog(b["service"])
+
+    def attempt(identity):
+        try:
+            catalog.decide_item(b["owner"], b["business"], str(identity), identity, value)
+            return "approved"
+        except (psycopg.errors.ExclusionViolation, Conflict):
+            return "conflict"
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        assert sorted(pool.map(attempt, proposals)) == ["approved", "conflict"]
+    assert len(at(b, "SHARED", value.effective_at)) == 1
+    with b["db"].transaction(b["owner"], b["business"]) as c:
+        assert c.execute("SELECT count(*) AS n FROM herman.item_decisions WHERE approved").fetchone()["n"] == 1
+        assert c.execute("SELECT count(*) AS n FROM herman.audit_events WHERE action='item.reviewed'").fetchone()["n"] == 1
+
+
+@pytest.mark.parametrize("failures", [1, 3])
+def test_deadlock_retry_rolls_back_data_keys_and_audit(backend, monkeypatch, failures):
+    b = backend
+    service = b["service"]
+    original = service._audit
+    calls = []
+
+    def interrupted(*args):
+        calls.append(True)
+        if len(calls) <= failures:
+            raise psycopg.errors.DeadlockDetected("private transaction details")
+        return original(*args)
+
+    value = Warehouse(id=uuid4(), business_id=b["business"], name="انبار آزمون")
+    with monkeypatch.context() as patch:
+        patch.setattr(service, "_audit", interrupted)
+        if failures == 3:
+            with pytest.raises(Conflict, match="تعارض"):
+                service.catalog(b["owner"], b["business"], "deadlock", value)
+            assert len(calls) == 3
+            with b["db"].transaction(b["owner"], b["business"]) as c:
+                assert c.execute("SELECT 1 FROM herman.warehouses WHERE id=%s", (value.id,)).fetchone() is None
+                assert c.execute("SELECT 1 FROM herman.idempotency_keys WHERE key='deadlock'").fetchone() is None
+        else:
+            assert service.catalog(b["owner"], b["business"], "deadlock", value) == value.id
+            assert len(calls) == 2
+    assert service.catalog(b["owner"], b["business"], "deadlock", value) == value.id
+    with b["db"].transaction(b["owner"], b["business"]) as c:
+        assert c.execute("SELECT count(*) AS n FROM herman.warehouses WHERE id=%s", (value.id,)).fetchone()["n"] == 1
+        assert c.execute("SELECT count(*) AS n FROM herman.audit_events WHERE entity_id=%s", (value.id,)).fetchone()["n"] == 1
 
 
 def test_raw_role_tenant_and_projection_guards(labels):
