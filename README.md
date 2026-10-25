@@ -22,7 +22,7 @@ Latest local C16 slice: [historical pack checks and reviewed resolutions](runs/p
 
 Dashboard pricing is now [specified](research/PRICING.md): ingredients, packaging, waste, preparation/operating costs, comparable competitor prices, customer price evidence, desired margin, and product/activity contribution. The calculator and screen are planned after backend dependencies; existing portfolio KPIs remain separate.
 
-The [shared historical pack interpreter](runs/pack-interpreter-2026-10-25/README.md) is now implemented and passed 99 new/dated/legacy arithmetic checks. It supplies v3 provenance receipts, conservative normalization and bounded nonnumeric capture contexts. Live analysis, freshness and duplicate routes still need to consume it; C16 remains open. Publishing and database verification await the user-authorized retry window after temporary connectivity failures.
+The [shared historical pack interpreter](runs/pack-interpreter-2026-10-25/README.md) is now implemented and passed 99 new/dated/legacy arithmetic checks. It supplies v3 provenance receipts, conservative normalization and bounded nonnumeric capture contexts. Live analysis, freshness and duplicate routes still need to consume it; C16 remains open. The authorized reconnection succeeded: the full local PostgreSQL suite passed **487 tests / one real-OCR skip**, and the final readiness rerun passed nine tests. GitHub publishing and new Linux CI remain pending because automatic permission review timed out before the push ran.
 
 ## Backend workflow
 

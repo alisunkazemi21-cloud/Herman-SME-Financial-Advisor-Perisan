@@ -31,3 +31,7 @@ The local code commit is complete. Shell pushes outside the sandbox were not exe
 Next: one binding-aware selector shared by new analyses, freshness comparison and duplicate normalization; capture recipe checks only on authorized writes; retain future-event dynamic selection and unchanged earlier receipts. Then current-label and public revision workflow acceptance. Real OCR/model quality, coordinated restore, complete 1,000-business workload and pilot outcomes remain open.
 
 The owner's new pricing request is recorded as a [designed dashboard/backend extension](../../research/PRICING.md), not implemented functionality. It includes costs, market/customer evidence, target margins and product/activity contribution. It does not bypass C16 or release gates.
+
+## Authorized reconnection follow-up
+
+The previously pending restricted-role readiness rerun is now verified. After the user resumed access, the focused readiness/binding suite passed 22 tests, and the full local PostgreSQL suite passed 487 / one real-OCR skip. The missing development-only review-history index was aligned with the unpublished migration, followed by nine readiness passes. GitHub publication/new Linux CI remain unverified. [Exact reconnection evidence and revisions](../pack-interpreter-2026-10-25/README.md#reconnection-and-full-local-regression). Live binding-aware consumers remain open.

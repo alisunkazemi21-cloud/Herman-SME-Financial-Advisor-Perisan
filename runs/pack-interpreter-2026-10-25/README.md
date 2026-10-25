@@ -18,7 +18,7 @@ Independent review identified two missing chronology/provenance checks: a review
 
 Marimo check exited zero with the existing inaccessible user-config warnings; the notebook remains unchanged for this backend-only slice. Graphify code-only extraction/report: **1,565 nodes, 5,052 relationships, 95 communities**. No semantic/model extraction or measured token-saving claim. Graph artifacts remain local.
 
-## Integration gate and current holds
+## Integration gate and retry history
 
 `Service.analyze`, freshness and duplicate matching still use their previous dated-timeline paths. In particular, the live duplicate path can still compare raw unresolved pack values; the pure normalizer supports the required fix but does not change that route yet. Do not claim live binding protection, a new full suite, PostgreSQL integration, Linux CI, capacity or real-data acceptance from this run.
 
@@ -28,4 +28,16 @@ The local PostgreSQL reachability command did not execute because automatic perm
 
 ## Authorized reconnection attempt
 
-The user explicitly resumed Git commits, publication and database access. Two elevated startup requests timed out before execution in automatic permission review. The default `pg_ctl` attempt failed with Windows restricted-token error 87. Starting the same existing cluster directly with `postgres.exe` succeeded in the sandbox; after crash recovery, PostgreSQL reported ready at 21:22:13 Tehran and `pg_isready` accepted connections. No reset or restore was performed. The restricted-role readiness and binding suites are running; passing results will be recorded only after their process exits. The focused pure inventory regression was repeated: **99 passed in 2.04 seconds**.
+The user explicitly resumed Git commits, publication and database access. Two elevated startup requests timed out before execution in automatic permission review. The default `pg_ctl` attempt failed with Windows restricted-token error 87. Starting the same existing cluster directly with `postgres.exe` succeeded in the sandbox; after crash recovery, PostgreSQL reported ready at 21:22:13 Tehran and `pg_isready` accepted connections. No reset or restore was performed. The restricted-role readiness and binding suites subsequently passed; the final scoped and full results are below. The focused pure inventory regression was repeated: **99 passed in 2.04 seconds**.
+
+## Reconnection and full local regression
+
+The founder explicitly resumed commits, GitHub publication and database access. The existing PostgreSQL 17.11 cluster recovered and accepted connections after a direct sandbox `postgres.exe` startup. Two elevated startup requests timed out in automatic permission review before execution; the sandbox `pg_ctl` attempt failed with restricted-token error 87. No data reset or restore was performed. The temporary server is an active test process, not production supervision or a restore rehearsal.
+
+The focused restricted-role readiness and binding regression passed **22 tests, one warning, in 57.84 seconds**. The full Windows PostgreSQL suite then passed **487 tests, one skipped real-OCR check, five warnings, in 748.65 seconds**. Application code is `3b8e81dad0530f056f953d5edb44e34e210996c8`; checkpoint HEAD when this full run began was `910faa0d9e6d36abb935836bd30a12e36a7569c2`. Only documentation changed during the run. This closes the previously pending local restricted-role readiness rerun and establishes the new full local regression result; it does not connect the unfinished consumers.
+
+A read-only schema inspection found versions 1–18 and a missing `pack_binding_review_history` index in this existing development database: it had received migration 18 before that index was added to the still-unpublished migration. After the full suite, only that index was created concurrently, under bounded lock/statement settings, and its definition and valid flag were checked. No migration was replayed and no record/receipt changed. Readiness was rerun after alignment: **nine passed, one warning, in 5.07 seconds**. Fresh isolated migration-upgrade coverage is included in the full suite.
+
+Ruff passed; Marimo check exited zero with existing host configuration-access warnings; the notebook is unchanged for this backend-only checkpoint. All **114 local Markdown links** in the synchronized checkpoint documents resolved. The pure suite was also rerun: **99 passed in 2.04 seconds**. Graphify code has not changed since the recorded 1,565-node refresh; no model extraction or measured token-saving claim is added.
+
+The default Git push failed to connect to GitHub port 443. Both authorized elevated push attempts timed out in automatic permission review before execution. Read-only connector branch listing worked, but a commit read later failed with a transport error. **Publication and new Linux CI remain unverified**; preserve the local commits and ordinary fast-forward publication path. No branch, pull request or rebuilt mirror history was created. The next engineering task remains trusted bounded binding selection/capture and consistent analysis/freshness/duplicate integration. C16 and the overall application goal remain open.
