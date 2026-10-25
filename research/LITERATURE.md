@@ -68,3 +68,7 @@ Reviewed Microsoft's [Job Object documentation](https://learn.microsoft.com/en-u
 ## Dated alias exclusion — 2026-10-25
 
 Reviewed PostgreSQL 17 [btree_gist](https://www.postgresql.org/docs/17/btree-gist.html) and [range constraints](https://www.postgresql.org/docs/17/rangetypes.html#RANGETYPES-CONSTRAINT). The extension supports UUID/text equality in a GiST index, and range exclusion can reject overlapping periods for the same identity key. Use this for business/SKU interval exclusion; it does not itself prove source approval, RLS or immutable-history correctness, which require separate guards and tests.
+
+## Transaction retry after deadlock — 2026-10-25
+
+PostgreSQL 17 documents [deadlock detection](https://www.postgresql.org/docs/17/explicit-locking.html#LOCKING-DEADLOCKS) and [whole-transaction retry](https://www.postgresql.org/docs/17/mvcc-serialization-failure-handling.html). Deadlock aborts can require retrying the transaction's complete decision logic. Retain a bounded retry budget and preserve idempotent, atomic application writes; constraint rejection remains a domain conflict.

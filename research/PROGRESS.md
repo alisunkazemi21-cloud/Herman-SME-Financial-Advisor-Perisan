@@ -125,3 +125,9 @@ At each checkpoint, update the last-verified/current-work markers in this map an
 ## C16 dated item aliases — October 25
 
 Implemented: migration 17 immutable label definitions/decisions, protected dated SKU projection, event-time import selection and retained source-definition IDs. Nine storage tests and forty import/correction checks passed. Independent review confirmed the scoped security/concurrency behavior. Full Windows regression passed **418 tests / one skip**; exact-code Linux CI passed **417 tests / two skips**. The alias slice is **verified** within [its documented scope](../runs/item-aliases-2026-10-25/README.md). Original item-list/analysis labels remain until the later label-selection integration; public revision routes stay gated.
+
+## C16 pack-use context identity — October 25
+
+New v2 calculation receipts identify originating fulfillments and complete recipe paths, including shared subrecipes reached through distinct branches. Legacy v1 context remains unknown. Focused Windows arithmetic passed **52 tests**, and final PostgreSQL analysis/case integration passed **two tests**. [Code-commit Linux CI](../runs/pack-use-context-2026-10-25/README.md) passed **426 tests / two skips**, plus Ruff/Marimo after the concurrency repair. The context identity slice is **verified** within its stated scope. This prepares persistent historical recipe binding; it does not close that gate or complete C16.
+
+Follow-up validation reopened alias concurrency after two later Linux runs encountered a native exclusion deadlock. A bounded whole-transaction retry repair passed **20 PostgreSQL tests**, including post-write rollback/idempotency/audit checks and recovery after exhaustion. Final repair CI passed **426 tests / two skips** at d6270a2, restoring the scoped verification. [The context follow-up](../runs/pack-use-context-2026-10-25/README.md) records the failed runs and repair CI; the initial passing alias results remain historical evidence.
