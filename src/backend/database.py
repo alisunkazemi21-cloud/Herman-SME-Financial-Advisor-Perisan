@@ -62,7 +62,7 @@ def migrate(admin_dsn: str, runtime_role: str = "herman_app") -> None:
         if existing is None:
             connection.execute(Path(__file__).with_name("schema.sql").read_text(encoding="utf-8"))
         versions = {row[0] for row in connection.execute("SELECT version FROM herman.schema_migrations")}
-        if not versions <= {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17} or 1 not in versions:
+        if not versions <= set(range(1, 19)) or 1 not in versions:
             raise ValueError("unsupported database schema version")
         if 2 not in versions:
             connection.execute(Path(__file__).with_name("migration_002.sql").read_text(encoding="utf-8"))
@@ -96,6 +96,8 @@ def migrate(admin_dsn: str, runtime_role: str = "herman_app") -> None:
             connection.execute(Path(__file__).with_name("migration_016.sql").read_text(encoding="utf-8"))
         if 17 not in versions:
             connection.execute(Path(__file__).with_name("migration_017.sql").read_text(encoding="utf-8"))
+        if 18 not in versions:
+            connection.execute(Path(__file__).with_name("migration_018.sql").read_text(encoding="utf-8"))
         if connection.execute("SELECT 1 FROM pg_roles WHERE rolname=%s", (runtime_role,)).fetchone() is None:
             connection.execute(sql.SQL("CREATE ROLE {} NOLOGIN NOSUPERUSER NOBYPASSRLS").format(
                 sql.Identifier(runtime_role)))
@@ -116,16 +118,21 @@ def migrate(admin_dsn: str, runtime_role: str = "herman_app") -> None:
                   "advisor_cases", "advisor_turns", "journal_accounts", "journal_entries",
                   "journal_lines", "journal_decisions", "journal_mappings", "journal_mapping_decisions",
                   "journal_reports", "journal_report_decisions", "journal_import_batches", "journal_import_sources",
-                  "pack_definitions", "pack_decisions", "item_definitions", "item_decisions"]
+                  "pack_definitions", "pack_decisions", "item_definitions", "item_decisions",
+                  "pack_binding_checks", "pack_binding_reviews"]
         for table in tables:
             connection.execute(sql.SQL("GRANT SELECT, INSERT ON herman.{} TO {}").format(
                 sql.Identifier(table), sql.Identifier(runtime_role)))
         connection.execute(sql.SQL("REVOKE INSERT ON herman.businesses FROM {}").format(sql.Identifier(runtime_role)))
         connection.execute(sql.SQL("GRANT SELECT ON herman.item_alias_periods TO {}").format(
             sql.Identifier(runtime_role)))
+        connection.execute(sql.SQL("GRANT SELECT ON herman.pack_binding_cutover, "
+            "herman.pack_definition_observations TO {}").format(sql.Identifier(runtime_role)))
         connection.execute(sql.SQL("GRANT UPDATE(status,attempts,available_at,lease_token,leased_until,error_code) "
             "ON herman.extraction_jobs TO {}").format(sql.Identifier(runtime_role)))
         for function in ("user_id()", "business_id()", "member_role(uuid)", "authenticate(text)",
-                         "create_business(text,text,text)", "list_businesses()"):
+                         "create_business(text,text,text)", "list_businesses()",
+                         "pack_binding_context(uuid,uuid,uuid,uuid,uuid[])",
+                         "pack_binding_candidates(uuid,uuid,timestamptz)"):
             connection.execute(sql.SQL("GRANT EXECUTE ON FUNCTION herman." + function + " TO {}").format(
                 sql.Identifier(runtime_role)))

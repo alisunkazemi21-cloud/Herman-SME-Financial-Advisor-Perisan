@@ -23,6 +23,11 @@ def dependencies_ready(database: Database, blob_root: Path) -> bool:
                                "JOIN herman.item_alias_periods a "
                                "ON (a.business_id,a.definition_id)=(d.business_id,d.id) WHERE false")
             connection.execute("SELECT item_definition_id FROM herman.record_sources WHERE false")
+            connection.execute("SELECT pack_binding_legacy FROM herman.records WHERE false")
+            connection.execute("SELECT captured_at FROM herman.pack_binding_cutover WHERE false")
+            connection.execute("SELECT observed_at FROM herman.pack_definition_observations WHERE false")
+            connection.execute("SELECT definition_id FROM herman.pack_binding_checks WHERE false")
+            connection.execute("SELECT definition_id FROM herman.pack_binding_reviews WHERE false")
         expected = secrets.token_bytes(32)
         with NamedTemporaryFile(mode="w+b", prefix=".herman-ready-", dir=blob_root) as probe:
             probe.write(expected)
