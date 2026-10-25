@@ -1,0 +1,9 @@
+# Separating observation, interpretation and calculation
+
+A definition's applicable interval and evidence that it was known before an event are different facts. The shared interpreter explicitly represents those facts alongside immutable checks and reviewer decisions. A late baseline cannot supply a factor for an existing unresolved check, while future quantities remain dynamically selected under the approved timeline.
+
+The pure engine has no clock, I/O, database writes or approval authority. It reuses inventory arithmetic rather than duplicating it. New v3 receipts preserve selected definition, observation, interpretation and optional check/review references; old v1/v2 tools and persisted history remain unchanged. A separate nonnumeric bounded trace records encountered source contexts, including a failed conversion, so later write integration can capture checks without fabricating numeric receipts or duplicating recipe traversal.
+
+Independent review exposed an impossible chronology that the first implementation accepted: a review before the chosen definition's observation. It also identified contradictory receipt provenance. Corrections now enforce these relationships, including observation before native approval/bound capture, valid migration labels, review chronology, exact converted quantities and evidence inclusion. Final focused validation passed 99 tests across new and existing engines. [Run evidence](../../runs/pack-interpreter-2026-10-25/README.md).
+
+This proves a deterministic component, not live database behavior. The selection adapter, write capture, snapshot hashing, legacy freshness and duplicate-normalization integration remain necessary. The user has kept SQL checks and publishing pending; those holds do not establish a passing gate or reduce the original application objective.

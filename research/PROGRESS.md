@@ -99,8 +99,8 @@ Business outcome: an owner can correct catalog or conversion definitions without
 
 | Stage | Current state | Observable exit |
 |---|---|---|
-| 1 · Design | **In progress** | [Initial contract](CATALOG_CORRECTIONS.md) sets identity, compatible revisions and historical meaning. The calculation envelope is fixed; migration and database lifecycle still need design. |
-| 2 · Implementation | **Partial: dated calculation, persistence and analysis integration** | Reviewed replacements preserve earlier definitions and receipts. |
+| 1 · Design | **Consumer integration under review** | [Contract](CATALOG_CORRECTIONS.md) sets identity, compatible revisions and historical meaning. Storage and pure interpretation are implemented; bounded selection/capture and legacy freshness still need integration acceptance. |
+| 2 · Implementation | **Partial: timelines, storage and shared pure interpreter** | Reviewed replacements and interpretation receipts preserve earlier history; live binding-aware consumers remain to connect. |
 | 3 · Validation | **Focused arithmetic passed; full workflow pending** | Independent arithmetic, compatibility, tenant/role, concurrent approval and historical-receipt checks pass. |
 | 4 · Publication | **Calculation slice pushed; full C16 pending** | Contract and checkpoint artifacts agree; a commit is pushed and its exact GitHub check result is recorded. |
 
@@ -142,3 +142,13 @@ Follow-up validation reopened alias concurrency after two later Linux runs encou
 ## Pricing dashboard scope — October 25
 
 The owner requested cost-based pricing plus competitor prices, customer ability to pay, desired margin and identification of profitable/key products and operations. [PRICING.md](PRICING.md) records input evidence, cost/waste/allocation rules, margin-versus-markup and fee scenarios, contribution/ranking criteria and acceptance. Status: **designed, implementation planned**. Backend and owner UI dependencies remain explicit; this adds no observed customer profitability, demand or price-effectiveness claim.
+
+## C16 shared pack interpreter — October 25
+
+Local code `3b8e81d`: the pure historical interpreter and bound inventory envelope passed **99 related tests in 1.97 seconds**, plus Ruff/Marimo. Independent review found and verified repairs to definition/review chronology and receipt provenance, then verified the bounded nonnumeric capture trace. [Evidence](../runs/pack-interpreter-2026-10-25/README.md). This is a verified component, not a new full suite or live SQL integration. The existing duplicate path still needs to stop comparing unresolved raw pack quantities; the pure normalizer now supplies unavailable results for that case.
+
+Current implementation priority stays **bounded trusted state → authorized batch capture → new analysis snapshots → freshness and duplicate normalization**, followed by current labels/public revision workflow. No more independent calculator expansion is needed before those consumers are connected. Earlier snapshots/hashes/cases stay unchanged. Legacy pack freshness requires explicit unknown-context handling, not fabricated IDs.
+
+The founder reported internet trouble and authorized retrying SQL checks and GitHub publication ten minutes later (not before October 25, 17:12:44 UTC). The attempted heartbeat was not saved after automatic permission-review timeout; the active session will handle the retry. Neither pending verification is a passing release gate.
+
+Reconnection update: the user explicitly resumed Git and database access. The existing PostgreSQL cluster recovered and accepted connections after a direct sandbox startup; the readiness/binding regression is running. Elevated startup attempts still timed out before execution, and no new passing SQL result or remote publication is claimed yet.
