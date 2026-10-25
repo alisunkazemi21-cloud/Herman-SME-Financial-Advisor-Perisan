@@ -22,7 +22,7 @@ Implemented under M40-1: separate `/ready` database feature and evidence-root I/
 | Current implementation | **C16 · Reviewed catalog/unit correction** | [Compatibility and lifecycle contract](CATALOG_CORRECTIONS.md) defines prospective revisions and immutable history. The dated calculator and internal pack revision storage/review are implemented; public workflow integration remains open. |
 | Most recently advanced | **S2 · Evidence and review + S4 · Advisor and knowledge** | Temporary document extraction, exact source locations, bounded cleanup and reusable unverified Quick sources. |
 | Next segment | **S3 · Financial and inventory core** | Dated aliases now resolve tabular imports and retain original source receipts. Historical pack bindings and current label display integration remain before public revision routes. |
-| Later UI | **S5 · Owner experience** | Deferred by the user; portfolio data already exists in the backend. |
+| Later UI | **S5 · Owner experience** | Minimal Persian owner workflow follows backend gates. Existing portfolio data is available; pricing is now specified but not implemented. |
 
 Status vocabulary: **verified** means the stated scope has passing evidence; **design review** means requirements or source inspection is underway before implementation; **in progress** means implementation has started but acceptance is unfinished; **planned** means no implementation claim; **gate open** means required evidence is missing; **deferred** means deliberately postponed. A segment can have verified capabilities and open gates at the same time.
 
@@ -113,6 +113,7 @@ The selected C16 direction is reviewed prospective revisions for compatible cata
 | N3 · Operational and engine acceptance | Demonstrate the system's real operating limits and advice quality | Three labeled OCR invoices, actual local model evaluation, recoverable backup/restore and representative multi-business workloads |
 | N4 · Owner-facing portfolio | Business overview, cash-flow diagram, indicators and knowledge highlights | Resume UI work with user direction; browser/accessibility checks, Persian typography and tested Contour integration |
 | N5 · Accounting depth | Close/report controls and verified accounting rules | Authoritative standard versions, accountant-reviewed fixtures and independent expected results |
+| N6 · Pricing and product/activity contribution | [Designed dashboard extension](PRICING.md): costs, market/customer evidence and margin scenarios | Typed cost functions, reviewed time-aware inputs, source integrity, missing/stale states, bounded portfolio data and later Persian owner workflow; no implementation claim yet |
 
 ## Pilot delivery gate
 
@@ -131,3 +132,13 @@ Implemented: migration 17 immutable label definitions/decisions, protected dated
 New v2 calculation receipts identify originating fulfillments and complete recipe paths, including shared subrecipes reached through distinct branches. Legacy v1 context remains unknown. Focused Windows arithmetic passed **52 tests**, and final PostgreSQL analysis/case integration passed **two tests**. [Code-commit Linux CI](../runs/pack-use-context-2026-10-25/README.md) passed **426 tests / two skips**, plus Ruff/Marimo after the concurrency repair. The context identity slice is **verified** within its stated scope. This prepares persistent historical recipe binding; it does not close that gate or complete C16.
 
 Follow-up validation reopened alias concurrency after two later Linux runs encountered a native exclusion deadlock. A bounded whole-transaction retry repair passed **20 PostgreSQL tests**, including post-write rollback/idempotency/audit checks and recovery after exhaustion. Final repair CI passed **426 tests / two skips** at d6270a2, restoring the scoped verification. [The context follow-up](../runs/pack-use-context-2026-10-25/README.md) records the failed runs and repair CI; the initial passing alias results remain historical evidence.
+
+## C16 historical pack checks/reviews — October 25
+
+**Locally validated, publication/full CI pending.** Migration 18 and internal `PackBindings` now preserve bound/unresolved historical interpretations, source observation provenance, canonical recipe-use identity and separate evidenced reviewer decisions. Final affected Windows PostgreSQL verification passed **68 tests**; readiness unit checks passed **eight**, with its restricted-PostgreSQL case not rerun after automatic approval-review timeouts. Ruff/Marimo passed. Code commit `f41c8fb` is local; shell and connector publication attempts timed out in automatic permission review. No new remote CI result is claimed. [Run evidence](../runs/pack-bindings-2026-10-25/README.md).
+
+**Next observable exit:** new analysis, freshness and duplicate matching share binding-aware selection while retaining future-event dynamics and immutable earlier receipts. These consumers still use the previous dated timeline; the new storage slice does not yet change live calculations. Public revision routes and current-label integration remain gated. C15 stays the last fully accepted checkpoint.
+
+## Pricing dashboard scope — October 25
+
+The owner requested cost-based pricing plus competitor prices, customer ability to pay, desired margin and identification of profitable/key products and operations. [PRICING.md](PRICING.md) records input evidence, cost/waste/allocation rules, margin-versus-markup and fee scenarios, contribution/ranking criteria and acceptance. Status: **designed, implementation planned**. Backend and owner UI dependencies remain explicit; this adds no observed customer profitability, demand or price-effectiveness claim.

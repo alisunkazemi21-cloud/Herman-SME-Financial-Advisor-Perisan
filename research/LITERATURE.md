@@ -72,3 +72,7 @@ Reviewed PostgreSQL 17 [btree_gist](https://www.postgresql.org/docs/17/btree-gis
 ## Transaction retry after deadlock — 2026-10-25
 
 PostgreSQL 17 documents [deadlock detection](https://www.postgresql.org/docs/17/explicit-locking.html#LOCKING-DEADLOCKS) and [whole-transaction retry](https://www.postgresql.org/docs/17/mvcc-serialization-failure-handling.html). Deadlock aborts can require retrying the transaction's complete decision logic. Retain a bounded retry budget and preserve idempotent, atomic application writes; constraint rejection remains a domain conflict.
+
+## Pricing and contribution — 2026-10-25
+
+Reviewed the [SBA break-even explanation](https://www.sba.gov/counseling/plan-your-business/) for fixed/variable costs and contribution terminology. Reviewed the official [XRB NZ IAS 2 publication, paragraphs 11–16](https://standards.xrb.govt.nz/standards-navigator/nz-ias-2/) for acquisition/conversion costs, normal-capacity production overhead allocation and excluded abnormal waste. The New Zealand standard is an equivalent primary publication, not evidence of Iranian compliance. Direct opening of the IFRS Foundation's 2021 IAS 2 PDF redirected to a subscription page; search excerpts are not a claim of full-text access. These sources inform the planned [pricing contract](PRICING.md); customer demand, competitor comparisons and effective prices require separate business evidence.

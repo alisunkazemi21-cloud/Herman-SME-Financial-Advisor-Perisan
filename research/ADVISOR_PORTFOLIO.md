@@ -2,6 +2,8 @@
 
 Checkpoint: 2026-10-08. Backend data only; the user explicitly deferred the visible portfolio screen.
 
+October 25 extension: the owner requested [pricing and product/activity contribution](PRICING.md) in the business dashboard. Its contract is designed; calculations, persistence, routes and screen are not implemented. Keep it separate from `portfolio.financial.v1` and its existing five indicators. Minimal owner UI follows the forty-day plan's backend gates.
+
 ## Scope
 
 This checkpoint adds reviewed business knowledge, read-only advisor context and a paginated portfolio of the authenticated user's businesses. It includes cash-flow diagram data and five financial indicators from reviewed financial snapshots. It does not implement a conversational model, automatic journal aggregation, a financial-statement parser, or a complete accounting dashboard.

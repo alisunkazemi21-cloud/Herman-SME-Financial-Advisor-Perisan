@@ -2,6 +2,11 @@
 
 This is a progress record, not a declaration that the whole product is complete.
 
+## October 25 active extensions
+
+- Historical pack-binding storage/review: migration 18 and internal services locally validated by 68 affected PostgreSQL tests and eight readiness unit checks. Analysis/freshness/duplicate integration remains open; publication/full CI are pending after automatic approval-review timeouts. [Evidence](../runs/pack-bindings-2026-10-25/README.md).
+- Dashboard pricing: the new [contract](PRICING.md) covers cost determination, competitor/customer evidence, desired margin and profitable/key products and operations. Status is designed, not implemented. Pricing effectiveness requires actual permissioned data and observed decisions/outcomes.
+
 ## Initial prototype and follow-up — 2026-10-05
 
 | Requirement | Evidence and status |

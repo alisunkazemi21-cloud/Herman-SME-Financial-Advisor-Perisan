@@ -31,3 +31,9 @@ The existing `/health` route is process liveness only. Add separate bounded read
 Other open release gates: operator credential renewal (provisioned credentials expire after 30 days), deployment supervision/TLS, database-plus-blob coordinated backup and isolated restore, real OCR/model evaluation, and representative concurrent workload testing. Existing backend CLI supports migration, provisioning, serving and workers; `tests/test_cli.py` tests the separate analysis CLI, not operator bootstrap. See `src/backend/cli.py`, `database.py`, `api.py`, `service.py`, `jobs.py`, `worker.py` and `tests/test_backend.py`, `tests/test_document_jobs.py`.
 
 The capacity target remains at least 1,000 business identities. Existing synthetic reads do not establish complete ingestion/worker/reporting capacity. Role descriptions claiming scale or speed are not benchmark evidence.
+
+## October 25 follow-up assignments
+
+Historical pack storage received independent review of canonical recipe paths, approved-successor provenance and cutover locking; all three findings were repaired and included in the lead's final 68-test affected PostgreSQL run. The lead then added receipt-preservation checks, schema-readiness probes and synchronized artifacts.
+
+A separate read-only pricing-contract assignment was dispatched using the installed Backend Architect brief as the requested role reference. It returned a design checklist but explicitly reported that no files were read or verified before interruption. Treat it as unverified suggestions, not independent approval of the pricing contract or evidence that the role brief was applied. The lead owns the current contract, primary-source review and integration decisions. No pricing implementation or new executable tool was installed by that assignment.

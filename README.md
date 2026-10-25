@@ -18,6 +18,10 @@ The local full PostgreSQL run passed **362 tests**, with **one real-OCR skip**. 
 
 Dependency monitoring: `/health` reports process liveness; `/ready` probes restricted database features and temporary evidence-root I/O with generic no-store responses. See [readiness scope and validation](runs/readiness-2026-10-25/README.md).
 
+Latest local C16 slice: [historical pack checks and reviewed resolutions](runs/pack-bindings-2026-10-25/README.md), migration 18. The affected PostgreSQL suite passed 68 tests; eight readiness unit checks also passed. Analysis/freshness/duplicate consumption remains the next integration gate. GitHub publication/full CI are pending after automatic permission-review timeouts; this is not complete C16 acceptance.
+
+Dashboard pricing is now [specified](research/PRICING.md): ingredients, packaging, waste, preparation/operating costs, comparable competitor prices, customer price evidence, desired margin, and product/activity contribution. The calculator and screen are planned after backend dependencies; existing portfolio KPIs remain separate.
+
 ## Backend workflow
 
 Business profile → evidence upload → extraction job → explicit CSV/XLSX mapping → inventory or journal proposals → human review → reconciliation / reviewed reports → portfolio and advisor context.

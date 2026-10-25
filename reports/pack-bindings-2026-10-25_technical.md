@@ -1,0 +1,11 @@
+# Historical pack-binding storage: technical report
+
+Migration 18 adds an immutable interpretation layer alongside original financial evidence. A locked cutover establishes which source records can receive a clearly labeled migration-derived interpretation. Native records are server-stamped as nonlegacy, including backdated inserts. Definition observations establish presence from capture time without inventing a legacy creation date.
+
+Usage keys include originating fulfillment and canonical ordered recipe paths. PostgreSQL derives item/event eligibility and rejects malformed topology, wrong units, cross-business references and future capture. Bound and unresolved checks never change. Separate owner/reviewer resolution records preserve rejection history and enforce one approved interpretation. The internal service verifies source bytes on approval and uses the existing atomic idempotency/audit transaction; bounded read methods do not write.
+
+Independent review repairs covered array bounds, approved-successor provenance and cutover lock ordering. Final affected PostgreSQL regression passed **68 tests**, and readiness unit checks passed **eight tests**. Ruff, whitespace and Marimo checks passed. This is focused Windows coverage, not a new full-suite or Linux result. Publication is pending after automatic approval-review timeouts; no remote branch, PR or new CI result is claimed. Exact code, commands, environment recovery and evidence limitations are in the [run record](../runs/pack-bindings-2026-10-25/README.md).
+
+Original source quantities and persisted legacy receipt representations/hashes remain unchanged in a fresh upgrade/reentry fixture. A stable legacy flag avoids relying on transaction IDs for this classification after logical copy; no restore drill is claimed. Existing detail sealing remains a separate recovery gate.
+
+This storage layer is not yet connected to live analysis, freshness or duplicate resolution. Complete C16 requires a shared selector, versioned binding-aware receipts, preserved future-event behavior, current labels and public workflow acceptance. The new [pricing contract](../research/PRICING.md) is design only, with explicit evidence, costing and missing-data requirements for later dashboard work.

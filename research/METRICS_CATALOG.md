@@ -59,3 +59,7 @@ Direct supermarket SKU sales generally need no recipe; packs, returns, waste, ex
 ## Portfolio financial indicators
 
 Version `portfolio.financial.v1` derives revenue, net income, net cash flow, current ratio and net margin from reviewed financial snapshots. Cash-flow chart data and numerical constants carry field-level evidence. See [formulas, units and unavailable-value behavior](ADVISOR_PORTFOLIO.md). These inputs are not automatic journal totals.
+
+## Pricing and contribution — designed extension
+
+The [pricing contract](PRICING.md) adds planned unit/batch cost breakdown, explicitly allocated scenario cost, unit/period contribution, target-price scenarios and contribution per constrained activity minute. Competitor observations and customer price evidence are separate comparisons/constraints. Each metric needs compatible dated cost, quantity, channel and fee evidence; absent inputs are not zero. Normal yield/waste is counted once, unexplained shortage is separate, margin differs from markup, and shared expenses are not deducted twice. These metrics are not implemented or folded into the five portfolio KPIs yet.
