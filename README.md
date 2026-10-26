@@ -18,11 +18,11 @@ The local full PostgreSQL run passed **362 tests**, with **one real-OCR skip**. 
 
 Dependency monitoring: `/health` reports process liveness; `/ready` probes restricted database features and temporary evidence-root I/O with generic no-store responses. See [readiness scope and validation](runs/readiness-2026-10-25/README.md).
 
-Latest local C16 slice: [historical pack checks and reviewed resolutions](runs/pack-bindings-2026-10-25/README.md), migration 18. The affected PostgreSQL suite passed 68 tests; eight readiness unit checks also passed. Analysis/freshness/duplicate consumption remains the next integration gate. GitHub publication/full CI are pending after automatic permission-review timeouts; this is not complete C16 acceptance.
+Latest C16 slice: [historical binding consumers](runs/binding-consumers-2026-10-25/README.md), code `3328736`, is published. New analysis, freshness and numeric duplicate matching now use the same supported historical interpretation. Exact-code Linux CI passed **513 tests / two skips**, plus Ruff and Marimo. The full Windows regression passed **514 tests / one real-OCR skip / five warnings / 862.56 seconds**. Current item-label display and reviewed public catalog routes remain before complete C16 acceptance.
 
 Dashboard pricing is now [specified](research/PRICING.md): ingredients, packaging, waste, preparation/operating costs, comparable competitor prices, customer price evidence, desired margin, and product/activity contribution. The calculator and screen are planned after backend dependencies; existing portfolio KPIs remain separate.
 
-The [shared historical pack interpreter](runs/pack-interpreter-2026-10-25/README.md) is now implemented and passed 99 new/dated/legacy arithmetic checks. It supplies v3 provenance receipts, conservative normalization and bounded nonnumeric capture contexts. Live analysis, freshness and duplicate routes still need to consume it; C16 remains open. The authorized reconnection succeeded: the full local PostgreSQL suite passed **487 tests / one real-OCR skip**, and the final readiness rerun passed nine tests. GitHub publishing and new Linux CI remain pending because automatic permission review timed out before the push ran.
+The [shared historical pack interpreter](runs/pack-interpreter-2026-10-25/README.md) remains separately tested with 99 related arithmetic checks. Its v3 receipts and bounded context trace now feed the live consumer integration above. Prior analyses and cases retain their saved receipts; legacy pack context can be explicitly unknown.
 
 ## Backend workflow
 
