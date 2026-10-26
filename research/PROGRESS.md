@@ -1,27 +1,27 @@
 # Herman development map
 
-Updated: **2026-10-26** · Active phase: **Backend workflows** · Last verified checkpoint: **C15 — Stateless Quick document intake** · Current work: **C16 implementation**
+Updated: **2026-10-26** · Active phase: **Backend workflows** · Last verified checkpoint: **C16 — Reviewed catalog/unit correction** · Next work: **C17 completeness/action contract (planned)**
 
-**Last delivered:** temporary document extraction supplies unverified, source-linked text to Quick without business history or persistent records. The local full PostgreSQL run passed **362 tests**, with **one real-OCR skip**; final Quick checks passed **86 tests**, including all **50 intake cases**. A POSIX descendant cleanup race failed the first Linux run; [the repair run](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38315758134) passed **362 tests** with two skips, then Ruff and Marimo checks. **Current work:** C16 event-time calculation implemented ([slice evidence](../runs/dated-inventory-2026-10-13/README.md)): 387 local passes / one skip; 386 Linux passes / two skips. Pack revision storage and internal human review passed 396 Windows tests / one skip and 395 Linux tests / two skips ([persistence evidence](../runs/pack-catalog-2026-10-13/README.md)); pack analysis/freshness/duplicate integration passed 398 Windows tests / one skip and 397 Linux tests / two skips ([evidence](../runs/pack-integration-2026-10-13/README.md)); dated item aliases/import receipts passed 418 Windows tests / one skip and 417 Linux tests / two skips; historical pack bindings, current label display integration and public routes remain open.
+**Last delivered:** C16's complete compatible-edit backend workflow: published dated labels, human-reviewed item/SKU and pack revisions, historical-use checks/resolutions, event-time import identity, shared analysis/freshness/duplicate interpretation and immutable source/analysis/case history. Code `f877b9b` passed **544 Windows tests / one real-OCR skip** and **543 Linux tests / two skips**, then Ruff/Marimo. [Acceptance matrix and run](../runs/catalog-workflow-2026-10-26/README.md). **Next:** category-level evidence completeness and reviewed investigation/action records under the forty-day plan. No C17 implementation is claimed yet.
 
 This map separates capabilities from acceptance gates. A verified checkpoint means its documented scope passed checks; it does not mean every feature in that segment is finished. There is no overall percentage because engine quality, operational readiness and deferred UI are different kinds of work.
 
 ## Forty-day delivery target
 
-**Day 1: October 24 · Day 40: December 2, 2026.** The founder is available full-time and will approach a pilot business in week one; access remains unconfirmed. Follow the [dated milestones](MVP_40_DAY_PLAN.md) and [specialist responsibilities](AGENT_TEAM.md). This planning update closes no implementation gate. Backend acceptance comes first, followed by a minimal Persian owner workflow. Earlier UI-deferral labels below describe the prior checkpoint state.
+**Day 1: October 24 · Day 40: December 2, 2026.** The founder is available full-time and will approach a pilot business in week one; access remains unconfirmed. Follow the [dated milestones](MVP_40_DAY_PLAN.md) and [specialist responsibilities](AGENT_TEAM.md). C16 is accepted; pilot readiness and the other delivery gates remain open. Backend acceptance comes first, followed by a minimal Persian owner workflow. Earlier UI-deferral labels below describe the prior checkpoint state.
 
 ## Independent reliability slice: dependency readiness
 
-Implemented under M40-1: separate `/ready` database feature and evidence-root I/O probes, generic no-store responses, database timeout settings and per-process single-flight admission retained through HTTP cancellation. The scoped PostgreSQL readiness/backend suite passed **15 tests**; independent review found and verified a cancellation repair. Full Windows regression passed **407 tests / one skip**; Linux code-commit CI passed **406 tests / two skips**, plus Ruff and Marimo. This reliability slice is **verified** within [its documented scope](../runs/readiness-2026-10-25/README.md). C16, restore, engine-quality and full workload-capacity gates remain open.
+Implemented under M40-1: separate `/ready` database feature and evidence-root I/O probes, generic no-store responses, database timeout settings and per-process single-flight admission retained through HTTP cancellation. The scoped PostgreSQL readiness/backend suite passed **15 tests**; independent review found and verified a cancellation repair. Full Windows regression passed **407 tests / one skip**; Linux code-commit CI passed **406 tests / two skips**, plus Ruff and Marimo. This reliability slice is **verified** within [its documented scope](../runs/readiness-2026-10-25/README.md). Restore, engine-quality and full workload-capacity gates remain open; C16 acceptance is recorded below.
 
 ## You are here
 
 | Position | Milestone | State / evidence |
 |---|---|---|
-| Last verified | **C15 · Stateless Quick document intake** | [Run record](../runs/quick-documents-2026-10-12/README.md): 362 full-suite passes / one OCR skip, followed by 86 final Quick checks. [GitHub checks](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/workflows/tests.yml). |
-| Current implementation | **C16 · Reviewed catalog/unit correction** | [Compatibility and lifecycle contract](CATALOG_CORRECTIONS.md) defines prospective revisions and immutable history. The dated calculator and internal pack revision storage/review are implemented; public workflow integration remains open. |
-| Most recently advanced | **S3 · Financial and inventory core** | Historical conversion now governs live analysis, freshness and numeric duplicate matching. Exact-code Linux CI passed 513 tests / two skips. [Evidence](../runs/binding-consumers-2026-10-25/README.md). |
-| Next segment | **S3 · Financial and inventory core** | Finish current item-label presentation and reviewed public catalog/binding routes, retaining the verified historical interpretation and earlier receipts. |
+| Last verified | **C16 · Reviewed catalog/unit correction** | [Accepted workflow](../runs/catalog-workflow-2026-10-26/README.md): 544 Windows passes / one skip, 543 Linux passes / two skips at code `f877b9b`. |
+| Next contract | **C17 · Completeness and reviewed actions — planned** | Define evidence categories, explicit no-event assertions, reviewed investigations and follow-up; no implementation claim yet. |
+| Most recently advanced | **S2 + S3 · Evidence/review and financial/inventory core** | Current labels and public reviewed catalog/binding operations now complete the historical interpretation workflow. [API guide](CATALOG_API.md). |
+| Next segment | **S2 + S3 · Reliable pilot evidence** | Category-level completeness and accountable reviewed follow-up, retaining missing/stale/unknown states. |
 | Later UI | **S5 · Owner experience** | Minimal Persian owner workflow follows backend gates. Existing portfolio data is available; pricing is now specified but not implemented. |
 
 Status vocabulary: **verified** means the stated scope has passing evidence; **design review** means requirements or source inspection is underway before implementation; **in progress** means implementation has started but acceptance is unfinished; **planned** means no implementation claim; **gate open** means required evidence is missing; **deferred** means deliberately postponed. A segment can have verified capabilities and open gates at the same time.
@@ -42,8 +42,15 @@ flowchart TD
     O[Quick document upload] -->|temporary local extraction| J
     K --> L[General draft context / financial calculations]
     L -. real model evaluation pending .-> N[Validated local advice]
-    H -. user deferred .-> M[Visible portfolio screen]
+    H -. planned after backend gates .-> M[Minimal Persian owner workflow]
     I -. real model evaluation pending .-> N[Validated local advice]
+    P[Catalog revision proposal] --> Q[Human decision and effective time]
+    Q --> R[Published dated catalog]
+    R --> D
+    R --> G
+    G -->|unsupported historical package use| T[Immutable usage check]
+    T --> U[Human evidenced resolution]
+    U --> G
 ```
 
 Solid paths exist in the backend within their documented bounds. Dashed paths show work or validation still outstanding. Advisors cannot approve or post financial records.
@@ -54,9 +61,9 @@ Solid paths exist in the backend within their documented bounds. Dashed paths sh
 |---|---|---|
 | S1 · Business foundation | Profiles, membership, tenant isolation, restricted database role, idempotent writes and audit events | Backup/restore and full application capacity. Existing 1,000-business benchmark covers synthetic reads only. |
 | S2 · Evidence and review | Immutable uploads, queue recovery, CSV/XLSX mapping, duplicate decisions; separate bounded temporary Quick extraction with source locations | Three labeled real OCR invoices; semantic invoice matching; broader PDF/image financial-table mapping. |
-| S3 · Financial and inventory core | Recipes/consumption reconciliation, reviewed corrections and input freshness/impact; sealed recipe structure; balanced journals, reversals, reviewed report mappings and cash-flow/KPI payloads | Catalog correction, closing controls, gross bank-flow classification, larger reports and official accounting-standard verification. |
+| S3 · Financial and inventory core | Reconciliation, reviewed corrections/freshness; dated catalog and historical interpretation with public review; balanced journals and reviewed report/portfolio payloads | Category completeness/actions, closing controls, gross bank-flow classification, larger reports and official accounting verification. |
 | S4 · Advisor and knowledge | Reviewed knowledge/corrections, bounded context, local draft routes, immutable cases, stateless Quick questions/documents and twelve typed calculations | Actual local-model quality and reliable financial interpretation of varied documents. |
-| S5 · Owner experience | Earlier Persian RTL prototype; backend portfolio and five indicators | Visible business portfolio remains user-deferred. Licensed Kalameh assets are unavailable; Contour is planned for a later UI checkpoint. |
+| S5 · Owner experience | Earlier Persian RTL prototype; backend portfolio and five indicators | Minimal Persian owner workflow after backend gates, with Kalameh fallback until licensed assets are available and inspected Contour integration. |
 | S6 · Production validation | PostgreSQL regression tests, GitHub checks, evidence-preserving artifacts and local Graphify navigation | Restore drill, complete workload/capacity testing, real-engine acceptance and deployment hardening. |
 
 ## Checkpoint history
@@ -80,10 +87,11 @@ Tests listed below are historical full-suite results, not completion percentages
 | C13 · Oct 11 | Reviewed inventory replacements, sealed recipes and retained import ancestry | [277 passed; 1 skipped](INVENTORY_CORRECTIONS.md) |
 | C14 · Oct 11 | Input freshness/change impact; stale figures withheld from current advice; exact receipts retained | [313 passed; 1 skipped](INVENTORY_FRESHNESS.md); [exact-commit CI](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38168599926) |
 | **C15 · Oct 12** | **Temporary Quick documents with source references, cleanup and no business history** | **[362 passed; 1 skipped](QUICK_DOCUMENTS.md)**; final 86 Quick checks after locator fix |
+| **C16 · Oct 26** | **Reviewed compatible catalog changes, dated labels and historical-use resolution through the public API** | **[544 Windows passes / one skip; 543 Linux passes / two skips](../runs/catalog-workflow-2026-10-26/README.md)**; code `f877b9b`, Ruff/Marimo passed |
 
 Documentation-language, typography and Graphify checkpoints are supporting changes recorded in [validation](VALIDATION.md). They did not independently close a product capability gate.
 
-## Last verified checkpoint: C15
+## Previous checkpoint: C15
 
 Delivered: raw-byte local extraction, bounded source packing, exact page/row/image references, temporary process/file cleanup, no business-state access, explicit engine failures, credential recheck and sanitized no-store Quick responses. The full suite passed **362 tests** with one real-OCR skip. After preserving whitespace in sheet-name locators, all **86** focused Quick checks passed, including **50** intake cases. Ruff and whitespace checks passed. Extracted text and resubmitted metadata remain unverified; financial amounts require typed input.
 
@@ -93,25 +101,29 @@ Evidence: [contract](QUICK_DOCUMENTS.md), [run record](../runs/quick-documents-2
 
 These are intended work groups, not calendar promises. Each is complete only when its listed outcome has direct evidence.
 
-### C16 · Reviewed catalog/unit correction — in progress
+### C16 · Reviewed catalog/unit correction — accepted
 
 Business outcome: an owner can correct catalog or conversion definitions without rewriting the meaning of historical records or saved analyses.
 
 | Stage | Current state | Observable exit |
 |---|---|---|
-| 1 · Design | **Historical interpretation contract implemented** | [Contract](CATALOG_CORRECTIONS.md) sets identity, compatible revisions and historical meaning. Trusted selection/capture and legacy freshness now have joint scoped acceptance. Current labels and the remaining public workflow still need C16 acceptance. |
-| 2 · Implementation | **Live historical binding consumers implemented** | Analysis, freshness and duplicates share supported interpretation; current labels and public revision routes remain. |
-| 3 · Validation | **Exact-code Linux regression passed; full C16 workflow pending** | Independent arithmetic, compatibility, tenant/role, concurrent approval and historical-receipt checks pass. |
-| 4 · Publication | **Binding consumers pushed with passing CI; full C16 pending** | Contract and checkpoint artifacts agree; a commit is pushed and its exact GitHub check result is recorded. |
+| 1 · Design | **Accepted compatible-edit contract** | Stable identity, immutable history, prospective decisions and explicit unsupported dimension changes are fixed in [the contract](CATALOG_CORRECTIONS.md). |
+| 2 · Implementation | **Public workflow implemented** | Dated labels, item/pack proposals/decisions, historical checks/resolutions and shared consumers are available through authenticated bounded APIs. |
+| 3 · Validation | **Passed within C16 scope** | 544 Windows passes / one real-OCR skip; 543 Linux passes / two skips, with independent arithmetic, concurrency, tenant/role/source, migration and saved-receipt checks. |
+| 4 · Publication | **Code published with passing CI** | `f877b9b`, [exact-code CI](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/40307392553), [API guide](CATALOG_API.md) and synchronized checkpoint artifacts. |
 
-The selected C16 direction is reviewed prospective revisions for compatible catalog labels and pack factors; a base-unit dimension change requires a new item identity and explicit stock handover. The internal calculator captures dated definition uses; migration 15 stores pack definitions and decisions, and migration 17 stores dated item labels/SKU intervals and import-definition receipts. [Alias slice evidence](../runs/item-aliases-2026-10-25/README.md) records focused checks and passing Windows/Linux regression. Public routes, historical pack bindings and current label display integration remain to implement and verify. Broader semantic mapping, real OCR/model quality and operational acceptance remain separate gates. UI work remains deferred.
+C16 is accepted for compatible name/SKU and pack-factor revisions within the stated backend bounds. Cross-identity stock migration, a visible owner workflow, broader document understanding and production/customer acceptance remain separate. [Requirement-by-requirement evidence](../runs/catalog-workflow-2026-10-26/README.md#acceptance-mapping).
+
+### C17 · Evidence completeness and reviewed follow-up — planned
+
+Outcome: a weekly reconciliation can identify missing categories and retain accountable investigations/actions instead of treating record absence as proof of no activity. Distinguish reviewed no-event assertions, missing/late/conflicting evidence and actual observations. Retain reviewer, evidence, responsible owner, follow-up time and confirmed outcome without claiming a cause or saving from the variance alone. This is the next contract under M40-2; no implementation is claimed.
 
 | Next group | Expected outcome | Evidence needed to close it |
 |---|---|---|
 | N1 · General Quick Advisor | Request/context scope verified at C11 and temporary document intake at C15; real answer quality remains under N3 | [Quick inputs](QUICK_ADVISOR.md), [document intake](QUICK_DOCUMENTS.md) and real-engine evaluation |
-| N2 · Corrections and document understanding | Knowledge correction verified at C12, inventory correction at C13 and freshness at C14; catalog and broader document handling remain open | Catalog correction contracts, deterministic conflict resolution and realistic duplicate/non-duplicate fixtures |
+| N2 · Corrections and document understanding | Knowledge C12, inventory C13, freshness C14 and compatible catalog C16 verified; broader semantic document handling remains open | Realistic semantic duplicate/non-duplicate and mapping evidence |
 | N3 · Operational and engine acceptance | Demonstrate the system's real operating limits and advice quality | Three labeled OCR invoices, actual local model evaluation, recoverable backup/restore and representative multi-business workloads |
-| N4 · Owner-facing portfolio | Business overview, cash-flow diagram, indicators and knowledge highlights | Resume UI work with user direction; browser/accessibility checks, Persian typography and tested Contour integration |
+| N4 · Owner-facing portfolio | Business overview, cash-flow diagram, indicators and knowledge highlights | Implement the approved minimal owner flow after backend gates; verify browser/accessibility, Persian typography and inspected Contour integration. |
 | N5 · Accounting depth | Close/report controls and verified accounting rules | Authoritative standard versions, accountant-reviewed fixtures and independent expected results |
 | N6 · Pricing and product/activity contribution | [Designed dashboard extension](PRICING.md): costs, market/customer evidence and margin scenarios | Typed cost functions, reviewed time-aware inputs, source integrity, missing/stale states, bounded portfolio data and later Persian owner workflow; no implementation claim yet |
 
@@ -160,3 +172,7 @@ Latest validation: authorized database reconnection succeeded; **487 passed / on
 Code `33287366adc29c1e8483686b4070739f884f52ea` is published to `main`. Trusted metadata, batch capture/reload, final IDs/hash, isolated resolution-evidence verification, stable freshness comparison and per-record numeric duplicate normalization are implemented. Exact-code [Linux CI](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/40299373210) passed **513 tests / two skips / 15 warnings / 89.96 seconds**, plus Ruff and Marimo. Full Windows regression passed **514 tests / one real-OCR skip / five warnings / 862.56 seconds**. [Complete checkpoint evidence](../runs/binding-consumers-2026-10-25/README.md).
 
 Independent reviews found two budget defects; both were repaired and regression-tested. The lead implemented all code/tests; reviewers performed source inspection only. The user's renewed web authorization enabled ordinary Git publishing after earlier network/permission timeouts. PostgreSQL recovered the existing cluster and is locally reachable. Next implementation is current-label display and reviewed public routes. C16, real-engine quality, coordinated restore, complete workload capacity and pilot outcomes remain open.
+
+## C16 final acceptance — October 26
+
+Code `f877b9b0ee782caec53bfa3792e7453e94af187f` passed the complete Windows PostgreSQL suite (**544 passed / one real-OCR skip / five warnings / 777.37 seconds**) and [Linux CI](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/40307392553) (**543 passed / two skips / 15 warnings / 105.34 seconds**), followed by Ruff/Marimo. The [C16 acceptance mapping](../runs/catalog-workflow-2026-10-26/README.md#acceptance-mapping) links every compatible-edit requirement to public/restricted-SQL evidence. Source review's historical-use detail omission was repaired and verified. All checkpoint artifacts are synchronized; the notebook is unchanged for this backend-only slice. The next primary checkpoint is C17 completeness/actions; the broad application goal remains active.

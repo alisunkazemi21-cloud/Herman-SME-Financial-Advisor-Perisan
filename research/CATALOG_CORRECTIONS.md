@@ -1,10 +1,10 @@
 # Catalog and unit-definition corrections — C16 design contract
 
-Status: **in progress**, 2026-10-13. The event-time calculator and internal pack persistence/review are implemented; the complete reviewed catalog workflow is not yet accepted. The baseline remains C15 plus the POSIX cleanup repair at commit `1589a7e`. See the [progress map](PROGRESS.md) and [validation record](VALIDATION.md).
+Status: **accepted for compatible catalog edits**, October 26, 2026. Code `f877b9b` passed 544 Windows tests / one real-OCR skip and 543 Linux tests / two skips, plus Ruff/Marimo. See the [acceptance matrix](../runs/catalog-workflow-2026-10-26/README.md#acceptance-mapping) and [public API guide](CATALOG_API.md). The dated design/implementation sections below retain their historical context; the latest section records final acceptance.
 
-## Problem and current boundary
+## Original design problem and correction boundary
 
-An owner can discover that an item name or SKU is wrong, or that a pack contains a different quantity from the currently recorded conversion. The current `items` and `unit_conversions` rows are insert-only. Replacing their values in place would change the meaning of earlier stock counts, movements, recipe lines and saved analyses. The current calculator receives one catalog and conversion set for the whole request; it does not select definitions by event time. `unit_conversions` permits one `pack` factor per item. Any new definition must therefore change the selection and calculator contract, not merely add an edit endpoint.
+An owner can discover that an item name or SKU is wrong, or that a pack contains a different quantity from the currently recorded conversion. At the original design baseline, `items` and `unit_conversions` rows were insert-only. Replacing their values in place would change the meaning of earlier stock counts, movements, recipe lines and saved analyses. The original calculator received one fixed catalog/conversion set; the accepted implementation below now supplies dated selection. `unit_conversions` permits one `pack` factor per item. Any new definition must therefore change the selection and calculator contract, not merely add an edit endpoint.
 
 `g`, `ml` and `each` represent different physical dimensions. The current schema has no safe general conversion between them. A correction from one of these base units to another cannot silently keep the same item identity or reinterpret existing quantities.
 
@@ -72,7 +72,7 @@ Migration 15 adds `pack_definitions` and `pack_decisions`. Existing conversions 
 
 `Catalog` is an internal service using the existing idempotency and audit transaction. Proposal and approval verify source file hashes; rejection remains possible when the source is unavailable. History is paginated and the timeline derives end instants from approved successor decisions. No public revision route is added. Analysis now consumes the dated timeline through the integration below. Migration 15 establishes definition baselines only; historical per-record bindings require a later migration, preserving existing receipts.
 
-The initial persistence suite passed nine PostgreSQL tests, including an isolated database upgraded from migrations 1–14 and migrated twice without changing its legacy conversion. Full regression and publication evidence are recorded in [the persistence run](../runs/pack-catalog-2026-10-13/README.md). C16 remains in progress.
+The initial persistence suite passed nine PostgreSQL tests, including an isolated database upgraded from migrations 1–14 and migrated twice without changing its legacy conversion. Full regression and publication evidence are recorded in [the persistence run](../runs/pack-catalog-2026-10-13/README.md). At that October 13 slice, C16 remained in progress; final acceptance is recorded above and in the October 26 section.
 
 ## Implemented analysis integration
 
@@ -131,3 +131,11 @@ Code `3328736` connects the shared interpreter to all three live consumers. The 
 Freshness indexes stable version/cutover/legacy/observation/check/review content, excluding as-of clock passage. Unsupported legacy pack context is unknown; approved resolutions make prior current context stale, while saved receipts remain exact. Numeric duplicate candidates independently normalize each record and skip any unavailable side, including two unavailable values. Complete-comparison row/read-byte and final-envelope byte limits fail explicitly and cannot become partial approval permission.
 
 Full exact-code Linux CI passed 513 tests / two skips, plus Ruff and Marimo. The full Windows run passed **514 tests / one real-OCR skip / five warnings / 862.56 seconds**. Source review found and verified repairs to the unbounded helper metadata callback and final encoded-envelope overhead. [Run evidence](../runs/binding-consumers-2026-10-25/README.md). Current item-label presentation and reviewed public catalog/binding workflows are the next C16 work; public revision endpoints remain gated until their acceptance.
+
+## Current labels and public workflow — October 26, 2026
+
+Code `f877b9b` implements the remaining current-label and reviewed public workflow. `catalog.item_labels.v1` selects one published label per stable item at the reporting end, validates exact identity/text/instant agreement, joins the existing input budgets/hash and verifies selected revision evidence. Freshness compares selected label meaning and excludes only an off-scope derived interval-end change; legacy snapshots compare their recorded text without fabricated old definition IDs. Original items, dimensions/modes and source/import/analysis/case history remain unchanged.
+
+The [public API guide](CATALOG_API.md) fixes route names, roles, pagination, exact decimals, no-store/redacted handled errors and the catalog-versus-historical-use distinction. Manual captures use a source-key conflict clause with the existing bounded transaction retry. Public acceptance includes competing item/pack decisions, simultaneous recipe captures, explicit past-use resolution, alias conflict rollback, no backdated activation and selected-label-only evidence tampering.
+
+Lead scoped runs passed 51 joint and four final cases. Exact-code Linux CI passed 543 tests / two skips, Ruff and Marimo. Full Windows regression passed 544 tests / one real-OCR skip / five warnings in 777.37 seconds. [Acceptance matrix and synchronized evidence](../runs/catalog-workflow-2026-10-26/README.md). C16 is accepted within this compatible-edit backend contract; broader product and pilot gates remain separate.

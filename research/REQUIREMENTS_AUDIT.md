@@ -2,7 +2,13 @@
 
 This is a progress record, not a declaration that the whole product is complete.
 
-## October 25 active extensions
+## Latest accepted scope — October 26
+
+C16 compatible catalog review is accepted at `f877b9b`: published dated labels, human-reviewed item/pack revisions, historical-use capture/resolution and consistent analysis/freshness/duplicate behavior are available through authenticated APIs. Full Windows regression passed 544 / one real-OCR skip; exact-code Linux CI passed 543 / two skips, plus Ruff/Marimo. [Acceptance mapping](../runs/catalog-workflow-2026-10-26/README.md#acceptance-mapping) and [API contract](CATALOG_API.md). Prior source/import/analysis/case history remains unchanged.
+
+Next planned scope is C17 category completeness and reviewed follow-up actions. Pricing remains designed, with no new calculation/UI claim. The original broader advisor goal, actual model/OCR quality, accounting depth/official standards, coordinated restore, a complete 1,000-business workload, minimal Persian owner workflow and permissioned pilot/recurring-value evidence remain open. No overall product-completion claim is made.
+
+## Historical October 25 active extensions
 
 - Historical pack-binding storage/review: migration 18 and internal services locally validated by 68 affected PostgreSQL tests and eight readiness unit checks. Analysis/freshness/duplicate integration remains open; publication/full CI are pending after automatic approval-review timeouts. [Evidence](../runs/pack-bindings-2026-10-25/README.md).
 - Dashboard pricing: the new [contract](PRICING.md) covers cost determination, competitor/customer evidence, desired margin and profitable/key products and operations. Status is designed, not implemented. Pricing effectiveness requires actual permissioned data and observed decisions/outcomes.
