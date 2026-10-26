@@ -35,7 +35,9 @@ flowchart TD
     C --> D[Explicit CSV / XLSX mapping]
     D --> E[Inventory or journal proposals]
     E --> F[Human review and duplicate decisions]
-    F --> G[Reconciliation / financial reports]
+    F --> V[Reviewed category completeness]
+    V --> G[Reconciliation / financial reports]
+    V --> W[Missing evidence or provisional status]
     G --> H[Portfolio and business knowledge]
     H --> I[Business advisor and case history]
     J[Question / excerpts / typed figures] --> K[Stateless Quick Advisor]
@@ -51,6 +53,9 @@ flowchart TD
     G -->|unsupported historical package use| T[Immutable usage check]
     T --> U[Human evidenced resolution]
     U --> G
+    G --> Y[Proposed investigation and named owner]
+    W --> Y
+    Y --> Z[Review and outcome history]
 ```
 
 Solid paths exist in the backend within their documented bounds. Dashed paths show work or validation still outstanding. Advisors cannot approve or post financial records.
@@ -114,9 +119,11 @@ Business outcome: an owner can correct catalog or conversion definitions without
 
 C16 is accepted for compatible name/SKU and pack-factor revisions within the stated backend bounds. Cross-identity stock migration, a visible owner workflow, broader document understanding and production/customer acceptance remain separate. [Requirement-by-requirement evidence](../runs/catalog-workflow-2026-10-26/README.md#acceptance-mapping).
 
-### C17 · Evidence completeness and reviewed follow-up — planned
+### C17 · Evidence completeness and reviewed follow-up — in validation
 
-Outcome: a weekly reconciliation can identify missing categories and retain accountable investigations/actions instead of treating record absence as proof of no activity. Distinguish reviewed no-event assertions, missing/late/conflicting evidence and actual observations. Retain reviewer, evidence, responsible owner, follow-up time and confirmed outcome without claiming a cause or saving from the variance alone. This is the next contract under M40-2; no implementation is claimed.
+Outcome: a weekly reconciliation can identify missing categories and retain accountable investigations/actions instead of treating record absence as proof of no activity. Code `c585774` implements twelve dataset-bound evidence categories, explicit no-event claims, pending/stale/provisional guards and sequenced reviewed follow-up. The final coverage component passed 13 tests; lead action/API/metadata/timeout scope passed 33. A reproduced large-tenant query-plan defect was repaired and retested under a stricter SQL time budget. Full Windows regression and [exact-code CI](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/40355665508) are running. [Run and failed-development evidence](../runs/completeness-actions-2026-10-26/README.md) · [API guide](COMPLETENESS_ACTIONS_API.md). No C17 acceptance or pilot outcome is claimed yet.
+
+The founder requested a Persian owner interview catalog immediately after C17, covering market/customer research and voluntary sample records with separate product-research, OCR-evaluation and model-training opt-ins. The approved offer is one month of platform membership plus a cooperation gift; gift/activation details remain to be specified. [Queued brief](OWNER_INTERVIEW_CATALOG_BRIEF.md).
 
 | Next group | Expected outcome | Evidence needed to close it |
 |---|---|---|

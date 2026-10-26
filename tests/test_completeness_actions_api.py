@@ -10,12 +10,14 @@ from uuid import UUID, uuid4
 import psycopg
 import pytest
 from fastapi.testclient import TestClient
+from psycopg.conninfo import make_conninfo
 from test_backend import backend as backend_fixture
 from test_backend import database as database_fixture
 from test_backend import inventory_payload as inventory_fixture
 from test_backend import seed_inventory
 
 from src.backend.api import create_app
+from src.backend.coverage_models import CoverageProposal
 
 backend = backend_fixture
 database = database_fixture
@@ -125,8 +127,12 @@ def test_three_true_flags_cannot_replace_a_review(client, backend, inventory_pay
     assert saved["result"]["unexplained_shortage"] is None and saved["pack_uses"] == []
 
 
-def test_reviewed_coverage_roundtrip_enables_independent_inventory_arithmetic(client, backend, inventory_payload):
+@pytest.mark.parametrize("database_timezone", ["UTC", "Asia/Tehran"])
+def test_reviewed_coverage_roundtrip_enables_independent_inventory_arithmetic(
+    client, backend, inventory_payload, monkeypatch, database_timezone,
+):
     b = backend
+    monkeypatch.setattr(b["db"], "dsn", make_conninfo(b["db"].dsn, options="-c timezone=" + database_timezone))
     value = seed_inventory(b, inventory_payload, attest=False)
     proposal = reviewed_coverage(client, b, value)
     state = assessment(client, b, value)
@@ -134,7 +140,8 @@ def test_reviewed_coverage_roundtrip_enables_independent_inventory_arithmetic(cl
     assert state["snapshot"]["decision"]["assessment_id"] == proposal["id"]
     path = f"/businesses/{b['business']}/coverage"
     detail = checked(client.get(path + "/" + proposal["id"], headers=headers(b, "viewer")))
-    assert detail["assessment"] == {**proposal, "supersedes_id": None}
+    assert CoverageProposal.model_validate(detail["assessment"]) == CoverageProposal.model_validate(
+        {**proposal, "supersedes_id": None})
     assert detail["decision"]["approved"] is True
     page = checked(client.get(path, headers=headers(b, "viewer")))
     assert [row["id"] for row in page["assessments"]] == [proposal["id"]]
