@@ -12,9 +12,14 @@ import psycopg
 from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.encoders import jsonable_encoder
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import AwareDatetime, Field, ValidationError
+from starlette.datastructures import MutableHeaders
+from starlette.types import ASGIApp, Message, Receive, Send
+from starlette.types import Scope as ASGIScope
 
 from src.ai_agent.agent import FinancialAgent
 from src.backend.advisor import (
@@ -28,6 +33,7 @@ from src.backend.advisor import (
     quick_context,
 )
 from src.backend.cases import BusinessCases, CaseInput, TurnInput
+from src.backend.catalog import Catalog, ItemDecision, ItemProposal, PackDecision, PackProposal
 from src.backend.database import AccessDenied, Database
 from src.backend.imports import TabularImport, TabularImporter
 from src.backend.inventory import (
@@ -45,6 +51,7 @@ from src.backend.jobs import ExtractionInput, ExtractionQueue
 from src.backend.journal_imports import JournalImport, JournalImporter
 from src.backend.journal_reports import JournalReports, MappingInput, ReportInput, ReportReview, ReviewInput
 from src.backend.journals import AccountInput, JournalDates, JournalDecision, JournalInput, Journals
+from src.backend.pack_bindings import BindingCheckInput, BindingReviewInput, PackBindings
 from src.backend.portfolio import FinancialPortfolio, FinancialSnapshot
 from src.backend.quick_document_api import QuickDocumentRoute, receive_and_extract
 from src.backend.quick_document_models import DocumentFormat, OcrEngine
@@ -64,6 +71,28 @@ class DecisionInput(Model):
     duplicate_resolution: Literal["same_event", "distinct_event"] | None = None
 
 
+def _catalog_path(path: str) -> bool:
+    parts = path.split("/")
+    return len(parts) >= 4 and parts[1] == "businesses" and parts[3] in ("catalog", "pack-bindings")
+
+
+class _CatalogCacheHeaders:
+    def __init__(self, app: ASGIApp):
+        self.app = app
+
+    async def __call__(self, scope: ASGIScope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or not _catalog_path(scope["path"]):
+            await self.app(scope, receive, send)
+            return
+
+        async def no_store(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                MutableHeaders(scope=message)["Cache-Control"] = "no-store"
+            await send(message)
+
+        await self.app(scope, receive, no_store)
+
+
 def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent | None = None) -> FastAPI:
     app = FastAPI(title="Herman SME backend", version="0.2.0")
     service = Service(database, blob_root)
@@ -75,6 +104,8 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
     journal_importer = JournalImporter(service)
     queue = ExtractionQueue(service)
     importer = TabularImporter(service)
+    catalog = Catalog(service)
+    bindings = PackBindings(service)
     bearer = HTTPBearer(auto_error=False)
     inference_slot = BoundedSemaphore(1)
     extraction_slot = BoundedSemaphore(1)
@@ -99,6 +130,80 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
 
     Actor = Annotated[UUID, Depends(actor)]
     Key = Annotated[str, Header(alias="Idempotency-Key", min_length=1, max_length=200)]
+
+    app.add_middleware(_CatalogCacheHeaders)
+
+    @app.exception_handler(RequestValidationError)
+    async def request_invalid(request: Request, exc):
+        if _catalog_path(request.url.path):
+            return JSONResponse(status_code=422, content={"detail": "ورودی با قرارداد داده سازگار نیست"},
+                                headers={"Cache-Control": "no-store"})
+        return await request_validation_exception_handler(request, exc)
+
+    def catalog_json(value):
+        return jsonable_encoder(value, custom_encoder={Decimal: str})
+
+    @app.get("/businesses/{business}/catalog/items")
+    def catalog_items(business: UUID, user: Actor, effective_at: AwareDatetime | None = None,
+                      after: UUID | None = None, limit: int = 50):
+        return catalog_json(catalog.items(user, business, effective_at, after, limit))
+
+    @app.get("/businesses/{business}/catalog/items/{identity}")
+    def catalog_item(business: UUID, identity: UUID, user: Actor, effective_at: AwareDatetime | None = None):
+        return catalog_json(catalog.current_item(user, business, identity, effective_at))
+
+    @app.get("/businesses/{business}/catalog/items/{identity}/labels")
+    def item_labels(business: UUID, identity: UUID, user: Actor, after: UUID | None = None, limit: int = 50):
+        return catalog_json(catalog.item_history(user, business, identity, after, limit))
+
+    @app.get("/businesses/{business}/catalog/items/{identity}/packs")
+    def item_packs(business: UUID, identity: UUID, user: Actor, after: UUID | None = None, limit: int = 50):
+        return catalog_json(catalog.pack_history(user, business, identity, after, limit))
+
+    @app.get("/businesses/{business}/catalog/item-revisions/{identity}")
+    def item_revision(business: UUID, identity: UUID, user: Actor):
+        return catalog_json(catalog.definition(user, business, "item", identity))
+
+    @app.post("/businesses/{business}/catalog/item-revisions", status_code=201)
+    def propose_item_revision(business: UUID, value: ItemProposal, user: Actor, key: Key):
+        return {"id": catalog.propose_item(user, business, key, value)}
+
+    @app.post("/businesses/{business}/catalog/item-revisions/{identity}/decision", status_code=201)
+    def decide_item_revision(business: UUID, identity: UUID, value: ItemDecision, user: Actor, key: Key):
+        return {"id": catalog.decide_item(user, business, key, identity, value)}
+
+    @app.get("/businesses/{business}/catalog/pack-revisions/{identity}")
+    def pack_revision(business: UUID, identity: UUID, user: Actor):
+        return catalog_json(catalog.definition(user, business, "pack", identity))
+
+    @app.post("/businesses/{business}/catalog/pack-revisions", status_code=201)
+    def propose_pack_revision(business: UUID, value: PackProposal, user: Actor, key: Key):
+        return {"id": catalog.propose_pack(user, business, key, value)}
+
+    @app.post("/businesses/{business}/catalog/pack-revisions/{identity}/decision", status_code=201)
+    def decide_pack_revision(business: UUID, identity: UUID, value: PackDecision, user: Actor, key: Key):
+        return {"id": catalog.decide_pack(user, business, key, identity, value)}
+
+    @app.get("/businesses/{business}/pack-bindings")
+    def pack_bindings(business: UUID, user: Actor, after: UUID | None = None, limit: int = 20,
+                      record: UUID | None = None):
+        return catalog_json(bindings.page(user, business, after, limit, record))
+
+    @app.post("/businesses/{business}/pack-bindings", status_code=201)
+    def capture_binding(business: UUID, value: BindingCheckInput, user: Actor, key: Key):
+        return {"id": bindings.capture(user, business, key, value)}
+
+    @app.get("/businesses/{business}/pack-bindings/{identity}")
+    def pack_binding(business: UUID, identity: UUID, user: Actor):
+        return catalog_json(bindings.read(user, business, identity))
+
+    @app.get("/businesses/{business}/pack-bindings/{identity}/reviews")
+    def binding_reviews(business: UUID, identity: UUID, user: Actor, after: UUID | None = None, limit: int = 20):
+        return catalog_json(bindings.reviews(user, business, identity, after, limit))
+
+    @app.post("/businesses/{business}/pack-bindings/{identity}/reviews", status_code=201)
+    def review_binding(business: UUID, identity: UUID, value: BindingReviewInput, user: Actor, key: Key):
+        return {"id": bindings.resolve(user, business, key, identity, value)}
 
     quick_documents = APIRouter(route_class=QuickDocumentRoute)
 

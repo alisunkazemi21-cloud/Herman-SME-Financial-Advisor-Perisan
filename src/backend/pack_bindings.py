@@ -5,7 +5,7 @@ from uuid import UUID
 from pydantic import Field, model_validator
 
 from src.backend.inventory import EvidenceRef
-from src.backend.service import NotFound, Service, insert
+from src.backend.service import Conflict, NotFound, Service, insert
 from src.models import Model
 
 
@@ -33,24 +33,37 @@ class BindingReviewInput(Model):
         return self
 
 
+def _existing_check(c, business: UUID, value: BindingCheckInput) -> dict | None:
+    return c.execute(
+        "SELECT id FROM herman.pack_binding_checks WHERE business_id=%s AND record_id=%s "
+        "AND ingredient_id IS NOT DISTINCT FROM %s::uuid "
+        "AND fulfillment_id IS NOT DISTINCT FROM %s::uuid AND recipe_path=%s::uuid[]",
+        (business, value.record_id, value.ingredient_id, value.fulfillment_id, list(value.recipe_path)),
+    ).fetchone()
+
+
+def _insert_check(c, business: UUID, value: BindingCheckInput) -> dict | None:
+    return c.execute(
+        "INSERT INTO herman.pack_binding_checks(business_id,id,record_id,ingredient_id,fulfillment_id,recipe_path) "
+        "VALUES(%s,%s,%s,%s,%s,%s::uuid[]) "
+        "ON CONFLICT(business_id,record_id,ingredient_id,fulfillment_id,recipe_path) DO NOTHING RETURNING id",
+        (business, value.id, value.record_id, value.ingredient_id, value.fulfillment_id, list(value.recipe_path)),
+    ).fetchone()
+
+
 class PackBindings:
     def __init__(self, service: Service):
         self.service = service
 
     def capture(self, actor: UUID, business: UUID, key: str, value: BindingCheckInput) -> UUID:
         def store(c):
-            previous = c.execute(
-                "SELECT id FROM herman.pack_binding_checks WHERE business_id=%s AND record_id=%s "
-                "AND ingredient_id IS NOT DISTINCT FROM %s::uuid "
-                "AND fulfillment_id IS NOT DISTINCT FROM %s::uuid AND recipe_path=%s::uuid[]",
-                (business, value.record_id, value.ingredient_id, value.fulfillment_id, list(value.recipe_path)),
-            ).fetchone()
+            previous = _existing_check(c, business, value)
             if previous:
                 return previous["id"]
-            fields = value.model_dump()
-            fields["recipe_path"] = list(value.recipe_path)
-            insert(c, "pack_binding_checks", dict(business_id=business, **fields))
-            return value.id
+            stored = _insert_check(c, business, value) or _existing_check(c, business, value)
+            if stored is None:
+                raise Conflict("بررسی هم‌زمان کامل نشد؛ درخواست را دوباره تلاش کنید")
+            return stored["id"]
 
         return self.service._write(actor, business, key, "pack_binding.captured",
                                    value.model_dump(mode="json"), store)
@@ -116,6 +129,9 @@ class PackBindings:
         if not 1 <= limit <= 50:
             raise ValueError("اندازهٔ صفحه نامعتبر است")
         with self.service.database.transaction(actor, business) as c:
+            if c.execute("SELECT 1 FROM herman.pack_binding_checks WHERE business_id=%s AND id=%s",
+                         (business, check)).fetchone() is None:
+                raise NotFound("بررسی تبدیل تاریخی موجود نیست")
             rows = c.execute("SELECT * FROM herman.pack_binding_reviews "
                              "WHERE business_id=%s AND check_id=%s AND (%s::uuid IS NULL OR id>%s) "
                              "ORDER BY id LIMIT %s", (business, check, after, after, limit+1)).fetchall()

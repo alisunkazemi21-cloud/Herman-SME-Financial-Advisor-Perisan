@@ -23,6 +23,7 @@ from src.backend.inventory import (
 )
 from src.backend.inventory_history import current_successor
 from src.backend.inventory_selection import SelectionLimit, select_inputs
+from src.backend.item_selection import ItemLabelState
 from src.backend.pack_interpretation import BoundInventoryRequest, PackBindingState
 
 MAX_INPUT_ROWS = 10000
@@ -59,6 +60,13 @@ def _index(inputs: dict) -> dict[tuple[str, str], dict]:
     for row in definitions:
         typed = PackDefinition.model_validate(row).model_dump()
         result[("pack_definitions", str(typed["id"]))] = typed
+    if inputs.get("item_labels") is not None:
+        labels = ItemLabelState.model_validate(inputs["item_labels"])
+        for label in labels.labels:
+            # A future successor can close this interval without changing selection here.
+            typed = label.model_dump(exclude={"valid_to"})
+            typed.update(contract_version=labels.contract_version, effective_at=labels.effective_at)
+            result[("item_labels", str(label.item_id))] = typed
     if inputs.get("pack_bindings") is not None:
         bindings = PackBindingState.model_validate(inputs["pack_bindings"])
         result[("binding_cutover", "singleton")] = dict(
@@ -108,7 +116,10 @@ def freshness(c: Connection, business: UUID, row: dict) -> dict:
         inventory_raw = dict(raw)
         definitions = inventory_raw.pop("pack_definitions", None)
         bindings = inventory_raw.pop("pack_bindings", None)
+        labels = inventory_raw.pop("item_labels", None)
         request = InventoryRequest.model_validate(inventory_raw)
+        if labels is not None:
+            ItemLabelState.model_validate(labels).validate_selection(request.items, business, request.scope.end)
         if bindings is not None:
             if definitions is None:
                 return unknown("invalid_or_unsupported_input")
@@ -133,6 +144,12 @@ def freshness(c: Connection, business: UUID, row: dict) -> dict:
             max_rows=MAX_INPUT_ROWS, include_bindings=bindings is not None)
         if len(_encoded(selected)) > MAX_INPUT_BYTES:
             return unknown("input_byte_limit")
+        current_labels = ItemLabelState.model_validate(selected["item_labels"])
+        current_labels.validate_selection(
+            (Item.model_validate(item) for item in selected["items"]), business, request.scope.end)
+        if labels is None:
+            # Legacy receipts compare their recorded item text without invented definition IDs.
+            selected.pop("item_labels")
         current = _index(selected)
         added = sorted(current.keys() - saved.keys())
         removed = sorted(saved.keys() - current.keys())

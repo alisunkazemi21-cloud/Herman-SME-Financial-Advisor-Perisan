@@ -40,6 +40,7 @@ from src.backend.inventory_history import (
     current_successor,
 )
 from src.backend.inventory_selection import SelectionLimit, select_inputs
+from src.backend.item_selection import ItemLabelState
 from src.backend.pack_binding_selection import capture_past_contexts
 from src.backend.pack_interpretation import BoundInventoryRequest, PackBindingState, reconcile_bound_inventory
 from src.models import Model
@@ -406,11 +407,14 @@ class Service:
             def prepare(inputs):
                 definitions = tuple(PackDefinition.model_validate(row) for row in inputs.pop("pack_definitions"))
                 bindings = PackBindingState.model_validate(inputs.pop("pack_bindings"))
+                labels = ItemLabelState.model_validate(inputs.pop("item_labels"))
                 request = InventoryRequest(scope=value.scope, target_item_id=value.target_item_id, basis=value.basis,
                     **inputs, coverage=value.coverage, policy=value.policy)
+                labels.validate_selection(request.items, business, request.scope.end)
                 snapshot = request.model_dump(mode="json")
                 snapshot["pack_definitions"] = [row.model_dump(mode="json") for row in definitions]
                 snapshot["pack_bindings"] = bindings.model_dump(mode="json")
+                snapshot["item_labels"] = labels.model_dump(mode="json")
                 if len(canonical(snapshot).encode()) > MAX_ANALYSIS_BYTES:
                     raise ValueError("حجم ورودی تحلیل بیش از حد بررسی است؛ بازهٔ کوچک‌تری انتخاب کنید")
                 bound = BoundInventoryRequest(inventory=request.model_copy(update={"conversions": ()}),
@@ -428,6 +432,8 @@ class Service:
                 raise Conflict("زمان رویداد هنگام بررسی گذشته است؛ تحلیل را دوباره درخواست کنید")
             definitions = bound.definitions
             refs = [request.coverage.evidence, request.policy.evidence, *(row.evidence for row in definitions)]
+            labels = ItemLabelState.model_validate(snapshot["item_labels"])
+            refs.extend(label.evidence for label in labels.labels if label.evidence is not None)
             refs.extend(resolution.evidence for resolution in bound.bindings.resolutions)
             refs.extend(row.evidence for row in (*request.movements, *request.recipes,
                 *request.fulfillments, *request.conversions))

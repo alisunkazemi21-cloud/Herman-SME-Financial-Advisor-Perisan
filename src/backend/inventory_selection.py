@@ -9,12 +9,14 @@ from psycopg import Connection, sql
 from src.backend.dated_inventory import PackDefinition
 from src.backend.inventory import Scope
 from src.backend.inventory_history import LIVE_RECORD
+from src.backend.item_selection import select_item_labels
 from src.backend.pack_binding_selection import SelectionLimit as SelectionLimit
 from src.backend.pack_binding_selection import select_binding_state
 
 
 def select_inputs(c: Connection, business: UUID, scope: Scope, opening: UUID | None,
-                  closing: UUID | None, *, max_rows: int | None = None, include_bindings: bool = True) -> dict:
+                  closing: UUID | None, *, max_rows: int | None = None, include_bindings: bool = True,
+                  include_labels: bool = True) -> dict:
     remaining = max_rows
 
     def read(query, parameters):
@@ -30,6 +32,12 @@ def select_inputs(c: Connection, business: UUID, scope: Scope, opening: UUID | N
         return rows
 
     items = read("SELECT * FROM herman.items WHERE business_id=%s ORDER BY id", (business,))
+    labels = None
+    if include_labels:
+        labels = select_item_labels(c, business, (row["id"] for row in items), scope.end,
+                                    read=read if max_rows is not None else None)
+        by_item = {row.item_id: row for row in labels.labels}
+        items = [dict(row, sku=by_item[row["id"]].sku, name_fa=by_item[row["id"]].name_fa) for row in items]
     conversions = read("SELECT * FROM herman.unit_conversions WHERE business_id=%s ORDER BY id", (business,))
     for row in conversions:
         row["evidence"] = dict(document_id=row.pop("document_id"), locator=row.pop("locator"))
@@ -82,6 +90,8 @@ def select_inputs(c: Connection, business: UUID, scope: Scope, opening: UUID | N
             by_recipe[line.pop("recipe_id")]["lines"].append(line)
     selected = dict(items=items, conversions=conversions, movements=movements, fulfillments=fulfillments,
                     recipes=recipes, opening=count(opening), closing=count(closing), pack_definitions=definitions)
+    if labels is not None:
+        selected["item_labels"] = labels.model_dump()
     if include_bindings:
         records = [*movements, *recipes, *fulfillments,
                    *(row for row in (selected["opening"], selected["closing"]) if row is not None)]
