@@ -9,14 +9,12 @@ from psycopg import Connection, sql
 from src.backend.dated_inventory import PackDefinition
 from src.backend.inventory import Scope
 from src.backend.inventory_history import LIVE_RECORD
-
-
-class SelectionLimit(ValueError):
-    """The complete comparison cannot be established within its read budget."""
+from src.backend.pack_binding_selection import SelectionLimit as SelectionLimit
+from src.backend.pack_binding_selection import select_binding_state
 
 
 def select_inputs(c: Connection, business: UUID, scope: Scope, opening: UUID | None,
-                  closing: UUID | None, *, max_rows: int | None = None) -> dict:
+                  closing: UUID | None, *, max_rows: int | None = None, include_bindings: bool = True) -> dict:
     remaining = max_rows
 
     def read(query, parameters):
@@ -82,5 +80,14 @@ def select_inputs(c: Connection, business: UUID, scope: Scope, opening: UUID | N
             (business, list(by_recipe)))
         for line in lines:
             by_recipe[line.pop("recipe_id")]["lines"].append(line)
-    return dict(items=items, conversions=conversions, movements=movements, fulfillments=fulfillments,
-                recipes=recipes, opening=count(opening), closing=count(closing), pack_definitions=definitions)
+    selected = dict(items=items, conversions=conversions, movements=movements, fulfillments=fulfillments,
+                    recipes=recipes, opening=count(opening), closing=count(closing), pack_definitions=definitions)
+    if include_bindings:
+        records = [*movements, *recipes, *fulfillments,
+                   *(row for row in (selected["opening"], selected["closing"]) if row is not None)]
+        selected["pack_bindings"] = select_binding_state(
+            c, business, tuple(PackDefinition.model_validate(row) for row in definitions),
+            (row["id"] for row in records), (row["id"] for row in fulfillments),
+            read=read if max_rows is not None else None,
+        ).model_dump()
+    return selected

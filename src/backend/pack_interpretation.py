@@ -103,6 +103,7 @@ class PackResolution(Model):
 
 
 class PackBindingState(Model):
+    contract_version: Literal["inventory.pack_bindings.v1"] = "inventory.pack_bindings.v1"
     business_id: UUID
     as_of: AwareDatetime
     cutover_at: AwareDatetime

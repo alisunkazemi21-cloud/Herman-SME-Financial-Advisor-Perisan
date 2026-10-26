@@ -179,7 +179,7 @@ def test_all_selected_catalog_and_recipe_inputs_are_compared_conservatively(back
         b["service"].propose(b["editor"], b["business"], "overlap", recipe)
     status = compare(b, before)
     assert status["status"] == "stale"
-    assert status["changes"]["added"]["examples"][0]["collection"] == kind
+    assert any(example["collection"] == kind for example in status["changes"]["added"]["examples"])
 
 
 def test_rejected_corrections_new_counts_and_unrelated_evidence_do_not_invalidate_selection(backend, inventory_payload):
@@ -216,7 +216,9 @@ def test_bounds_yield_unknown_and_withhold_current_advice(backend, inventory_pay
     value = seed_inventory(b, inventory_payload)
     before = analyze(b, value, "before")
     if limit == "rows":
-        monkeypatch.setattr(inventory_freshness, "MAX_INPUT_ROWS", 9)
+        exact_rows = compare(b, before)["current_inputs"] + sum(
+            len(recipe["lines"]) for recipe in before["input_snapshot"]["recipes"])
+        monkeypatch.setattr(inventory_freshness, "MAX_INPUT_ROWS", exact_rows)
         assert compare(b, before)["status"] == "current"
         add_movement(b, inventory_payload, quantity="2")
     else:
@@ -261,7 +263,7 @@ def test_read_does_not_recompute_rewrite_or_reverify_files_and_respects_access(b
     value = seed_inventory(b, inventory_payload)
     before = analyze(b, value, "before")
     from src.backend import service
-    monkeypatch.setattr(service, "reconcile_dated_inventory", lambda *_: pytest.fail("read must not recalculate"))
+    monkeypatch.setattr(service, "reconcile_bound_inventory", lambda *_: pytest.fail("read must not recalculate"))
     with b["db"].transaction(b["viewer"], b["business"]) as c:
         source = c.execute("SELECT sha256 FROM herman.documents WHERE id=%s", (value.coverage.evidence.document_id,)).fetchone()
         audit_count = c.execute("SELECT count(*) AS n FROM herman.audit_events").fetchone()["n"]

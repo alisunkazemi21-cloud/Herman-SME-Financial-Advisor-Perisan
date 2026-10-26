@@ -15,7 +15,7 @@ from psycopg.types.json import Jsonb
 from pydantic import Field
 
 from src.backend.database import Database
-from src.backend.dated_inventory import DatedInventoryRequest, PackDefinition, reconcile_dated_inventory
+from src.backend.dated_inventory import PackDefinition
 from src.backend.duplicates import document_matches, record_matches
 from src.backend.inventory import (
     Count,
@@ -39,8 +39,13 @@ from src.backend.inventory_history import (
     correction_provenance,
     current_successor,
 )
-from src.backend.inventory_selection import select_inputs
+from src.backend.inventory_selection import SelectionLimit, select_inputs
+from src.backend.pack_binding_selection import capture_past_contexts
+from src.backend.pack_interpretation import BoundInventoryRequest, PackBindingState, reconcile_bound_inventory
 from src.models import Model
+
+MAX_ANALYSIS_ROWS = 10000
+MAX_ANALYSIS_BYTES = 8 * 1024 * 1024
 
 
 class Conflict(ValueError):
@@ -379,7 +384,14 @@ class Service:
             if c.execute("SELECT 1 FROM herman.warehouses WHERE business_id=%s AND id=%s",
                          (business, value.scope.warehouse_id)).fetchone() is None:
                 raise NotFound("انبار موجود نیست")
-            selected = select_inputs(c, business, value.scope, value.opening_id, value.closing_id)
+            def select():
+                try:
+                    return select_inputs(c, business, value.scope, value.opening_id, value.closing_id,
+                                         max_rows=MAX_ANALYSIS_ROWS)
+                except SelectionLimit:
+                    raise ValueError("حجم ورودی تحلیل بیش از حد بررسی است؛ بازهٔ کوچک‌تری انتخاب کنید") from None
+
+            selected = select()
             for role, identity in (("opening", value.opening_id), ("closing", value.closing_id)):
                 if identity is not None and selected[role] is None:
                     successor = current_successor(c, business, identity)
@@ -391,26 +403,46 @@ class Service:
                     if pending and pending["supersedes"]:
                         raise Conflict("اصلاح شمارش برای استفاده در تحلیل تأیید نشده است")
                     raise NotFound("شمارش موجود نیست یا رد شده است")
-            definitions = tuple(PackDefinition.model_validate(row) for row in selected.pop("pack_definitions"))
-            request = InventoryRequest(scope=value.scope, target_item_id=value.target_item_id, basis=value.basis,
-                **selected, coverage=value.coverage, policy=value.policy)
-            snapshot = request.model_dump(mode="json")
-            snapshot["pack_definitions"] = [row.model_dump(mode="json") for row in definitions]
+            def prepare(inputs):
+                definitions = tuple(PackDefinition.model_validate(row) for row in inputs.pop("pack_definitions"))
+                bindings = PackBindingState.model_validate(inputs.pop("pack_bindings"))
+                request = InventoryRequest(scope=value.scope, target_item_id=value.target_item_id, basis=value.basis,
+                    **inputs, coverage=value.coverage, policy=value.policy)
+                snapshot = request.model_dump(mode="json")
+                snapshot["pack_definitions"] = [row.model_dump(mode="json") for row in definitions]
+                snapshot["pack_bindings"] = bindings.model_dump(mode="json")
+                if len(canonical(snapshot).encode()) > MAX_ANALYSIS_BYTES:
+                    raise ValueError("حجم ورودی تحلیل بیش از حد بررسی است؛ بازهٔ کوچک‌تری انتخاب کنید")
+                bound = BoundInventoryRequest(inventory=request.model_copy(update={"conversions": ()}),
+                                              definitions=definitions, bindings=bindings)
+                return request, bound, snapshot
+
+            request, bound, _ = prepare(selected)
+            preflight = reconcile_bound_inventory(bound)
+            capture_past_contexts(c, business, preflight.encountered_contexts, bound.bindings.as_of)
+            request, bound, snapshot = prepare(select())
+            calculated = reconcile_bound_inventory(bound)
+            captured = {check.key for check in bound.bindings.checks}
+            if any(context.occurred_at <= bound.bindings.as_of and context.key not in captured
+                   for context in calculated.encountered_contexts):
+                raise Conflict("زمان رویداد هنگام بررسی گذشته است؛ تحلیل را دوباره درخواست کنید")
+            definitions = bound.definitions
             refs = [request.coverage.evidence, request.policy.evidence, *(row.evidence for row in definitions)]
+            refs.extend(resolution.evidence for resolution in bound.bindings.resolutions)
             refs.extend(row.evidence for row in (*request.movements, *request.recipes,
                 *request.fulfillments, *request.conversions))
             refs.extend(row.evidence for row in (request.opening, request.closing) if row is not None)
             for document_id in {ref.document_id for ref in refs}:
                 source = c.execute("SELECT sha256 FROM herman.documents WHERE business_id=%s AND id=%s",
                                    (business, document_id)).fetchone()
+                if source is None:
+                    raise NotFound("شاهد تحلیل در این بیزینس موجود نیست")
                 try:
                     content = (self.blob_root / str(business) / source["sha256"]).read_bytes()
-                except FileNotFoundError as exc:
+                except OSError as exc:
                     raise Conflict("فایل شاهد موجود نیست؛ تحلیل ثبت نشد") from exc
                 if hashlib.sha256(content).hexdigest() != source["sha256"]:
                     raise Conflict("فایل شاهد تغییر کرده است؛ تحلیل ثبت نشد")
-            calculated = reconcile_dated_inventory(DatedInventoryRequest(
-                inventory=request.model_copy(update={"conversions": ()}), definitions=definitions))
             result = calculated.result.model_dump(mode="json")
             record_ids = [row.id for row in (*request.movements, *request.recipes, *request.fulfillments)]
             record_ids.extend(row.id for row in (request.opening, request.closing) if row is not None)

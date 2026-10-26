@@ -23,6 +23,7 @@ from src.backend.inventory import (
 )
 from src.backend.inventory_history import current_successor
 from src.backend.inventory_selection import SelectionLimit, select_inputs
+from src.backend.pack_interpretation import BoundInventoryRequest, PackBindingState
 
 MAX_INPUT_ROWS = 10000
 MAX_INPUT_BYTES = 8 * 1024 * 1024
@@ -58,16 +59,41 @@ def _index(inputs: dict) -> dict[tuple[str, str], dict]:
     for row in definitions:
         typed = PackDefinition.model_validate(row).model_dump()
         result[("pack_definitions", str(typed["id"]))] = typed
+    if inputs.get("pack_bindings") is not None:
+        bindings = PackBindingState.model_validate(inputs["pack_bindings"])
+        result[("binding_cutover", "singleton")] = dict(
+            business_id=bindings.business_id, cutover_at=bindings.cutover_at,
+            contract_version=bindings.contract_version)
+        for identity in bindings.legacy_record_ids:
+            result[("binding_legacy_sources", str(identity))] = dict(id=identity)
+        for name, rows, key in (
+            ("binding_observations", bindings.observations, "definition_id"),
+            ("binding_checks", bindings.checks, "id"),
+            ("binding_resolutions", bindings.resolutions, "id"),
+        ):
+            for entry in rows:
+                result[(name, str(getattr(entry, key)))] = entry.model_dump()
     return result
+
+
+def _contains_pack_quantities(request: InventoryRequest) -> bool:
+    direct = (*request.movements, *request.fulfillments,
+              *(row for row in (request.opening, request.closing) if row is not None))
+    return any(row.unit == "pack" for row in direct) or any(
+        recipe.output_unit == "pack" or any(line.unit == "pack" for line in recipe.lines)
+        for recipe in request.recipes)
 
 
 def freshness(c: Connection, business: UUID, row: dict) -> dict:
     """Compare current recorded inputs, not source bytes or reconstructed historical approvals."""
-    common = dict(comparison_version="inventory.selection.v1", checked_at=datetime.now(timezone.utc),
+    common = dict(comparison_version="inventory.selection.v2", checked_at=datetime.now(timezone.utc),
                   evidence_verification="not_rechecked")
 
     def unknown(reason: str) -> dict:
-        return dict(**common, status="unknown", stale=None, reason=reason, reason_fa=REASONS_FA["unknown"],
+        explanation = ("اطلاعات این تحلیل برای بررسی سابقهٔ تبدیل بسته کافی نیست؛ "
+                       "تبدیل‌ها را بررسی و تحلیل تازه‌ای تهیه کنید."
+                       if reason == "legacy_pack_context_missing" else REASONS_FA["unknown"])
+        return dict(**common, status="unknown", stale=None, reason=reason, reason_fa=explanation,
                     changes=None, count_selection_required=[])
 
     try:
@@ -81,8 +107,16 @@ def freshness(c: Connection, business: UUID, row: dict) -> dict:
             return unknown("unsupported_metric_version")
         inventory_raw = dict(raw)
         definitions = inventory_raw.pop("pack_definitions", None)
+        bindings = inventory_raw.pop("pack_bindings", None)
         request = InventoryRequest.model_validate(inventory_raw)
-        if definitions is not None:
+        if bindings is not None:
+            if definitions is None:
+                return unknown("invalid_or_unsupported_input")
+            BoundInventoryRequest(inventory=request.model_copy(update={"conversions": ()}),
+                                  definitions=definitions, bindings=bindings)
+        elif _contains_pack_quantities(request):
+            return unknown("legacy_pack_context_missing")
+        elif definitions is not None:
             DatedInventoryRequest(inventory=request.model_copy(update={"conversions": ()}),
                                   definitions=definitions)
         if request.scope.business_id != business:
@@ -96,7 +130,7 @@ def freshness(c: Connection, business: UUID, row: dict) -> dict:
             return unknown("input_row_limit")
         selected = select_inputs(c, business, request.scope,
             request.opening.id if request.opening else None, request.closing.id if request.closing else None,
-            max_rows=MAX_INPUT_ROWS)
+            max_rows=MAX_INPUT_ROWS, include_bindings=bindings is not None)
         if len(_encoded(selected)) > MAX_INPUT_BYTES:
             return unknown("input_byte_limit")
         current = _index(selected)
@@ -112,7 +146,7 @@ def freshness(c: Connection, business: UUID, row: dict) -> dict:
                 if change == "changed":
                     entry.update(before_status=saved[key].get("status"), after_status=current[key].get("status"))
                     entry["fields"] = sorted(field for field in saved[key] if saved[key][field] != current[key][field])
-                if change == "removed" and collection not in ("items", "conversions", "pack_definitions"):
+                if change == "removed" and collection in ("opening", "closing", "movements", "recipes", "fulfillments"):
                     successor = current_successor(c, business, UUID(identity))
                     entry["superseded_by"] = str(successor) if successor else None
                 examples.append(entry)
