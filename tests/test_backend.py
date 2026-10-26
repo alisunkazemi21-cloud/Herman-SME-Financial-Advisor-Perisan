@@ -138,7 +138,7 @@ def test_retry_concurrency_and_conflict(backend):
         service.create_business(b["owner"], "different", "cafe", "retry-business")
 
 
-def seed_inventory(b, p):
+def seed_inventory(b, p, *, attest=True):
     service, actor, business = b["service"], b["owner"], b["business"]
     p["scope"]["business_id"] = str(business)
     warehouse = UUID(p["scope"]["warehouse_id"])
@@ -157,8 +157,12 @@ def seed_inventory(b, p):
             service.approve(actor, business, "approve:" + row["id"], value.id, True, "بررسی نمونه ساختگی")
     for field in ("coverage", "policy"):
         p[field]["evidence"] = dict(document_id=str(document), locator="synthetic:coverage")
-    return AnalysisInput(scope=p["scope"], target_item_id=p["target_item_id"], opening_id=p["opening"]["id"],
-                         closing_id=p["closing"]["id"], coverage=p["coverage"], policy=p["policy"])
+    value = AnalysisInput(scope=p["scope"], target_item_id=p["target_item_id"], opening_id=p["opening"]["id"],
+                          closing_id=p["closing"]["id"], coverage=p["coverage"], policy=p["policy"])
+    if attest:
+        from coverage_helpers import attest_coverage
+        attest_coverage(b, value)
+    return value
 
 
 def test_persisted_vertical_slice_and_quick_no_history(backend, inventory_payload):

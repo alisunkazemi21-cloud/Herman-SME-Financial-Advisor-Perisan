@@ -22,6 +22,7 @@ from starlette.types import ASGIApp, Message, Receive, Send
 from starlette.types import Scope as ASGIScope
 
 from src.ai_agent.agent import FinancialAgent
+from src.backend.actions import ActionEvent, ActionProposal, Actions
 from src.backend.advisor import (
     BusinessAdvisor,
     BusinessContextInput,
@@ -34,6 +35,8 @@ from src.backend.advisor import (
 )
 from src.backend.cases import BusinessCases, CaseInput, TurnInput
 from src.backend.catalog import Catalog, ItemDecision, ItemProposal, PackDecision, PackProposal
+from src.backend.coverage import Coverage as CoverageWorkflow
+from src.backend.coverage import CoverageDecision, CoverageProposal
 from src.backend.database import AccessDenied, Database
 from src.backend.imports import TabularImport, TabularImporter
 from src.backend.inventory import (
@@ -43,6 +46,7 @@ from src.backend.inventory import (
     Item,
     Movement,
     Recipe,
+    Scope,
     UnitConversion,
     reconcile_inventory,
 )
@@ -73,7 +77,8 @@ class DecisionInput(Model):
 
 def _catalog_path(path: str) -> bool:
     parts = path.split("/")
-    return len(parts) >= 4 and parts[1] == "businesses" and parts[3] in ("catalog", "pack-bindings")
+    return len(parts) >= 4 and parts[1] == "businesses" and parts[3] in (
+        "catalog", "pack-bindings", "coverage", "actions", "inventory-analyses")
 
 
 class _CatalogCacheHeaders:
@@ -106,6 +111,8 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
     importer = TabularImporter(service)
     catalog = Catalog(service)
     bindings = PackBindings(service)
+    coverage_workflow = CoverageWorkflow(service)
+    actions = Actions(service)
     bearer = HTTPBearer(auto_error=False)
     inference_slot = BoundedSemaphore(1)
     extraction_slot = BoundedSemaphore(1)
@@ -204,6 +211,46 @@ def create_app(database: Database, blob_root: Path, draft_agent: FinancialAgent 
     @app.post("/businesses/{business}/pack-bindings/{identity}/reviews", status_code=201)
     def review_binding(business: UUID, identity: UUID, value: BindingReviewInput, user: Actor, key: Key):
         return {"id": bindings.resolve(user, business, key, identity, value)}
+
+    @app.get("/businesses/{business}/coverage/assessment")
+    def coverage_assessment(business: UUID, warehouse_id: UUID, start: AwareDatetime, end: AwareDatetime,
+                            user: Actor, basis: Literal["service", "production"] = "service"):
+        scope = Scope(business_id=business, warehouse_id=warehouse_id, start=start, end=end)
+        snapshot = coverage_workflow.assess(user, business, scope, basis)
+        return catalog_json(dict(snapshot=snapshot, complete=snapshot.complete,
+                                 provisional=snapshot.provisional, blockers_fa=snapshot.blockers_fa))
+
+    @app.get("/businesses/{business}/coverage")
+    def coverage_page(business: UUID, user: Actor, after: UUID | None = None, limit: int = 50):
+        return catalog_json(coverage_workflow.page(user, business, after, limit))
+
+    @app.post("/businesses/{business}/coverage", status_code=201)
+    def propose_coverage(business: UUID, value: CoverageProposal, user: Actor, key: Key):
+        return {"id": coverage_workflow.propose(user, business, key, value)}
+
+    @app.get("/businesses/{business}/coverage/{identity}")
+    def coverage_detail(business: UUID, identity: UUID, user: Actor):
+        return catalog_json(coverage_workflow.detail(user, business, identity))
+
+    @app.post("/businesses/{business}/coverage/{identity}/decision", status_code=201)
+    def decide_coverage(business: UUID, identity: UUID, value: CoverageDecision, user: Actor, key: Key):
+        return {"id": coverage_workflow.decide(user, business, key, identity, value)}
+
+    @app.get("/businesses/{business}/actions")
+    def action_page(business: UUID, user: Actor, after: UUID | None = None, limit: int = 50):
+        return catalog_json(actions.page(user, business, after, limit))
+
+    @app.post("/businesses/{business}/actions", status_code=201)
+    def propose_action(business: UUID, value: ActionProposal, user: Actor, key: Key):
+        return {"id": actions.propose(user, business, key, value)}
+
+    @app.get("/businesses/{business}/actions/{identity}")
+    def action_detail(business: UUID, identity: UUID, user: Actor, after_sequence: int = 0, limit: int = 50):
+        return catalog_json(actions.detail(user, business, identity, after_sequence, limit))
+
+    @app.post("/businesses/{business}/actions/{identity}/events", status_code=201)
+    def action_event(business: UUID, identity: UUID, value: ActionEvent, user: Actor, key: Key):
+        return {"id": actions.event(user, business, key, identity, value)}
 
     quick_documents = APIRouter(route_class=QuickDocumentRoute)
 

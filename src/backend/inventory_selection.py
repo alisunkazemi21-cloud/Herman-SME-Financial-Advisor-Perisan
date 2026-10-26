@@ -6,6 +6,7 @@ from uuid import UUID
 
 from psycopg import Connection, sql
 
+from src.backend.coverage_selection import select_coverage
 from src.backend.dated_inventory import PackDefinition
 from src.backend.inventory import Scope
 from src.backend.inventory_history import LIVE_RECORD
@@ -16,7 +17,7 @@ from src.backend.pack_binding_selection import select_binding_state
 
 def select_inputs(c: Connection, business: UUID, scope: Scope, opening: UUID | None,
                   closing: UUID | None, *, max_rows: int | None = None, include_bindings: bool = True,
-                  include_labels: bool = True) -> dict:
+                  include_labels: bool = True, coverage_basis: str | None = None) -> dict:
     remaining = max_rows
 
     def read(query, parameters):
@@ -100,4 +101,7 @@ def select_inputs(c: Connection, business: UUID, scope: Scope, opening: UUID | N
             (row["id"] for row in records), (row["id"] for row in fulfillments),
             read=read if max_rows is not None else None,
         ).model_dump()
+    if coverage_basis is not None:
+        selected["coverage_review"] = select_coverage(
+            c, business, scope, coverage_basis, read=read if max_rows is not None else None).model_dump()
     return selected

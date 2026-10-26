@@ -1,8 +1,8 @@
 # Herman development map
 
-Updated: **2026-10-26** · Active phase: **Backend workflows** · Last verified checkpoint: **C16 — Reviewed catalog/unit correction** · Next work: **C17 completeness/action contract (planned)**
+Updated: **2026-10-26** · Active phase: **Backend workflows** · Last verified checkpoint: **C16 — Reviewed catalog/unit correction** · Current work: **C17 completeness/actions — implementation under regression**
 
-**Last delivered:** C16's complete compatible-edit backend workflow: published dated labels, human-reviewed item/SKU and pack revisions, historical-use checks/resolutions, event-time import identity, shared analysis/freshness/duplicate interpretation and immutable source/analysis/case history. Code `f877b9b` passed **544 Windows tests / one real-OCR skip** and **543 Linux tests / two skips**, then Ruff/Marimo. [Acceptance matrix and run](../runs/catalog-workflow-2026-10-26/README.md). **Next:** category-level evidence completeness and reviewed investigation/action records under the forty-day plan. No C17 implementation is claimed yet.
+**Last accepted:** C16's compatible-edit backend workflow, code `f877b9b`, passed **544 Windows tests / one real-OCR skip** and **543 Linux tests / two skips**, then Ruff/Marimo. [Acceptance matrix and run](../runs/catalog-workflow-2026-10-26/README.md). **Now:** C17 has twelve-category dataset-bound completeness reviews, provisional/current-advice guards and immutable investigation/action history. Component/API checks passed; the full fresh-database regression is running. [Implementation and pending acceptance](../runs/completeness-actions-2026-10-26/README.md).
 
 This map separates capabilities from acceptance gates. A verified checkpoint means its documented scope passed checks; it does not mean every feature in that segment is finished. There is no overall percentage because engine quality, operational readiness and deferred UI are different kinds of work.
 
@@ -19,7 +19,7 @@ Implemented under M40-1: separate `/ready` database feature and evidence-root I/
 | Position | Milestone | State / evidence |
 |---|---|---|
 | Last verified | **C16 · Reviewed catalog/unit correction** | [Accepted workflow](../runs/catalog-workflow-2026-10-26/README.md): 544 Windows passes / one skip, 543 Linux passes / two skips at code `f877b9b`. |
-| Next contract | **C17 · Completeness and reviewed actions — planned** | Define evidence categories, explicit no-event assertions, reviewed investigations and follow-up; no implementation claim yet. |
+| In validation | **C17 · Completeness and reviewed actions** | Twelve explicit categories, reviewed no-event assertions, changed/pending/provisional guards and named investigation follow-up are implemented. Full regression/CI acceptance remains pending. |
 | Most recently advanced | **S2 + S3 · Evidence/review and financial/inventory core** | Current labels and public reviewed catalog/binding operations now complete the historical interpretation workflow. [API guide](CATALOG_API.md). |
 | Next segment | **S2 + S3 · Reliable pilot evidence** | Category-level completeness and accountable reviewed follow-up, retaining missing/stale/unknown states. |
 | Later UI | **S5 · Owner experience** | Minimal Persian owner workflow follows backend gates. Existing portfolio data is available; pricing is now specified but not implemented. |

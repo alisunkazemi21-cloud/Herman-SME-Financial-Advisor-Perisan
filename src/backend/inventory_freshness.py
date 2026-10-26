@@ -10,9 +10,12 @@ from uuid import UUID
 from psycopg import Connection
 from pydantic import ValidationError
 
+from src.backend.coverage_budget import CoverageTimeout
+from src.backend.coverage_models import CoverageSnapshot
 from src.backend.dated_inventory import DatedInventoryRequest, PackDefinition
 from src.backend.inventory import (
     Count,
+    Coverage,
     Fulfillment,
     InventoryRequest,
     InventoryResult,
@@ -81,6 +84,9 @@ def _index(inputs: dict) -> dict[tuple[str, str], dict]:
         ):
             for entry in rows:
                 result[(name, str(getattr(entry, key)))] = entry.model_dump()
+    if inputs.get("coverage_review") is not None:
+        completeness = CoverageSnapshot.model_validate(inputs["coverage_review"])
+        result[("coverage_review", "scope")] = completeness.model_dump(exclude={"as_of"})
     return result
 
 
@@ -101,6 +107,10 @@ def freshness(c: Connection, business: UUID, row: dict) -> dict:
         explanation = ("اطلاعات این تحلیل برای بررسی سابقهٔ تبدیل بسته کافی نیست؛ "
                        "تبدیل‌ها را بررسی و تحلیل تازه‌ای تهیه کنید."
                        if reason == "legacy_pack_context_missing" else REASONS_FA["unknown"])
+        if reason == "legacy_coverage_missing":
+            explanation = "این تحلیل سابقهٔ بررسی دسته‌های اسناد را ندارد؛ برای استفاده از آن به‌عنوان وضعیت فعلی، پوشش اسناد را بررسی و تحلیل تازه تهیه کنید."
+        elif reason == "coverage_query_timeout":
+            explanation = "بررسی پوشش اسناد در زمان مجاز ممکن نشد؛ ارقام این تحلیل برای وضعیت فعلی ارائه نمی‌شوند."
         return dict(**common, status="unknown", stale=None, reason=reason, reason_fa=explanation,
                     changes=None, count_selection_required=[])
 
@@ -117,6 +127,8 @@ def freshness(c: Connection, business: UUID, row: dict) -> dict:
         definitions = inventory_raw.pop("pack_definitions", None)
         bindings = inventory_raw.pop("pack_bindings", None)
         labels = inventory_raw.pop("item_labels", None)
+        coverage_review = inventory_raw.pop("coverage_review", None)
+        declaration = inventory_raw.pop("coverage_declaration", None)
         request = InventoryRequest.model_validate(inventory_raw)
         if labels is not None:
             ItemLabelState.model_validate(labels).validate_selection(request.items, business, request.scope.end)
@@ -130,6 +142,12 @@ def freshness(c: Connection, business: UUID, row: dict) -> dict:
         elif definitions is not None:
             DatedInventoryRequest(inventory=request.model_copy(update={"conversions": ()}),
                                   definitions=definitions)
+        if coverage_review is None or declaration is None:
+            return unknown("legacy_coverage_missing")
+        completeness = CoverageSnapshot.model_validate(coverage_review)
+        completeness.validate_scope(request.scope, request.basis)
+        if completeness.derive(Coverage.model_validate(declaration)) != request.coverage:
+            return unknown("invalid_coverage_derivation")
         if request.scope.business_id != business:
             return unknown("invalid_scope")
         result = InventoryResult.model_validate(row["result"])
@@ -137,11 +155,12 @@ def freshness(c: Connection, business: UUID, row: dict) -> dict:
             return unknown("result_scope_mismatch")
         saved = _index(raw)
         saved_rows = len(saved) + sum(len(r["lines"]) for r in request.model_dump()["recipes"])
+        saved_rows += completeness.dataset.row_count + int(completeness.assessment is not None)
         if saved_rows > MAX_INPUT_ROWS:
             return unknown("input_row_limit")
         selected = select_inputs(c, business, request.scope,
             request.opening.id if request.opening else None, request.closing.id if request.closing else None,
-            max_rows=MAX_INPUT_ROWS, include_bindings=bindings is not None)
+            max_rows=MAX_INPUT_ROWS, include_bindings=bindings is not None, coverage_basis=request.basis)
         if len(_encoded(selected)) > MAX_INPUT_BYTES:
             return unknown("input_byte_limit")
         current_labels = ItemLabelState.model_validate(selected["item_labels"])
@@ -151,6 +170,7 @@ def freshness(c: Connection, business: UUID, row: dict) -> dict:
             # Legacy receipts compare their recorded item text without invented definition IDs.
             selected.pop("item_labels")
         current = _index(selected)
+        live_completeness = CoverageSnapshot.model_validate(selected["coverage_review"])
         added = sorted(current.keys() - saved.keys())
         removed = sorted(saved.keys() - current.keys())
         changed = sorted(key for key in current.keys() & saved.keys() if current[key] != saved[key])
@@ -176,10 +196,17 @@ def freshness(c: Connection, business: UUID, row: dict) -> dict:
                 successor = current_successor(c, business, old.id)
                 counts.append(dict(role=role, id=str(old.id), superseded_by=str(successor) if successor else None))
         status = "stale" if added or removed or changed else "current"
-        return dict(**common, status=status, stale=status == "stale", reason_fa=REASONS_FA[status],
+        explanation = REASONS_FA[status]
+        if status == "current" and live_completeness.provisional:
+            explanation = "بررسی پوشش پیش از پایان دوره انجام شده است؛ محاسبهٔ مشروط در رسید محفوظ است و ارقام آن برای وضعیت فعلی ارائه نمی‌شوند."
+        return dict(**common, status=status, stale=status == "stale", reason_fa=explanation,
                     saved_inputs=len(saved), current_inputs=len(current), count_selection_required=counts,
+                    completeness=dict(complete=live_completeness.complete, provisional=live_completeness.provisional,
+                                      blockers_fa=live_completeness.blockers_fa),
                     changes=dict(added=sample(added, "added"), removed=sample(removed, "removed"),
                                  changed=sample(changed, "changed")))
+    except CoverageTimeout:
+        return unknown("coverage_query_timeout")
     except SelectionLimit:
         return unknown("input_row_limit")
     except (ValidationError, KeyError, TypeError, ValueError):
@@ -191,10 +218,13 @@ def advice_summary(c: Connection, business: UUID, row: dict) -> dict:
     current = status["status"] == "current"
     result = row["result"] if isinstance(row["result"], dict) else {}
     saved_status = result.get("status") if result.get("status") in ("complete", "incomplete") else None
+    completeness = status.get("completeness", {})
+    supported = current and completeness.get("complete") is True and not completeness.get("provisional", True)
+    show_result = current and (supported or saved_status == "incomplete")
     return dict(id=row["id"], input_sha256=row["input_sha256"], created_at=row["created_at"],
                 saved_status=saved_status, freshness=status,
-                available_for_current_advice=current and saved_status == "complete",
-                result=row["result"] if current else None,
-                source_provenance=row.get("source_provenance", []) if current else [],
-                correction_provenance=row.get("correction_provenance", []) if current else [],
-                pack_uses=row.get("pack_uses", []) if current else [])
+                available_for_current_advice=supported and saved_status == "complete",
+                result=row["result"] if show_result else None,
+                source_provenance=row.get("source_provenance", []) if show_result else [],
+                correction_provenance=row.get("correction_provenance", []) if show_result else [],
+                pack_uses=row.get("pack_uses", []) if show_result else [])

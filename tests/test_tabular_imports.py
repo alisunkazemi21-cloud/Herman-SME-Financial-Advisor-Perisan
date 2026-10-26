@@ -163,6 +163,10 @@ def test_imported_movement_provenance_saved_in_analysis(backend, inventory_paylo
     before = b["service"].analyze(b["owner"], b["business"], "before-review", analysis_input)
     assert b["service"].analysis(b["owner"], b["business"], before)["result"]["status"] == "incomplete"
     b["service"].approve(b["owner"], b["business"], "review-import", record_id, True, "بررسی خرید")
+    unreviewed_coverage = b["service"].analyze(b["owner"], b["business"], "before-coverage-review", analysis_input)
+    assert b["service"].analysis(b["viewer"], b["business"], unreviewed_coverage)["result"]["status"] == "incomplete"
+    from coverage_helpers import attest_coverage
+    attest_coverage(b, analysis_input)
     after = b["service"].analyze(b["owner"], b["business"], "after-review", analysis_input)
     result = b["service"].analysis(b["owner"], b["business"], after)
     assert result["result"]["status"] == "complete"

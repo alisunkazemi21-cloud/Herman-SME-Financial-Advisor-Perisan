@@ -8,7 +8,9 @@ See the [40-day delivery plan](research/MVP_40_DAY_PLAN.md) and [specialist team
 
 ## Development position
 
-**Last verified: C16 — Reviewed catalog and unit corrections. Next: C17 — Evidence completeness and reviewed follow-up actions (planned).**
+**Last verified: C16 — Reviewed catalog and unit corrections. In validation: C17 — Evidence completeness and reviewed follow-up actions.**
+
+C17 now has [an implementation contract](research/COMPLETENESS_ACTIONS.md) and [backend code under regression](runs/completeness-actions-2026-10-26/README.md): twelve-category completeness reviews tied to the recorded dataset, provisional/legacy figure guards and immutable actions with named responsibility and reviewed outcomes. Full checkpoint acceptance is pending.
 
 The [accepted C16 workflow](runs/catalog-workflow-2026-10-26/README.md), code `f877b9b`, supports dated current labels, source-backed item/pack proposals and human decisions, historical-use resolution, consistent analysis/freshness/duplicate interpretation and preserved earlier receipts. The full local PostgreSQL regression passed **544 tests / one real-OCR skip**; exact-code [Linux CI](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/40307392553) passed **543 tests / two skips**, followed by Ruff and Marimo.
 

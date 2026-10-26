@@ -1,0 +1,13 @@
+# C17 technical report
+
+Status: implementation under regression; not yet accepted. [Run evidence](../runs/completeness-actions-2026-10-26/README.md).
+
+Migrations 19–20 add immutable completeness assessments/decisions and investigation proposals/events with forced RLS. Completeness selection uses the exact business, warehouse, half-open period and service/production basis. Twelve explicit categories distinguish supplied records, reviewed no-event claims, recipe non-applicability, missing and incomplete evidence. Server-authored signatures include active source facts, approval state, correction identities, boundary counts and recipe lines. Dossiers are capped before aggregation; caller selection budgets also charge their facts. UTC epoch normalization avoids timezone-only changes.
+
+New analysis snapshots store the original declaration and the typed completeness selection before hashing. Derived calculator flags cannot exceed reviewed support. Evidence hashes are checked at review and new-analysis writes. Freshness compares stable metadata rather than the passage of time; provisional reviews never become actual-period support automatically. Saved raw receipts are unchanged, and legacy completeness is explicitly unknown. Current advisor, overview and portfolio consumers use the same gated summary.
+
+Action events implement optimistic sequence concurrency with database state guards. Only owners/reviewers decide or complete; editors may propose and work on approved actions. Completion requires an outcome, reason and source reference. Terminal history cannot be amended. Linked users must be active members at proposal time; a named responsible person remains mandatory even without a user account.
+
+Coverage/action/analysis routes have scoped no-store headers and sanitized validation errors. Reads are bounded and do not capture observations or verify source bytes anew. No external reminder, message, automatic posting or numeric savings assertion is added. The run record tracks component checks, independent review repairs, development failures and pending full acceptance without conflating them.
+
+The initial full regression exposed a pathological plan for a newly imported tenant absent from statistics. A rollback-only reproduction showed a quadratic header/detail rescan; exact primary-key LATERAL lookup fences completed the same unanalysed 10,001-row case in 1.863 seconds after the original exceeded 15 seconds. The new per-statement completeness budget is fifteen seconds, preserving a stricter caller limit. Savepoints recover cancelled reads before returning unknown status, so subsequent context queries remain usable. This scoped test is not the representative 1,000-business capacity gate.

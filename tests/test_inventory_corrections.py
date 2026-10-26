@@ -50,6 +50,12 @@ def review(b, identity, key="review-correction", approved=True, resolution=None)
 
 
 def analyze(b, value, key):
+    from coverage_helpers import attest_coverage
+    with b["db"].transaction(b["owner"], b["business"]) as c:
+        retried = c.execute("SELECT 1 FROM herman.idempotency_keys WHERE business_id=%s AND key=%s",
+                            (b["business"], key)).fetchone()
+    if not retried:
+        attest_coverage(b, value)
     identity = b["service"].analyze(b["owner"], b["business"], key, value)
     return b["service"].analysis(b["viewer"], b["business"], identity)
 

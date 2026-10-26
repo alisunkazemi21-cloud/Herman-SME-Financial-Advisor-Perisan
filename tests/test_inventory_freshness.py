@@ -68,7 +68,8 @@ def test_reviewed_replacement_changes_freshness_but_never_the_receipt(backend, i
     assert status["status"] == "stale" and status["stale"] is True
     assert status["changes"]["removed"]["count"] == 1
     assert status["changes"]["removed"]["examples"][0]["superseded_by"] == str(identity)
-    assert status["changes"]["changed"]["count"] == 0
+    assert status["changes"]["changed"]["examples"] == [dict(
+        collection="coverage_review", id="scope", before_status=None, after_status=None, fields=["dataset"])]
     assert status["changes"]["added"]["count"] == (0 if kind == "count" else 1)
     if kind == "count":
         assert status["count_selection_required"] == [dict(role="closing", id=str(predecessor),
@@ -139,12 +140,18 @@ def test_independent_pending_record_and_review_are_detected(backend, inventory_p
     status = compare(b, incomplete)
     assert status["status"] == "stale"
     if approve:
-        assert status["changes"]["changed"]["examples"] == [dict(collection="movements", id=str(pending.id),
-            before_status="proposed", after_status="approved", fields=["status"])]
+        assert status["changes"]["changed"]["examples"] == [
+            dict(collection="coverage_review", id="scope", before_status=None, after_status=None, fields=["dataset"]),
+            dict(collection="movements", id=str(pending.id),
+                 before_status="proposed", after_status="approved", fields=["status"])]
     else:
         assert status["changes"]["removed"]["examples"][0]["superseded_by"] is None
-        # Rejecting an independent candidate returns the earlier approved selection to its original state.
-        assert compare(b, before)["status"] == "current"
+        # Operational rows return to their old state, but the fixture's reviewed
+        # pending assessment replaced the original completeness review.
+        restored = compare(b, before)
+        assert restored["status"] == "stale"
+        assert restored["changes"]["added"]["count"] == restored["changes"]["removed"]["count"] == 0
+        assert [entry["collection"] for entry in restored["changes"]["changed"]["examples"]] == ["coverage_review"]
 
 
 @pytest.mark.parametrize("position,stale", [("before", False), ("start", True), ("end", False), ("warehouse", False)])
@@ -182,18 +189,25 @@ def test_all_selected_catalog_and_recipe_inputs_are_compared_conservatively(back
     assert any(example["collection"] == kind for example in status["changes"]["added"]["examples"])
 
 
-def test_rejected_corrections_new_counts_and_unrelated_evidence_do_not_invalidate_selection(backend, inventory_payload):
+def test_new_boundary_count_requires_review_without_auto_selecting_it(backend, inventory_payload):
     b = backend
     value = seed_inventory(b, inventory_payload)
     before = analyze(b, value, "before")
     predecessor, replacement = revised(inventory_payload, "movement", quantity="70")
     review(b, correct(b, predecessor, replacement), approved=False)
+    assert compare(b, before)["status"] == "current"
     count = Count.model_validate(dict(inventory_payload["closing"], id=str(uuid4()), quantity="17"))
-    b["service"].propose(b["editor"], b["business"], "another-count", count)
     b["service"].document(b["editor"], b["business"], "another-file", "note.txt", "text/plain", b"new evidence")
     b["service"].catalog(b["stranger"], b["other"], "other-item",
         Item(id=uuid4(), business_id=b["other"], sku="unrelated", name_fa="کالا", base_unit="each"))
     assert compare(b, before)["status"] == "current"
+    b["service"].propose(b["editor"], b["business"], "another-count", count)
+    changed = compare(b, before)
+    assert changed["status"] == "stale"
+    assert changed["count_selection_required"] == []
+    assert changed["changes"]["added"]["count"] == changed["changes"]["removed"]["count"] == 0
+    assert [entry["collection"] for entry in changed["changes"]["changed"]["examples"]] == ["coverage_review"]
+    assert b["service"].analysis(b["viewer"], b["business"], before["id"]) == before
 
 
 def test_explicit_count_successor_chain_and_missing_count_are_not_auto_selected(backend, inventory_payload):
@@ -218,6 +232,10 @@ def test_bounds_yield_unknown_and_withhold_current_advice(backend, inventory_pay
     if limit == "rows":
         exact_rows = compare(b, before)["current_inputs"] + sum(
             len(recipe["lines"]) for recipe in before["input_snapshot"]["recipes"])
+        # The dossier is one indexed object but its underlying fact rows and
+        # selected review header also consume the shared selection budget.
+        completeness = before["input_snapshot"]["coverage_review"]
+        exact_rows += completeness["dataset"]["row_count"] + int(completeness["assessment"] is not None)
         monkeypatch.setattr(inventory_freshness, "MAX_INPUT_ROWS", exact_rows)
         assert compare(b, before)["status"] == "current"
         add_movement(b, inventory_payload, quantity="2")

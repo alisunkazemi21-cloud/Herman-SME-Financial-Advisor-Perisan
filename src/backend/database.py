@@ -62,7 +62,7 @@ def migrate(admin_dsn: str, runtime_role: str = "herman_app") -> None:
         if existing is None:
             connection.execute(Path(__file__).with_name("schema.sql").read_text(encoding="utf-8"))
         versions = {row[0] for row in connection.execute("SELECT version FROM herman.schema_migrations")}
-        if not versions <= set(range(1, 19)) or 1 not in versions:
+        if not versions <= set(range(1, 21)) or 1 not in versions:
             raise ValueError("unsupported database schema version")
         if 2 not in versions:
             connection.execute(Path(__file__).with_name("migration_002.sql").read_text(encoding="utf-8"))
@@ -98,6 +98,10 @@ def migrate(admin_dsn: str, runtime_role: str = "herman_app") -> None:
             connection.execute(Path(__file__).with_name("migration_017.sql").read_text(encoding="utf-8"))
         if 18 not in versions:
             connection.execute(Path(__file__).with_name("migration_018.sql").read_text(encoding="utf-8"))
+        if 19 not in versions:
+            connection.execute(Path(__file__).with_name("migration_019.sql").read_text(encoding="utf-8"))
+        if 20 not in versions:
+            connection.execute(Path(__file__).with_name("migration_020.sql").read_text(encoding="utf-8"))
         if connection.execute("SELECT 1 FROM pg_roles WHERE rolname=%s", (runtime_role,)).fetchone() is None:
             connection.execute(sql.SQL("CREATE ROLE {} NOLOGIN NOSUPERUSER NOBYPASSRLS").format(
                 sql.Identifier(runtime_role)))
@@ -119,7 +123,8 @@ def migrate(admin_dsn: str, runtime_role: str = "herman_app") -> None:
                   "journal_lines", "journal_decisions", "journal_mappings", "journal_mapping_decisions",
                   "journal_reports", "journal_report_decisions", "journal_import_batches", "journal_import_sources",
                   "pack_definitions", "pack_decisions", "item_definitions", "item_decisions",
-                  "pack_binding_checks", "pack_binding_reviews"]
+                  "pack_binding_checks", "pack_binding_reviews", "coverage_assessments", "coverage_decisions",
+                  "action_proposals", "action_events"]
         for table in tables:
             connection.execute(sql.SQL("GRANT SELECT, INSERT ON herman.{} TO {}").format(
                 sql.Identifier(table), sql.Identifier(runtime_role)))
@@ -133,6 +138,7 @@ def migrate(admin_dsn: str, runtime_role: str = "herman_app") -> None:
         for function in ("user_id()", "business_id()", "member_role(uuid)", "authenticate(text)",
                          "create_business(text,text,text)", "list_businesses()",
                          "pack_binding_context(uuid,uuid,uuid,uuid,uuid[])",
-                         "pack_binding_candidates(uuid,uuid,timestamptz)"):
+                         "pack_binding_candidates(uuid,uuid,timestamptz)",
+                         "coverage_dossier(uuid,uuid,timestamptz,timestamptz,text)"):
             connection.execute(sql.SQL("GRANT EXECUTE ON FUNCTION herman." + function + " TO {}").format(
                 sql.Identifier(runtime_role)))

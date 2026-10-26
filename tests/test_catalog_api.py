@@ -286,6 +286,10 @@ def unresolved_seed(backend):
         opening_id=opening.id, closing_id=closing.id,
         coverage=dict(movements_complete=True, fulfillment_complete=True, recipes_complete=True, evidence=ref),
         policy=dict(absolute_base_quantity="0", relative_fraction="0", evidence=ref))
+    from coverage_helpers import attest_coverage
+    # Catalog resolution changes the interpretation, independently of the
+    # explicit human review of this synthetic period's operational records.
+    attest_coverage(b, analysis)
     return b, opening, factor, documents, analysis
 
 

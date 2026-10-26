@@ -14,6 +14,8 @@ from psycopg import sql
 from psycopg.types.json import Jsonb
 from pydantic import Field
 
+from src.backend.coverage_budget import CoverageTimeout
+from src.backend.coverage_models import CoverageSnapshot
 from src.backend.database import Database
 from src.backend.dated_inventory import PackDefinition
 from src.backend.duplicates import document_matches, record_matches
@@ -388,7 +390,9 @@ class Service:
             def select():
                 try:
                     return select_inputs(c, business, value.scope, value.opening_id, value.closing_id,
-                                         max_rows=MAX_ANALYSIS_ROWS)
+                                         max_rows=MAX_ANALYSIS_ROWS, coverage_basis=value.basis)
+                except CoverageTimeout as exc:
+                    raise ValueError(str(exc)) from None
                 except SelectionLimit:
                     raise ValueError("حجم ورودی تحلیل بیش از حد بررسی است؛ بازهٔ کوچک‌تری انتخاب کنید") from None
 
@@ -408,13 +412,17 @@ class Service:
                 definitions = tuple(PackDefinition.model_validate(row) for row in inputs.pop("pack_definitions"))
                 bindings = PackBindingState.model_validate(inputs.pop("pack_bindings"))
                 labels = ItemLabelState.model_validate(inputs.pop("item_labels"))
+                completeness = CoverageSnapshot.model_validate(inputs.pop("coverage_review"))
+                completeness.validate_scope(value.scope, value.basis)
                 request = InventoryRequest(scope=value.scope, target_item_id=value.target_item_id, basis=value.basis,
-                    **inputs, coverage=value.coverage, policy=value.policy)
+                    **inputs, coverage=completeness.derive(value.coverage), policy=value.policy)
                 labels.validate_selection(request.items, business, request.scope.end)
                 snapshot = request.model_dump(mode="json")
                 snapshot["pack_definitions"] = [row.model_dump(mode="json") for row in definitions]
                 snapshot["pack_bindings"] = bindings.model_dump(mode="json")
                 snapshot["item_labels"] = labels.model_dump(mode="json")
+                snapshot["coverage_review"] = completeness.model_dump(mode="json")
+                snapshot["coverage_declaration"] = value.coverage.model_dump(mode="json")
                 if len(canonical(snapshot).encode()) > MAX_ANALYSIS_BYTES:
                     raise ValueError("حجم ورودی تحلیل بیش از حد بررسی است؛ بازهٔ کوچک‌تری انتخاب کنید")
                 bound = BoundInventoryRequest(inventory=request.model_copy(update={"conversions": ()}),
@@ -435,6 +443,8 @@ class Service:
             labels = ItemLabelState.model_validate(snapshot["item_labels"])
             refs.extend(label.evidence for label in labels.labels if label.evidence is not None)
             refs.extend(resolution.evidence for resolution in bound.bindings.resolutions)
+            completeness = CoverageSnapshot.model_validate(snapshot["coverage_review"])
+            refs.extend(completeness.evidence_refs)
             refs.extend(row.evidence for row in (*request.movements, *request.recipes,
                 *request.fulfillments, *request.conversions))
             refs.extend(row.evidence for row in (request.opening, request.closing) if row is not None)
@@ -450,6 +460,10 @@ class Service:
                 if hashlib.sha256(content).hexdigest() != source["sha256"]:
                     raise Conflict("فایل شاهد تغییر کرده است؛ تحلیل ثبت نشد")
             result = calculated.result.model_dump(mode="json")
+            if result["status"] == "incomplete":
+                result["missing_fa"] = list(dict.fromkeys((*result["missing_fa"], *completeness.blockers_fa)))
+            elif completeness.provisional:
+                result["explanation_fa"] += " این محاسبه مشروط به اسناد و فرض‌های بررسی‌شده پیش از پایان دوره است؛ نتیجهٔ قطعی عملکرد دوره نیست."
             record_ids = [row.id for row in (*request.movements, *request.recipes, *request.fulfillments)]
             record_ids.extend(row.id for row in (request.opening, request.closing) if row is not None)
             provenance = c.execute("SELECT s.*,b.mapping,e.source_sha256,e.parser_version FROM herman.record_sources s "

@@ -28,6 +28,10 @@ def dependencies_ready(database: Database, blob_root: Path) -> bool:
             connection.execute("SELECT observed_at FROM herman.pack_definition_observations WHERE false")
             connection.execute("SELECT definition_id FROM herman.pack_binding_checks WHERE false")
             connection.execute("SELECT definition_id FROM herman.pack_binding_reviews WHERE false")
+            connection.execute("SELECT id FROM herman.coverage_assessments WHERE false")
+            connection.execute("SELECT assessment_id FROM herman.coverage_decisions WHERE false")
+            connection.execute("SELECT id FROM herman.action_proposals WHERE false")
+            connection.execute("SELECT sequence FROM herman.action_events WHERE false")
         expected = secrets.token_bytes(32)
         with NamedTemporaryFile(mode="w+b", prefix=".herman-ready-", dir=blob_root) as probe:
             probe.write(expected)

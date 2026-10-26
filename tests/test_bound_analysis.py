@@ -107,6 +107,10 @@ def test_analysis_budget_exhaustion_has_no_partial_write(recipe_context, monkeyp
 
 def test_concurrent_analysis_captures_one_shared_context(recipe_context, monkeypatch):
     b, _, _, _, value, recipe, _ = recipe_context
+    from coverage_helpers import attest_coverage
+    # Both analyses share one already reviewed dataset; simultaneous review
+    # decisions are a separate workflow covered by the completeness tests.
+    attest_coverage(b, value)
     barrier, attempts = Barrier(2), local()
     capture = service.capture_past_contexts
 

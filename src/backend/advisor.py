@@ -442,16 +442,17 @@ class BusinessAdvisor:
             analyses = []
             for row in rows:
                 summary = advice_summary(c, business, row)
-                result = row["result"] if isinstance(row["result"], dict) else {}
+                saved_result = row["result"] if isinstance(row["result"], dict) else {}
+                result = summary["result"] or {}
                 comparison = summary["freshness"]
-                current = comparison["status"] == "current"
+                visible = summary["result"] is not None
                 analyses.append(dict(id=row["id"], created_at=row["created_at"],
-                    status=result["status"] if current else comparison["status"], saved_status=summary["saved_status"],
+                    status=result["status"] if visible else comparison["status"], saved_status=summary["saved_status"],
                     freshness=comparison, available_for_current_advice=summary["available_for_current_advice"],
-                    needs_review=result["needs_review"] if current else None,
-                    explanation_fa=result["explanation_fa"] if current else comparison["reason_fa"],
-                    scope=result.get("scope"), target_item_id=result.get("target_item_id"), base_unit=result.get("base_unit"),
-                    unexplained_shortage=result["unexplained_shortage"] if current else None))
+                    needs_review=result.get("needs_review"),
+                    explanation_fa=result["explanation_fa"] if visible else comparison["reason_fa"],
+                    scope=saved_result.get("scope"), target_item_id=saved_result.get("target_item_id"),
+                    base_unit=saved_result.get("base_unit"), unexplained_shortage=result.get("unexplained_shortage")))
             return bounded_context(
                 dict(
                     profile=profile,
