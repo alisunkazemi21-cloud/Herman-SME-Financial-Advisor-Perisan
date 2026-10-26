@@ -1,6 +1,6 @@
 # C17 technical report
 
-Status: implementation under regression; not yet accepted. [Run evidence](../runs/completeness-actions-2026-10-26/README.md).
+Status: accepted within C17 backend scope. Full Windows regression passed 590 tests / one skip in 1133.34 seconds; Linux CI passed 590 / two skips in 148.72 seconds, followed by Ruff/Marimo. [Exact revisions, evidence and limits](../runs/completeness-actions-2026-10-26/README.md).
 
 Migrations 19–20 add immutable completeness assessments/decisions and investigation proposals/events with forced RLS. Completeness selection uses the exact business, warehouse, half-open period and service/production basis. Twelve explicit categories distinguish supplied records, reviewed no-event claims, recipe non-applicability, missing and incomplete evidence. Server-authored signatures include active source facts, approval state, correction identities, boundary counts and recipe lines. Dossiers are capped before aggregation; caller selection budgets also charge their facts. UTC epoch normalization avoids timezone-only changes.
 

@@ -6,4 +6,4 @@ A manager can review each category of records, including an explicit statement w
 
 An investigation can have a named responsible person, follow-up date, human approval and an evidence-backed outcome. Unsuccessful and inconclusive work remains part of the history. A stock difference still means something needs investigation; it does not establish a cause or prove a saving.
 
-This backend checkpoint is under validation. It does not yet establish real customer results or provide the planned minimal Persian owner screen. [Current test evidence and limitations](../runs/completeness-actions-2026-10-26/README.md).
+This backend checkpoint passed its documented regression and CI checks. It does not establish real customer results or provide the planned minimal Persian owner screen. [Test evidence and limitations](../runs/completeness-actions-2026-10-26/README.md).

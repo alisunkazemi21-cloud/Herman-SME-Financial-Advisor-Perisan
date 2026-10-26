@@ -1,6 +1,6 @@
 # C17: reviewed completeness and follow-up
 
-Status: implemented under regression, not accepted. Recorded 2026-10-26 before implementation. [Run evidence](../runs/completeness-actions-2026-10-26/README.md).
+Status: accepted within the documented backend scope. Recorded 2026-10-26 before implementation. Full Windows regression: 590 passed / one skip; Linux CI: 590 passed / two skips. [Run evidence and limits](../runs/completeness-actions-2026-10-26/README.md).
 
 ## Managed inventory analyses
 

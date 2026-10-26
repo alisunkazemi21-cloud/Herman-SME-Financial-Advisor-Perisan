@@ -1,6 +1,6 @@
 # Completeness and action API
 
-Implementation under C17 validation. [Contract](COMPLETENESS_ACTIONS.md) · [Run evidence](../runs/completeness-actions-2026-10-26/README.md).
+Accepted C17 backend workflow. [Contract](COMPLETENESS_ACTIONS.md) · [Run evidence and limits](../runs/completeness-actions-2026-10-26/README.md).
 
 All paths below are relative to `/businesses/{business}`. Supply a valid Bearer credential; writes also require `Idempotency-Key` (1–200 characters). Actor identity and review times come from the server. Reusing the same key/payload returns the original result; changing the payload conflicts. Responses, including handled errors, use `Cache-Control: no-store`. Client schemas do not accept server decisions, signatures or timestamps.
 

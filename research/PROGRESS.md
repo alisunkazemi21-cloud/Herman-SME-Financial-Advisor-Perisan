@@ -1,14 +1,14 @@
 # Herman development map
 
-Updated: **2026-10-26** · Active phase: **Backend workflows** · Last verified checkpoint: **C16 — Reviewed catalog/unit correction** · Current work: **C17 completeness/actions — implementation under regression**
+Updated: **2026-10-26** · Active phase: **Backend workflows and pilot preparation** · Last verified checkpoint: **C17 — Completeness and reviewed actions** · Next work: **Persian owner interview catalog**
 
-**Last accepted:** C16's compatible-edit backend workflow, code `f877b9b`, passed **544 Windows tests / one real-OCR skip** and **543 Linux tests / two skips**, then Ruff/Marimo. [Acceptance matrix and run](../runs/catalog-workflow-2026-10-26/README.md). **Now:** C17 has twelve-category dataset-bound completeness reviews, provisional/current-advice guards and immutable investigation/action history. Component/API checks passed; the full fresh-database regression is running. [Implementation and pending acceptance](../runs/completeness-actions-2026-10-26/README.md).
+**Last accepted:** C17 supplies twelve-category dataset-bound completeness reviews, provisional/legacy current-advice guards and immutable investigation/action history. Full Windows regression passed **590 tests / one real-OCR skip**; Linux CI passed **590 / two skips**, followed by Ruff/Marimo. [Exact revisions, acceptance mapping and limits](../runs/completeness-actions-2026-10-26/README.md). **Next:** the requested Persian owner interview catalog for market/customer evidence and voluntary permissioned sample records.
 
 This map separates capabilities from acceptance gates. A verified checkpoint means its documented scope passed checks; it does not mean every feature in that segment is finished. There is no overall percentage because engine quality, operational readiness and deferred UI are different kinds of work.
 
 ## Forty-day delivery target
 
-**Day 1: October 24 · Day 40: December 2, 2026.** The founder is available full-time and will approach a pilot business in week one; access remains unconfirmed. Follow the [dated milestones](MVP_40_DAY_PLAN.md) and [specialist responsibilities](AGENT_TEAM.md). C16 is accepted; pilot readiness and the other delivery gates remain open. Backend acceptance comes first, followed by a minimal Persian owner workflow. Earlier UI-deferral labels below describe the prior checkpoint state.
+**Day 1: October 24 · Day 40: December 2, 2026.** The founder is available full-time and will approach a pilot business in week one; access remains unconfirmed. Follow the [dated milestones](MVP_40_DAY_PLAN.md) and [specialist responsibilities](AGENT_TEAM.md). C16 and C17 are accepted within their backend scope; pilot readiness and the other delivery gates remain open. Backend acceptance comes first, followed by a minimal Persian owner workflow. Earlier UI-deferral labels below describe the prior checkpoint state.
 
 ## Independent reliability slice: dependency readiness
 
@@ -18,8 +18,8 @@ Implemented under M40-1: separate `/ready` database feature and evidence-root I/
 
 | Position | Milestone | State / evidence |
 |---|---|---|
-| Last verified | **C16 · Reviewed catalog/unit correction** | [Accepted workflow](../runs/catalog-workflow-2026-10-26/README.md): 544 Windows passes / one skip, 543 Linux passes / two skips at code `f877b9b`. |
-| In validation | **C17 · Completeness and reviewed actions** | Twelve explicit categories, reviewed no-event assertions, changed/pending/provisional guards and named investigation follow-up are implemented. Full regression/CI acceptance remains pending. |
+| Last verified | **C17 · Completeness and reviewed actions** | [Accepted workflow](../runs/completeness-actions-2026-10-26/README.md): 590 Windows passes / one skip, 590 Linux passes / two skips; implementation `c585774`, timezone-test follow-up `9611c11`. |
+| Current side quest | **Persian owner interview catalog** | Market/customer research and voluntary financial samples; separate research/OCR/training opt-ins, one free month of Herman and one gym month, with no city/provider names. |
 | Most recently advanced | **S2 + S3 · Evidence/review and financial/inventory core** | Current labels and public reviewed catalog/binding operations now complete the historical interpretation workflow. [API guide](CATALOG_API.md). |
 | Next segment | **S2 + S3 · Reliable pilot evidence** | Category-level completeness and accountable reviewed follow-up, retaining missing/stale/unknown states. |
 | Later UI | **S5 · Owner experience** | Minimal Persian owner workflow follows backend gates. Existing portfolio data is available; pricing is now specified but not implemented. |
@@ -66,7 +66,7 @@ Solid paths exist in the backend within their documented bounds. Dashed paths sh
 |---|---|---|
 | S1 · Business foundation | Profiles, membership, tenant isolation, restricted database role, idempotent writes and audit events | Backup/restore and full application capacity. Existing 1,000-business benchmark covers synthetic reads only. |
 | S2 · Evidence and review | Immutable uploads, queue recovery, CSV/XLSX mapping, duplicate decisions; separate bounded temporary Quick extraction with source locations | Three labeled real OCR invoices; semantic invoice matching; broader PDF/image financial-table mapping. |
-| S3 · Financial and inventory core | Reconciliation, reviewed corrections/freshness; dated catalog and historical interpretation with public review; balanced journals and reviewed report/portfolio payloads | Category completeness/actions, closing controls, gross bank-flow classification, larger reports and official accounting verification. |
+| S3 · Financial and inventory core | Reconciliation, reviewed corrections/freshness; dated catalog/historical interpretation; twelve-category completeness and reviewed action history; balanced journals and reviewed report/portfolio payloads | Closing controls, gross bank-flow classification, larger reports and official accounting verification. |
 | S4 · Advisor and knowledge | Reviewed knowledge/corrections, bounded context, local draft routes, immutable cases, stateless Quick questions/documents and twelve typed calculations | Actual local-model quality and reliable financial interpretation of varied documents. |
 | S5 · Owner experience | Earlier Persian RTL prototype; backend portfolio and five indicators | Minimal Persian owner workflow after backend gates, with Kalameh fallback until licensed assets are available and inspected Contour integration. |
 | S6 · Production validation | PostgreSQL regression tests, GitHub checks, evidence-preserving artifacts and local Graphify navigation | Restore drill, complete workload/capacity testing, real-engine acceptance and deployment hardening. |
@@ -93,6 +93,7 @@ Tests listed below are historical full-suite results, not completion percentages
 | C14 · Oct 11 | Input freshness/change impact; stale figures withheld from current advice; exact receipts retained | [313 passed; 1 skipped](INVENTORY_FRESHNESS.md); [exact-commit CI](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/38168599926) |
 | **C15 · Oct 12** | **Temporary Quick documents with source references, cleanup and no business history** | **[362 passed; 1 skipped](QUICK_DOCUMENTS.md)**; final 86 Quick checks after locator fix |
 | **C16 · Oct 26** | **Reviewed compatible catalog changes, dated labels and historical-use resolution through the public API** | **[544 Windows passes / one skip; 543 Linux passes / two skips](../runs/catalog-workflow-2026-10-26/README.md)**; code `f877b9b`, Ruff/Marimo passed |
+| **C17 · Oct 26** | **Dataset-bound completeness reviews, provisional/legacy figure guards and accountable investigation history** | **[590 Windows passes / one skip; 590 Linux passes / two skips](../runs/completeness-actions-2026-10-26/README.md)**; application `c585774`, timezone-test follow-up `9611c11`, Ruff/Marimo passed |
 
 Documentation-language, typography and Graphify checkpoints are supporting changes recorded in [validation](VALIDATION.md). They did not independently close a product capability gate.
 
@@ -119,11 +120,11 @@ Business outcome: an owner can correct catalog or conversion definitions without
 
 C16 is accepted for compatible name/SKU and pack-factor revisions within the stated backend bounds. Cross-identity stock migration, a visible owner workflow, broader document understanding and production/customer acceptance remain separate. [Requirement-by-requirement evidence](../runs/catalog-workflow-2026-10-26/README.md#acceptance-mapping).
 
-### C17 · Evidence completeness and reviewed follow-up — in validation
+### C17 · Evidence completeness and reviewed follow-up — accepted
 
-Outcome: a weekly reconciliation can identify missing categories and retain accountable investigations/actions instead of treating record absence as proof of no activity. Code `c585774` implements twelve dataset-bound evidence categories, explicit no-event claims, pending/stale/provisional guards and sequenced reviewed follow-up. The final coverage component passed 13 tests; lead action/API/metadata/timeout scope passed 33. A reproduced large-tenant query-plan defect was repaired and retested under a stricter SQL time budget. Full Windows regression and [exact-code CI](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/40355665508) are running. [Run and failed-development evidence](../runs/completeness-actions-2026-10-26/README.md) · [API guide](COMPLETENESS_ACTIONS_API.md). No C17 acceptance or pilot outcome is claimed yet.
+Outcome: a weekly reconciliation identifies missing categories and retains accountable investigations/actions rather than treating record absence as proof of no activity. Code `c585774` implements twelve dataset-bound evidence categories, explicit no-event claims, pending/stale/provisional guards and sequenced reviewed follow-up. Full Windows regression passed 590 / one skip; [final CI](https://github.com/alisunkazemi21-cloud/Herman-SME-Financial-Advisor-Perisan/actions/runs/40357187856) at test-only follow-up `9611c11` passed 590 / two skips, then Ruff/Marimo. The reproduced large-tenant query-plan defect and timezone-test failure are repaired and retained in [run evidence](../runs/completeness-actions-2026-10-26/README.md). [API guide](COMPLETENESS_ACTIONS_API.md). No pilot outcome is inferred.
 
-The founder requested a Persian owner interview catalog immediately after C17, covering market/customer research and voluntary sample records with separate product-research, OCR-evaluation and model-training opt-ins. The approved offer is one month of platform membership plus a cooperation gift; gift/activation details remain to be specified. [Queued brief](OWNER_INTERVIEW_CATALOG_BRIEF.md).
+The founder requested a Persian owner interview catalog immediately after C17, covering market/customer research and voluntary sample records with separate product-research, OCR-evaluation and model-training opt-ins. The approved offer is one month of Herman plus one gym month; city/provider names must be omitted, and activation/usage details agreed before participation. [Working brief](OWNER_INTERVIEW_CATALOG_BRIEF.md).
 
 | Next group | Expected outcome | Evidence needed to close it |
 |---|---|---|
